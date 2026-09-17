@@ -1,0 +1,23 @@
+[Unit]
+Description=Mazad signed GitHub webhook receiver
+Requires=docker.service
+After=docker.service network-online.target
+
+[Service]
+User=mazad-hook
+Group=mazad-hook
+EnvironmentFile=/etc/mazad/webhook.env
+ExecStart=/usr/bin/python3 /usr/local/lib/mazad-deploy/receiver.py
+Restart=always
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/mazad-webhook
+RestrictAddressFamilies=AF_INET AF_UNIX
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

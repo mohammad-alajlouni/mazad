@@ -1,0 +1,15 @@
+[Unit]
+Description=Mazad serialized deployment worker
+Requires=docker.service
+After=docker.service network-online.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u /usr/local/lib/mazad-deploy/worker.py
+Restart=always
+RestartSec=5
+UMask=0077
+TimeoutStopSec=30
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target
