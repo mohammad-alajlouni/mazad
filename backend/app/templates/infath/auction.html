@@ -1,0 +1,4 @@
+<div class="intro-block center">{% if project.auction_logo %}<img class="auction-logo" src="{{ project.auction_logo }}">{% endif %}<h1>{{ auction.auction_name }}</h1><h3>{{ bt(auction.auction_type) }}</h3><p>{{ page.legal_announcement_text }}</p><p>{{ page.court_decision_text }}</p>
+{% for field in ['supervising_authority','license_number','auction_date','auction_start_date','auction_end_date','start_time','end_time'] %}<p>{{ bt(field) }}: {{ auction[field] or '-' }}</p>{% endfor %}
+{% if auction.auction_type in ['physical','hybrid'] %}<p>{{ bt('physical_location') }}: {{ auction.physical_location or '-' }}</p>{% endif %}
+{% if auction.auction_type in ['electronic','hybrid'] %}<p>{{ bt('electronic_platform_name') }}: {{ auction.electronic_platform_name or '-' }}</p>{% endif %}</div>

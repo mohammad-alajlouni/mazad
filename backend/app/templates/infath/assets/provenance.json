@@ -1,0 +1,116 @@
+{
+  "cover-1": {
+    "source": "/Users/mohammad/Downloads/اغلفة-الكتيف/Ai/1.ai",
+    "sha256": "2c92419da115cd839877c5582a9fcf8e8229412ab67f70e8b93da7c6518dc355",
+    "removed_dynamic_regions": [
+      [
+        360,
+        730,
+        570,
+        819
+      ],
+      [
+        18,
+        775,
+        577,
+        823
+      ]
+    ]
+  },
+  "cover-2": {
+    "source": "/Users/mohammad/Downloads/اغلفة-الكتيف/Ai/2.ai",
+    "sha256": "2dcb79a99e9390553e54b4227c63b3823d313ac132f7a0e049d67086a3d82506",
+    "removed_dynamic_regions": [
+      [
+        175,
+        350,
+        390,
+        453
+      ],
+      [
+        18,
+        775,
+        577,
+        823
+      ]
+    ]
+  },
+  "cover-3": {
+    "source": "/Users/mohammad/Downloads/اغلفة-الكتيف/Ai/3.ai",
+    "sha256": "faa7fd0a1b87a49c4805055114cdc699f8667e3ac167affce8dfe4868579e314",
+    "removed_dynamic_regions": [
+      [
+        175,
+        350,
+        390,
+        453
+      ],
+      [
+        18,
+        775,
+        577,
+        823
+      ]
+    ]
+  },
+  "cover-4": {
+    "source": "/Users/mohammad/Downloads/اغلفة-الكتيف/Ai/4.ai",
+    "sha256": "7c7e4d5418b2d4e08bf31ebee9aa3713d6ff60352f42517d38a61541384b2bac",
+    "removed_dynamic_regions": [
+      [
+        290,
+        350,
+        500,
+        453
+      ],
+      [
+        18,
+        775,
+        577,
+        823
+      ]
+    ]
+  },
+  "cover-5": {
+    "source": "/Users/mohammad/Downloads/اغلفة-الكتيف/Ai/5.ai",
+    "sha256": "18c764d1ddc1648177eaaa7ef27782facaf299264aed3452bbd14f18a065ec9c",
+    "removed_dynamic_regions": [
+      [
+        290,
+        350,
+        500,
+        453
+      ],
+      [
+        18,
+        775,
+        577,
+        823
+      ]
+    ]
+  },
+  "cover-6": {
+    "source": "/Users/mohammad/Downloads/اغلفة-الكتيف/Ai/6.ai",
+    "sha256": "87392879541199240ee077950f147eb3f218feafa52775c04d88cc143992b749",
+    "removed_dynamic_regions": [
+      [
+        360,
+        730,
+        570,
+        819
+      ],
+      [
+        18,
+        775,
+        577,
+        823
+      ]
+    ]
+  },
+  "fixed": {
+    "introduction": "supplied booklet page 2, unchanged",
+    "terms": "guide page 24; immutable crops by auction type",
+    "font": "guide page 9: Ruaq Arabic",
+    "logos": "original artwork only"
+  }
+}

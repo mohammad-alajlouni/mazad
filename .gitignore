@@ -1,0 +1,23 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+.next/
+storage/
+*.db
+*.log
+output/
+*.inspect.ndjson
+*.tsbuildinfo
+frontend/test-results/
+frontend/playwright-report/
+
+# Local reference extraction and disposable verification databases
+tmp/
+
+# Local OS files, caches, and private environment overrides
+.DS_Store
+.ruff_cache/
+.env.*
+!.env.example

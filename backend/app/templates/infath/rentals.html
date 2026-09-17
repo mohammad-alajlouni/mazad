@@ -1,0 +1,1 @@
+<h2 class="center">{{ bt('rental_contracts') }} · {{ page.item.number }}</h2><table class="table rentals"><thead><tr>{% for key in rental_fields %}<th>{{ bt(key) }}</th>{% endfor %}</tr></thead><tbody>{% for row in page.rows %}<tr>{% for key in rental_fields %}<td>{{ display(row.get(key)) }}</td>{% endfor %}</tr>{% endfor %}</tbody></table>

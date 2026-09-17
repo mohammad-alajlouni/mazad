@@ -1,0 +1,9 @@
+## Noto
+
+The following software may be included in this product: Google Noto fonts. Use of any of this software is
+        governed by the terms of the license below:
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is copied below,
+        and is also available with a FAQ at: http://scripts.sil.org/OFL
+
+Jump to SIL Open Font License, Version 1.1

@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block body %}{% include '_heading.html' %}<h2>{{ t('Booklet readiness and data coverage') }}</h2>{% for finding in findings %}<p dir="{{ finding|direction }}">{{ finding }}</p>{% endfor %}<h2>{{ t('Supporting asset data') }}</h2>{% include '_items.html' %}{% endblock %}

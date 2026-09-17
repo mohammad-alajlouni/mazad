@@ -1,0 +1,394 @@
+import { AuctionWorkspace, AuctionReview } from "./AuctionWorkspace";
+import { useConfirm } from "./Confirmation";
+import { formatNumber, formatDate } from "../i18n/format";
+import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { ArrowUpRight, Plus, Layers, Sparkles } from "lucide-react";
+import { api, send, Detail, Item, Output, Run } from "./api";
+import { Config } from "./Settings";
+import { Badge, Empty, OutputList, title } from "./shared";
+import {
+  ProjectForm,
+  ItemForm,
+  ExcelUpload,
+  ImageUpload,
+} from "./ProjectForms";
+export default function ProjectWorkspace({
+  detail,
+  config,
+  types,
+  busy,
+  run,
+  tab,
+  setTab,
+  reloadProject,
+  setReview,
+}: {
+  detail: Detail;
+  config: Config | null;
+  types: { key: string; title: string }[];
+  busy: boolean;
+  run: Run;
+  tab: string;
+  setTab: (tab: string) => void;
+  reloadProject: () => Promise<void>;
+  setReview: (output: Output) => void;
+}) {
+  const tr = useTranslations();
+  const confirm = useConfirm();
+  const [outputLanguage, setOutputLanguage] = useState(
+    String(
+      detail.project.auction?.document_language ||
+        config?.branding.default_language ||
+        "en",
+    ),
+  );
+
+  useEffect(() => {
+    if (detail.project.auction?.document_language)
+      setOutputLanguage(String(detail.project.auction.document_language));
+  }, [detail.project.auction?.document_language]);
+  const [itemEditor, setItemEditor] = useState<Item | "new" | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [auctionValid, setAuctionValid] = useState(false);
+  const [useAI, setUseAI] = useState(false);
+  return (
+    <>
+      <div className="project-meta">
+        <Badge status={detail.project.status} />
+        <span>{detail.project.customer || tr("ui.no_client_assigned")}</span>
+        <span>{tr("common.itemsCount", { count: detail.items.length })}</span>
+        <span>{tr("common.imagesCount", { count: detail.images.length })}</span>
+      </div>
+      <div className="tabs project-tabs">
+        {[
+          "overview",
+          "auction",
+          "items",
+          "excel import",
+          "images",
+          "generate",
+          "outputs",
+          "details",
+        ].map((t) => (
+          <button
+            key={t}
+            className={tab === t ? "selected" : ""}
+            onClick={() => {
+              setTab(t);
+              setItemEditor(null);
+            }}
+          >
+            {t === "auction" ? tr("auction.auction_setup") : title(t)}
+          </button>
+        ))}
+      </div>
+      {tab === "auction" && (
+        <AuctionWorkspace detail={detail} run={run} reload={reloadProject} />
+      )}
+      {tab === "overview" && (
+        <div className="project-overview">
+          <section className="panel form-panel">
+            <h2>{tr("ui.project_overview")}</h2>
+            <p>
+              {detail.project.description ||
+                tr("ui.add_a_description_in_project_details")}
+            </p>
+            <div className="overview-facts">
+              <div>
+                <small>{tr("ui.reference_upper")}</small>
+                <strong>
+                  <bdi dir="ltr">{detail.project.code}</bdi>
+                </strong>
+              </div>
+              <div>
+                <small>{tr("ui.location_upper")}</small>
+                <strong>{detail.project.location || "—"}</strong>
+              </div>
+              <div>
+                <small>{tr("ui.project_date_upper")}</small>
+                <strong>
+                  {detail.project.date ? formatDate(detail.project.date) : "—"}
+                </strong>
+              </div>
+            </div>
+            <h3>{tr("ui.notes")}</h3>
+            <p className="muted">
+              {detail.project.notes || tr("ui.no_notes_yet")}
+            </p>
+          </section>
+          <section className="panel form-panel">
+            <h2>{tr("ui.bring_your_project_to_life")}</h2>
+            <div className="steps">
+              {[
+                ["01", tr("ui.add_your_data"), "items"],
+                ["02", tr("ui.upload_real_images"), "images"],
+                ["03", tr("ui.generate_your_outputs"), "generate"],
+                ["04", tr("ui.review_and_approve"), "outputs"],
+              ].map(([n, label, t]) => (
+                <button key={n} onClick={() => setTab(t)}>
+                  <span>{formatNumber(n, { minimumIntegerDigits: 2 })}</span>
+                  {label}
+                  <ArrowUpRight size={16} />
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+      {tab === "items" &&
+        (itemEditor ? (
+          <ItemForm
+            projectId={detail.project.id}
+            existing={itemEditor === "new" ? undefined : itemEditor}
+            run={run}
+            onDone={() => {
+              setItemEditor(null);
+              void reloadProject();
+            }}
+          />
+        ) : (
+          <section className="panel">
+            <div className="panel-heading flex-row">
+              <h2>{tr("ui.normalized_items")}</h2>
+              <button className="primary" onClick={() => setItemEditor("new")}>
+                <Plus size={16} />
+                {tr("ui.add_item")}
+              </button>
+            </div>
+            {detail.items.length ? (
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{tr("ui.item")}</th>
+                      <th>{tr("ui.category")}</th>
+                      <th>{tr("ui.quantity")}</th>
+                      <th>{tr("ui.unit_value")}</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detail.items.map((i) => (
+                      <tr key={i.id}>
+                        <td>
+                          <strong>{i.title}</strong>
+                          <small dir="ltr">{i.reference}</small>
+                        </td>
+                        <td>{i.category || "—"}</td>
+                        <td>{formatNumber(i.quantity)}</td>
+                        <td>{formatNumber(i.financial_value)}</td>
+                        <td>
+                          <div className="actions">
+                            <button
+                              className="text-button"
+                              onClick={() => setItemEditor(i)}
+                            >
+                              {tr("ui.edit")}
+                            </button>
+                            <button
+                              className="text-button"
+                              disabled={detail.items.indexOf(i) === 0}
+                              onClick={() =>
+                                void run(async () => {
+                                  const ids = detail.items.map((v) => v.id);
+                                  const index = ids.indexOf(i.id);
+                                  [ids[index - 1], ids[index]] = [
+                                    ids[index],
+                                    ids[index - 1],
+                                  ];
+                                  await api(
+                                    `/projects/${detail.project.id}/item-order`,
+                                    {
+                                      method: "PUT",
+                                      body: send({ item_ids: ids }),
+                                    },
+                                  );
+                                  await reloadProject();
+                                })
+                              }
+                            >
+                              {tr("auction.move_up")}
+                            </button>
+                            <button
+                              className="text-button danger"
+                              onClick={async () => {
+                                if (
+                                  await confirm(
+                                    tr(
+                                      "ui.delete_this_item_and_its_image_associations_existing_outputs_will",
+                                    ),
+                                  )
+                                )
+                                  void run(async () => {
+                                    await api(
+                                      `/projects/${detail.project.id}/items/${i.id}`,
+                                      { method: "DELETE" },
+                                    );
+                                    await reloadProject();
+                                  }, tr("ui.item_deleted"));
+                              }}
+                            >
+                              {tr("ui.delete")}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <Empty
+                text={tr("ui.add_an_item_manually_or_import_an_excel_workbook")}
+              />
+            )}
+          </section>
+        ))}
+      {tab === "excel import" && (
+        <ExcelUpload
+          projectId={detail.project.id}
+          run={run}
+          onDone={() => {
+            void reloadProject();
+            setTab("items");
+          }}
+        />
+      )}
+      {tab === "images" && (
+        <ImageUpload
+          detail={detail}
+          run={run}
+          onDone={() => void reloadProject()}
+        />
+      )}
+      {tab === "details" && (
+        <ProjectForm
+          key={detail.project.id}
+          existing={detail.project}
+          run={run}
+          onDone={() => void reloadProject()}
+        />
+      )}
+      {tab === "outputs" && (
+        <OutputList outputs={detail.outputs} onOpen={setReview} />
+      )}
+      {tab === "generate" && (
+        <section className="panel form-panel">
+          {Object.keys(detail.project.auction || {}).length > 0 ? (
+            <AuctionReview
+              detail={detail}
+              run={run}
+              onValid={setAuctionValid}
+            />
+          ) : null}
+          <div className="flex-row">
+            <div>
+              <h2>{tr("ui.one_project_a_complete_output_set")}</h2>
+              <p className="muted">
+                {tr("ui.every_output_begins_as_a_draft_for_your_review")}
+              </p>
+            </div>
+            <button
+              className="text-button"
+              onClick={() =>
+                setSelected(
+                  selected.length === types.length
+                    ? []
+                    : types.map((t) => t.key),
+                )
+              }
+            >
+              {selected.length === types.length
+                ? tr("ui.clear_selection")
+                : tr("ui.select_all_eight")}
+            </button>
+          </div>
+          <div className="generation-grid">
+            {types.map((t) => (
+              <label
+                className={
+                  "generator-option " +
+                  (selected.includes(t.key) ? "checked" : "")
+                }
+                key={t.key}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.includes(t.key)}
+                  onChange={(e) =>
+                    setSelected(
+                      e.target.checked
+                        ? [...selected, t.key]
+                        : selected.filter((k) => k !== t.key),
+                    )
+                  }
+                />
+                <Layers size={21} />
+                <span>{title(t.key)}</span>
+              </label>
+            ))}
+          </div>
+          <label>
+            {tr("common.outputLanguage")}
+            <select
+              aria-label={tr("common.outputLanguage")}
+              value={outputLanguage}
+              onChange={(e) => setOutputLanguage(e.target.value)}
+            >
+              <option value="en">{tr("common.english")}</option>
+              <option value="ar">{tr("common.arabic")}</option>
+            </select>
+          </label>
+          <p className="muted">{tr("common.outputLanguageHelp")}</p>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={useAI}
+              onChange={(e) => setUseAI(e.target.checked)}
+            />
+            <Sparkles size={16} />
+            {tr("ui.assist_with_ai")}{" "}
+            {config?.ai.available
+              ? tr("ui.requires_review")
+              : tr("ui.unavailable_no_api_key_configured")}
+          </label>
+          <p className="muted">
+            {tr(
+              "ui.your_current_data_and_branding_are_saved_with_each_output_changes",
+            )}
+          </p>
+          <button
+            disabled={
+              !selected.length ||
+              busy ||
+              (Object.keys(detail.project.auction || {}).length > 0 &&
+                selected.includes("project_booklet") &&
+                !auctionValid)
+            }
+            className="primary"
+            onClick={() =>
+              void run(async () => {
+                await api(`/projects/${detail.project.id}/generate`, {
+                  method: "POST",
+                  body: send({
+                    types: selected,
+                    use_ai: useAI,
+                    output_language: outputLanguage,
+                  }),
+                });
+                await reloadProject();
+                setTab("outputs");
+              }, tr("ui.drafts_generated_and_ready_for_review"))
+            }
+          >
+            <Sparkles size={17} />
+            {busy
+              ? tr("ui.generating_documents")
+              : tr("common.generateButton", { count: selected.length })}
+          </button>
+        </section>
+      )}
+    </>
+  );
+}

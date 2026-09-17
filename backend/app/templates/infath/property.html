@@ -1,0 +1,4 @@
+{% set item=page.item %}{% set prop=item.property_data %}{% set main=item.image_assets[0] if item.image_assets else none %}
+<span class="tag">{{ item.number }}</span><h2>{{ item.title }}</h2><div class="{{ 'portrait-layout' if main and main.orientation == 'portrait' else '' }}">
+{% if main %}<img class="hero" src="{{ main.src }}">{% endif %}<div class="detail-data"><h3>{{ bt('description') }}</h3><p>{{ page.description or '-' }}</p><dl class="fields">{% for key in property_fields %}<div class="field"><dt>{{ bt(key) }}</dt><dd>{{ display(prop.get(key)) }}</dd></div>{% endfor %}</dl>
+{% if auction.auction_type in ['electronic','hybrid'] %}<p>{{ bt('auction_close_date') }}: {{ prop.auction_close_date or '-' }}<br>{{ bt('auction_close_time') }}: {{ prop.auction_close_time or '-' }}</p>{% endif %}</div></div>{{ qrs(item.qr_links) }}
