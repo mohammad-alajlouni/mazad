@@ -10,15 +10,19 @@ from .schemas import Branding
 
 def bootstrap():
     with SessionLocal() as db:
-        if not db.scalar(
+        admin = db.scalar(
             select(User).where(User.email == settings().admin_email.lower())
-        ):
+        )
+        if not admin:
             db.add(
                 User(
                     email=settings().admin_email.lower(),
                     password_hash=hasher.hash(settings().admin_password),
+                    role="admin",
                 )
             )
+        else:
+            admin.role = "admin"
         for key in GENERATORS:
             if not db.scalar(select(Template).where(Template.output_type == key)):
                 db.add(

@@ -6,7 +6,7 @@ import { messages, Locale } from "./messages";
 const Context = createContext<{
   locale: Locale;
   setLocale: (locale: Locale) => void;
-}>({ locale: "en", setLocale: () => {} });
+}>({ locale: "ar", setLocale: () => {} });
 export function useInterfaceLocale() {
   return useContext(Context);
 }

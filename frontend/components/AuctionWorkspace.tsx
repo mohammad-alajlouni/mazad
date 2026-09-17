@@ -223,10 +223,14 @@ export function AuctionWorkspace({
   detail,
   run,
   reload,
+  section = "auction",
+  onSaved,
 }: {
   detail: Detail;
   run: Run;
   reload: () => Promise<void>;
+  section?: "auction" | "agent";
+  onSaved?: () => void;
 }) {
   const t = useTranslations("auction");
   const auction = detail.project.auction || {};
@@ -238,11 +242,11 @@ export function AuctionWorkspace({
     String(auction.selected_cover_template_id || "infath-2"),
   );
   useEffect(() => {
-    void run(async () => setCovers(await api("/booklet-templates")));
+    if (section === "auction") void run(async () => setCovers(await api("/booklet-templates")));
   }, []);
   return (
     <div className="auction-workspace">
-      <form
+      {section === "auction" && <form
         className="panel form-panel"
         onSubmit={(event) => {
           event.preventDefault();
@@ -257,6 +261,7 @@ export function AuctionWorkspace({
               }),
             });
             await reload();
+            onSaved?.();
           }, t("saved"));
         }}
       >
@@ -276,7 +281,7 @@ export function AuctionWorkspace({
           </select>
         </label>
         {auctionGroups.map((fields, index) => (
-          <details key={index} open={index === 0}>
+          <details key={index} open={index < 3}>
             <summary>
               {t(
                 [
@@ -325,8 +330,8 @@ export function AuctionWorkspace({
           ))}
         </div>
         <button className="primary">{t("save_auction")}</button>
-      </form>
-      <form
+      </form>}
+      {section === "agent" && <form
         className="panel form-panel"
         onSubmit={(event) => {
           event.preventDefault();
@@ -337,6 +342,7 @@ export function AuctionWorkspace({
               body: send(values),
             });
             await reload();
+            onSaved?.();
           }, t("saved"));
         }}
       >
@@ -371,7 +377,7 @@ export function AuctionWorkspace({
         </label>
         <p className="muted">{t("upload_logo_help")}</p>
         <button className="primary">{t("save_agent")}</button>
-      </form>
+      </form>}
     </div>
   );
 }
@@ -388,12 +394,15 @@ export function AuctionReview({
   detail,
   run,
   onValid,
+  onFix,
 }: {
   detail: Detail;
   run: Run;
   onValid: (value: boolean) => void;
+  onFix?: (step: string) => void;
 }) {
   const t = useTranslations("auction");
+  const f = useTranslations("flow");
   const [review, setReview] = useState<Review | null>(null);
   useEffect(() => {
     onValid(false);
@@ -466,12 +475,14 @@ export function AuctionReview({
           </tbody>
         </table>
       </div>
+      <p className="muted">{f("requiredLegend")}</p>
       {review.errors.map((e, i) => (
         <p className="error" key={i}>
           {t(e.code)}:{" "}
           {t.has(e.field.split(".").at(-1)!)
             ? t(e.field.split(".").at(-1)!)
             : e.field}
+          {onFix && <button className="text-button" onClick={() => onFix(e.field.startsWith("selling_agent") ? "agent" : e.field.startsWith("properties") ? "items" : "auction")}>{f(e.field.startsWith("selling_agent") ? "fixAgent" : e.field.startsWith("properties") ? "fixProperties" : "fixAuction")}</button>}
         </p>
       ))}
       <details>

@@ -46,5 +46,5 @@ class ItemInput(BaseModel):
 class Branding(BaseModel):
     organization_name: str = Field(default="Atlas Studio", max_length=200)
     primary_color: str = Field(default="#176858", pattern=r"^#[0-9a-fA-F]{6}$")
-    default_language: str = Field(default="en", pattern="^(en|ar)$")
+    default_language: str = Field(default="ar", pattern="^(en|ar)$")
     logo_key: str = ""

@@ -6,6 +6,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 
 import { useTranslations } from "next-intl";
 import Login from "./Login";
+import UserManagement from "./UserManagement";
 import DashboardView, { Dashboard } from "./Dashboard";
 import ProjectWorkspace from "./ProjectWorkspace";
 import { useEffect, useState, useCallback } from "react";
@@ -19,18 +20,19 @@ import {
   Search,
   Menu,
   X,
+  Users,
 } from "lucide-react";
-import { api, Project, Output, Detail, Run } from "./api";
+import { api, Project, Output, Detail, Run, Account } from "./api";
 import { ProjectList, OutputList, title } from "./shared";
 import { ProjectForm } from "./ProjectForms";
 import OutputReview from "./OutputReview";
 import Settings, { Config } from "./Settings";
 type Page =
-  "dashboard" | "projects" | "create" | "outputs" | "settings" | "project";
+  "dashboard" | "projects" | "create" | "outputs" | "settings" | "project" | "users";
 export default function Workspace() {
   const tr = useTranslations();
 
-  const [user, setUser] = useState<string | null>(null),
+  const [user, setUser] = useState<Account | null>(null),
     [ready, setReady] = useState(false),
     [page, setPage] = useState<Page>("dashboard"),
     [busy, setBusy] = useState(false),
@@ -80,9 +82,10 @@ export default function Workspace() {
       setReview(null);
     };
     window.addEventListener("session-expired", expired);
-    api<{ email: string }>("/auth/me")
+    api<Account>("/auth/me")
       .then((u) => {
-        setUser(u.email);
+        setUser(u);
+        setPage(u.role === "admin" ? "users" : "dashboard");
         return refresh();
       })
       .catch(() => {})
@@ -98,7 +101,7 @@ export default function Workspace() {
   const openProject = async (id: string) => {
     setDetail(await api<Detail>("/projects/" + id));
     setPage("project");
-    setTab("overview");
+    setTab("auction");
     setReview(null);
   };
   const reloadProject = async () => {
@@ -123,13 +126,14 @@ export default function Workspace() {
     return (
       <Login
         run={run}
-        setUser={setUser}
+        setUser={(account) => { setUser(account); setPage(account.role === "admin" ? "users" : "dashboard"); }}
         refresh={refresh}
         error={error ? errorMessage(error) : ""}
         busy={busy}
       />
     );
   const heading: Record<Page, [string, string]> = {
+    users: [tr("flow.adminHome"), tr("flow.usersHelp")],
     dashboard: [
       tr("ui.your_workspace_at_a_glance"),
       tr("ui.turn_project_data_into_polished_approved_deliverables"),
@@ -162,7 +166,7 @@ export default function Workspace() {
           <span className="brand-symbol">a</span>atlas
           <span className="brand-tag">{tr("ui.workspace_upper")}</span>
         </div>
-        <p className="nav-label">{tr("ui.workspace_upper")}</p>
+        <p className="nav-label">{tr("flow.authorArea")}</p>
         <nav>
           {(
             [
@@ -202,19 +206,22 @@ export default function Workspace() {
             <br />
             <strong>{tr("ui.starts_with_good_data")}</strong>
           </div>
+          {user.role === "admin" && <>
+          <p className="nav-label">{tr("flow.adminArea")}</p>
+          <button className={page === "users" ? "active" : ""} onClick={() => navigate("users")}><Users size={18}/>{tr("flow.users")}</button>
           <button
             className={page === "settings" ? "active" : ""}
             onClick={() => navigate("settings")}
           >
             <SettingsIcon size={18} />
             {tr("ui.settings")}
-          </button>
+          </button></>}
           <div className="account">
             <div className="avatar">{tr("ui.ad_upper")}</div>
             <div>
-              <strong>{tr("ui.administrator")}</strong>
-              <small title={user} dir="ltr">
-                {user}
+              <strong>{tr(user.role === "admin" ? "flow.adminRole" : "flow.userRole")}</strong>
+              <small title={user.email} dir="ltr">
+                {user.email}
               </small>
             </div>
             <button
@@ -245,14 +252,14 @@ export default function Workspace() {
             {tr("ui.workspace")}
             <span>/</span>{" "}
             <strong>
-              {page === "dashboard" ? tr("ui.overview") : title(page)}
+              {page === "users" ? tr("flow.users") : page === "dashboard" ? tr("flow.home") : title(page)}
             </strong>
           </div>
           <div className="topbar-right">
             <LanguageSwitcher />
             <span className="environment">
               <i />
-              {tr("ui.development_templates")}
+              {tr(user.role === "admin" ? "flow.adminRole" : "flow.userRole")}
             </span>
             <div className="avatar small">{tr("ui.ad_upper")}</div>
           </div>
@@ -381,11 +388,13 @@ export default function Workspace() {
                   />
                 </>
               )}
-              {page === "settings" && config && (
+              {page === "users" && user.role === "admin" && <UserManagement run={run} busy={busy} />}
+              {page === "settings" && user.role === "admin" && config && (
                 <Settings config={config} run={run} reload={refresh} />
               )}
               {page === "project" && detail && (
                 <ProjectWorkspace
+                  key={detail.project.id}
                   detail={detail}
                   config={config}
                   types={types}

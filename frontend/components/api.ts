@@ -23,6 +23,7 @@ export async function api<T = unknown>(
   return response.json();
 }
 export const send = (body: unknown) => JSON.stringify(body);
+export type Account = { email: string; role: "admin" | "user" };
 export type Project = {
   auction?: Record<string, unknown>;
   id: string;

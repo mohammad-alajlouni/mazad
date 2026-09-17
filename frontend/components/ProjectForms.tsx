@@ -32,7 +32,7 @@ export function ProjectForm({
               method: existing ? "PUT" : "POST",
               body: send({
                 ...data,
-                ...(existing?.auction ? { auction: existing.auction } : {}),
+                ...(existing ? { auction: existing.auction } : { auction: { auction_name: data.name, auction_type: "physical", selected_cover_template_id: "infath-2", document_language: "ar" } }),
               }),
             },
           );
@@ -183,6 +183,7 @@ export function ItemForm({
           </label>
         ))}
       </div>
+      <PropertyFields existing={existing} />
       {[
         ["description", tr("ui.description")],
         ["specifications", tr("ui.specifications")],
@@ -198,8 +199,7 @@ export function ItemForm({
           />
         </label>
       ))}
-      <PropertyFields existing={existing} />
-      <label>
+      <details><summary>{tr("flow.otherTools")}</summary><label>
         {tr("ui.additional_attributes_json")}
         <textarea
           dir="ltr"
@@ -208,6 +208,7 @@ export function ItemForm({
           defaultValue={JSON.stringify(existing?.attributes || {}, null, 2)}
         />
       </label>
+      </details>
       {jsonError && <p className="error">{tr(jsonError)}</p>}
       <div className="actions">
         <button type="submit" className="primary">

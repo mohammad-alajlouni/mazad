@@ -2,7 +2,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 
 import { useTranslations } from "next-intl";
 import { ArrowRight } from "lucide-react";
-import { api, send, Run } from "./api";
+import { api, send, Run, Account } from "./api";
 export default function Login({
   run,
   setUser,
@@ -11,7 +11,7 @@ export default function Login({
   busy,
 }: {
   run: Run;
-  setUser: (email: string) => void;
+  setUser: (account: Account) => void;
   refresh: () => Promise<void>;
   error: string;
   busy: boolean;
@@ -53,11 +53,11 @@ export default function Login({
           e.preventDefault();
           const data = Object.fromEntries(new FormData(e.currentTarget));
           void run(async () => {
-            const u = await api<{ email: string }>("/auth/login", {
+            const u = await api<Account>("/auth/login", {
               method: "POST",
               body: send(data),
             });
-            setUser(u.email);
+            setUser(u);
             await refresh();
           }, tr("ui.welcome_to_your_workspace"));
         }}
@@ -75,7 +75,7 @@ export default function Login({
             dir="ltr"
             autoComplete="username"
             required
-            placeholder="admin@organization.com"
+            placeholder="name@organization.com"
           />
         </label>
         <label>
@@ -99,7 +99,7 @@ export default function Login({
           <ArrowRight size={17} />
         </button>
         <small className="muted">
-          {tr("ui.administrator_access_secure_session")}
+          {tr("flow.accountHelp")}
         </small>
       </form>
     </main>

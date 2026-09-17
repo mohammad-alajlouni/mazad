@@ -31,12 +31,18 @@ def current_user(request: Request, db=Depends(get_db)):
             algorithms=["HS256"],
         )
         user = db.get(User, claims["sub"])
-        if not user or claims.get("version") != user.token_version:
+        if not user or not user.is_active or claims.get("version") != user.token_version:
             raise ValueError()
         db.info["user_id"] = user.id
         return user
     except (jwt.InvalidTokenError, ValueError, KeyError):
         raise HTTPException(401, "Please sign in")
+
+
+def current_admin(user=Depends(current_user)):
+    if user.role != "admin":
+        raise HTTPException(403, "Administrator access required")
+    return user
 
 
 @router.post("/login")
@@ -49,7 +55,7 @@ def login(body: Login, request: Request, response: Response, db=Depends(get_db))
     if len(queue) >= 10:
         raise HTTPException(429, "Too many login attempts. Try again in five minutes.")
     user = db.scalar(select(User).where(User.email == body.email.lower()))
-    if not user or not hasher.verify(body.password, user.password_hash):
+    if not user or not user.is_active or not hasher.verify(body.password, user.password_hash):
         queue.append(timestamp)
         logging.warning("Authentication failed")
         raise HTTPException(401, "Invalid email or password")
@@ -72,12 +78,12 @@ def login(body: Login, request: Request, response: Response, db=Depends(get_db))
         max_age=28800,
         path="/",
     )
-    return {"email": user.email}
+    return {"email": user.email, "role": user.role}
 
 
 @router.get("/me")
 def me(user=Depends(current_user)):
-    return {"email": user.email}
+    return {"email": user.email, "role": user.role}
 
 
 @router.post("/logout")

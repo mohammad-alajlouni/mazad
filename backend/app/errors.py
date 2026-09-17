@@ -1,6 +1,10 @@
 """Stable public error codes; English detail is retained for API compatibility."""
 
 ERROR_CODES = {
+    "Administrator access required": "ADMIN_REQUIRED",
+    "Email already registered": "EMAIL_REGISTERED",
+    "User not found": "USER_NOT_FOUND",
+    "Cannot disable an administrator": "ADMIN_PROTECTED",
     "Too many login attempts. Try again in five minutes.": "TOO_MANY_LOGIN_ATTEMPTS_TRY_AGAIN_IN_FIVE_MINUTES",
     "Invalid email or password": "INVALID_EMAIL_OR_PASSWORD",
     "Please sign in": "PLEASE_SIGN_IN",

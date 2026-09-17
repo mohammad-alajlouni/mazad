@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import { messages, normalizeLocale } from "./messages";
 export const currentLocale = () =>
   normalizeLocale(
-    typeof document === "undefined" ? "en" : document.documentElement.lang,
+    typeof document === "undefined" ? "ar" : document.documentElement.lang,
   );
 export function translate(
   key: string,

@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
-from ..auth import current_user
+from ..auth import current_user, current_admin
 from ..config import settings
 from ..db import get_db
 from ..generation.engine import build_content
@@ -30,7 +30,7 @@ def read_settings(db=Depends(get_db)):
     }
 
 
-@router.put("/settings")
+@router.put("/settings", dependencies=[Depends(current_admin)])
 def save_settings(body: Branding, db=Depends(get_db)):
     row = db.get(SystemSetting, "global")
     old = row.data if row else {}
@@ -45,7 +45,7 @@ def save_settings(body: Branding, db=Depends(get_db)):
     return row.data
 
 
-@router.post("/settings/logo")
+@router.post("/settings/logo", dependencies=[Depends(current_admin)])
 async def logo(file: UploadFile = File(...), db=Depends(get_db)):
     key = LocalStorage().image(await upload_bytes(file))
     row = db.get(SystemSetting, "global")
