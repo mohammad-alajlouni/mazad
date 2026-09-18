@@ -177,15 +177,16 @@ for (const locale of ["en", "ar"] as const)
         .click();
       await page
         .getByLabel(t("ui.excel_workbook"))
-        .setInputFiles(path.join(root, "samples/demo-assets.xlsx"));
+        .setInputFiles(path.join(root, "samples/approved-properties.xlsx"));
+      await page.getByLabel(t("excel.city"), { exact: true }).fill("الرياض");
       await page
         .getByRole("button", { name: t("ui.preview_workbook") })
         .click();
       await expect(
-        page.getByText(t("common.importSummary", { valid: 3, invalid: 0 })),
+        page.getByText(t("excel.summary", { valid: 3, invalid: 0 })),
       ).toBeVisible();
       await page
-        .getByRole("button", { name: t("common.importButton", { count: 3 }) })
+        .getByRole("button", { name: t("excel.import", { count: 3 }) })
         .click();
       await expect(page.locator(".workflow-steps .selected")).toContainText(
         t("flow.properties"),
@@ -193,7 +194,7 @@ for (const locale of ["en", "ar"] as const)
       await expect(
         page
           .locator("tbody strong")
-          .getByText("Industrial compressor", { exact: true }),
+          .getByText("أرض · حي تجريبي 1", { exact: true }),
       ).toBeVisible();
       await page
         .getByRole("button", { name: new RegExp(t("flow.images")) })

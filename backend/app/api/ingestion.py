@@ -1,5 +1,8 @@
 import json
 from io import BytesIO
+from pathlib import Path
+
+from fastapi.responses import FileResponse
 from typing import Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
@@ -9,6 +12,7 @@ from sqlalchemy import func, select
 from ..auth import current_user
 from ..db import get_db
 from ..models import ExcelImport, ExcelImportRow, ProjectImage, ProjectItem
+from ..services.approved_excel import parse_approved_excel, identity, issue
 from ..services.ingestion import DEFAULT_MAPPING, PROPERTY_TARGETS, parse_excel
 from ..services.properties import save_item
 from ..services.storage import LocalStorage
@@ -90,6 +94,29 @@ def excel_mapping():
 async def preview_import(
     id: str, file: UploadFile = File(...), mapping: str = Form(""), db=Depends(get_db)
 ):
+    return await _preview_import(id, file, mapping, db, approved=False)
+
+
+@router.get("/booklet-import-template")
+def booklet_import_template():
+    return FileResponse(
+        Path(__file__).parents[1] / "templates" / "approved-booklet.xlsx",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename="kutayyib-booklet-template.xlsx",
+    )
+
+
+@router.post("/projects/{id}/imports/approved/preview")
+async def preview_approved_import(
+    id: str,
+    file: UploadFile = File(...),
+    city: str = Form("", max_length=100),
+    db=Depends(get_db),
+):
+    return await _preview_import(id, file, "", db, approved=True, city=city)
+
+
+async def _preview_import(id, file, mapping, db, approved, city=""):
     get_project(db, id)
     try:
         custom = json.loads(mapping) if mapping else None
@@ -97,8 +124,25 @@ async def preview_import(
         raise HTTPException(400, "Mapping must be valid JSON")
     if custom is not None and not isinstance(custom, dict):
         raise HTTPException(400, "Mapping must be a JSON object")
-    rows = parse_excel(await upload_bytes(file), file.filename or "", custom)
-    imp = ExcelImport(project_id=id, filename=(file.filename or "workbook")[:255])
+    data = await upload_bytes(file)
+    rows = (
+        parse_approved_excel(data, file.filename or "", city)
+        if approved
+        else parse_excel(data, file.filename or "", custom)
+    )
+    if approved:
+        existing = {
+            identity({"property_data": i.property_data})
+            for i in db.scalars(select(ProjectItem).where(ProjectItem.project_id == id))
+        }
+        for row in rows:
+            if identity(row["data"]) in existing:
+                row["errors"].append(issue("D8", "already_imported"))
+    imp = ExcelImport(
+        project_id=id,
+        filename=(file.filename or "workbook")[:255],
+        status="APPROVED_PREVIEW" if approved else "PREVIEW",
+    )
     db.add(imp)
     db.flush()
     for row in rows:
@@ -116,6 +160,7 @@ async def preview_import(
     db.commit()
     return {
         "id": imp.id,
+        "format": "approved" if approved else "table",
         "rows": rows,
         "columns": list({c["header"]: c for r in rows for c in r["columns"]}.values()),
         "target_fields": sorted(
@@ -147,11 +192,23 @@ def commit_import(id: str, import_id: str, db=Depends(get_db)):
     )
     if not imp or imp.project_id != id:
         raise HTTPException(404, "Import not found")
-    if imp.status != "PREVIEW":
+    if imp.status not in ("PREVIEW", "APPROVED_PREVIEW"):
         raise HTTPException(409, "This workbook preview has already been imported")
     rows = db.scalars(
         select(ExcelImportRow).where(ExcelImportRow.import_id == import_id)
     ).all()
+    if imp.status == "APPROVED_PREVIEW":
+        rows.sort(key=lambda row: row.row_number)
+        if any(row.errors for row in rows):
+            raise HTTPException(400, "Correct all workbook errors before importing")
+        existing = {
+            identity({"property_data": i.property_data})
+            for i in db.scalars(select(ProjectItem).where(ProjectItem.project_id == id))
+        }
+        if any(identity(row.data) in existing for row in rows):
+            raise HTTPException(
+                409, "Workbook properties already exist in this project"
+            )
     count = 0
     for row in rows:
         if not row.errors:

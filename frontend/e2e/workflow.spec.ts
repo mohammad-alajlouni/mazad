@@ -69,19 +69,22 @@ test("administrator completes manual and Excel input, uploads image, reviews and
     .click();
   await page
     .getByLabel("Excel workbook")
-    .setInputFiles(path.join(root, "samples/demo-assets.xlsx"));
+    .setInputFiles(path.join(root, "samples/approved-properties.xlsx"));
+  await page
+    .getByLabel("City for all workbook properties (optional)")
+    .fill("الرياض");
   await page.getByRole("button", { name: "Preview workbook" }).click();
   await expect(
-    page.getByText("3 valid rows · 0 invalid rows (will be skipped)"),
+    page.getByText("Valid properties: 3 · Sheets with errors: 0"),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Import 3 valid rows" }).click();
+  await page.getByRole("button", { name: "Import 3 properties" }).click();
   await expect(page.locator(".workflow-steps .selected")).toContainText(
     "Properties",
   );
   await expect(
     page
       .locator("tbody strong")
-      .getByText("Industrial compressor", { exact: true }),
+      .getByText("أرض · حي تجريبي 1", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: /Images and attachments/ }).click();
   await page

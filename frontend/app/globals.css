@@ -1540,3 +1540,11 @@ html:lang(ar) .brand-tag {
     font-size: 12px;
   }
 }
+
+.excel-instructions { padding-inline-start: 24px; line-height: 1.9; }
+.excel-property { border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-block: 16px; overflow-wrap: anywhere; }
+.excel-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.excel-facts dt { color: var(--muted); font-size: 12px; }
+.excel-facts dd { margin: 6px 0; }
+.excel-acknowledge { display: flex; align-items: start; gap: 10px; margin-block: 16px; }
+.excel-acknowledge input { width: auto; margin-top: 5px; }

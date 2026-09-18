@@ -141,24 +141,15 @@ for (const flow of ["manual", "excel"])
         .click();
       await page
         .getByLabel("Excel workbook")
-        .setInputFiles(path.join(root, "samples/auction-properties.xlsx"));
+        .setInputFiles(path.join(root, "samples/approved-properties.xlsx"));
+      await page
+        .getByLabel("City for all workbook properties (optional)")
+        .fill("الرياض");
       await page.getByRole("button", { name: "Preview workbook" }).click();
       await expect(
-        page.getByText("2 valid rows · 0 invalid rows (will be skipped)"),
+        page.getByText("Valid properties: 3 · Sheets with errors: 0"),
       ).toBeVisible();
-      await page
-        .getByLabel("Custom survey", { exact: true })
-        .selectOption("property.survey_link");
-      await expect(
-        page.getByRole("button", { name: "Import 2 valid rows" }),
-      ).toBeDisabled();
-      await page
-        .getByRole("button", { name: "Validate mapping again" })
-        .click();
-      await expect(
-        page.getByRole("button", { name: "Import 2 valid rows" }),
-      ).toBeEnabled();
-      await page.getByRole("button", { name: "Import 2 valid rows" }).click();
+      await page.getByRole("button", { name: "Import 3 properties" }).click();
     }
     await page.getByRole("button", { name: /Review and generate/ }).click();
     await expect(

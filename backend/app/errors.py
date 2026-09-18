@@ -1,6 +1,11 @@
 """Stable public error codes; English detail is retained for API compatibility."""
 
 ERROR_CODES = {
+    "Approved template requires .xlsx": "APPROVED_XLSX_REQUIRED",
+    "Approved workbook exceeds limits": "APPROVED_WORKBOOK_LIMIT",
+    "Approved workbook contains no properties": "APPROVED_WORKBOOK_EMPTY",
+    "Correct all workbook errors before importing": "APPROVED_WORKBOOK_ERRORS",
+    "Workbook properties already exist in this project": "APPROVED_WORKBOOK_DUPLICATE",
     "Administrator access required": "ADMIN_REQUIRED",
     "Email already registered": "EMAIL_REGISTERED",
     "User not found": "USER_NOT_FOUND",
