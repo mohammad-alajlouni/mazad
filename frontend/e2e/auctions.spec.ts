@@ -22,35 +22,30 @@ for (const flow of ["manual", "excel"])
     await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in to workspace" }).click();
     await page
-      .getByRole("button", { name: "Create project", exact: true })
+      .getByRole("button", { name: "Create auction booklet", exact: true })
       .first()
       .click();
     const name = `Auction browser ${flow} ${Date.now()}`;
-    await page.getByLabel("Project name", { exact: true }).fill(name);
+    await page.getByLabel("Booklet / auction name", { exact: true }).fill(name);
     await page.getByLabel("Reference code").fill(`AU-${flow}-${Date.now()}`);
     await page
       .locator("form")
-      .getByRole("button", { name: "Create project" })
+      .getByRole("button", { name: "Create auction booklet" })
       .click();
     await page
-      .getByRole("button", { name: "Auction setup", exact: true })
+      .getByRole("button", { name: /Auction and cover/, exact: true })
       .click();
     const auction = page.locator(".auction-workspace form").first();
     await auction
       .getByLabel("Auction name", { exact: true })
       .fill("مزاد الاختبار المتكامل");
     await auction.getByLabel("Auction type").selectOption("hybrid");
-    await auction.locator("summary").filter({ hasText: "Schedule" }).click();
     await auction
       .getByLabel("Auction date", { exact: true })
       .fill("2026-10-10");
     await auction.getByLabel("Start date", { exact: true }).fill("2026-10-10");
     await auction.getByLabel("End date", { exact: true }).fill("2026-10-12");
     await auction.getByLabel("Start time", { exact: true }).fill("16:00");
-    await auction
-      .locator("summary")
-      .filter({ hasText: "Location, platform and links" })
-      .click();
     await auction
       .getByLabel("Physical location", { exact: true })
       .fill("الرياض");
@@ -65,7 +60,7 @@ for (const flow of ["manual", "excel"])
       .getByRole("button", { name: "Save auction and cover" })
       .click();
     await expect(page.getByRole("status")).toContainText("Saved");
-    const agent = page.locator(".auction-workspace form").nth(1);
+    const agent = page.locator(".auction-workspace form").first();
     await agent.getByLabel("Name", { exact: true }).fill("وكيل البيع التجريبي");
     await agent
       .getByLabel("Description", { exact: true })
@@ -74,9 +69,9 @@ for (const flow of ["manual", "excel"])
     await expect(page.getByRole("status")).toContainText("Saved");
     if (flow === "manual") {
       for (let n = 1; n <= 2; n++) {
-        await page.getByRole("button", { name: "Items", exact: true }).click();
+        await page.getByRole("button", { name: /Properties/ }).click();
         await page
-          .getByRole("button", { name: "Add item", exact: true })
+          .getByRole("button", { name: "Add property", exact: true })
           .click();
         await page.getByLabel("Item title").fill(`عقار المتصفح ${n}`);
         await page
@@ -115,7 +110,9 @@ for (const flow of ["manual", "excel"])
           page.getByText(`عقار المتصفح ${n}`, { exact: true }),
         ).toBeVisible();
       }
-      await page.getByRole("button", { name: "Images", exact: true }).click();
+      await page
+        .getByRole("button", { name: /Images and attachments/ })
+        .click();
       await page
         .getByLabel("Attach to")
         .selectOption({ label: "عقار المتصفح 1" });
@@ -137,7 +134,10 @@ for (const flow of ["manual", "excel"])
       await expect(page.getByAltText("Uploaded project asset")).toHaveCount(2);
     } else {
       await page
-        .getByRole("button", { name: "Excel Import", exact: true })
+        .getByRole("button", {
+          name: "Import properties from Excel",
+          exact: true,
+        })
         .click();
       await page
         .getByLabel("Excel workbook")
@@ -160,7 +160,7 @@ for (const flow of ["manual", "excel"])
       ).toBeEnabled();
       await page.getByRole("button", { name: "Import 2 valid rows" }).click();
     }
-    await page.getByRole("button", { name: "Generate", exact: true }).click();
+    await page.getByRole("button", { name: /Review and generate/ }).click();
     await expect(
       page.getByText("Data is ready to generate a draft"),
     ).toBeVisible();
@@ -168,15 +168,8 @@ for (const flow of ["manual", "excel"])
       .getByLabel("Output language", { exact: true })
       .selectOption("ar");
     await page
-      .locator(".generator-option")
-      .filter({ hasText: "Project Booklet" })
-      .locator("input")
-      .check();
-    await page
-      .getByRole("button", { name: "Generate 1 draft output", exact: false })
+      .getByRole("button", { name: "Generate auction booklet", exact: true })
       .click();
-    await expect(page.locator(".output-card")).toHaveCount(1);
-    await page.locator(".output-card").click();
     await expect(page.getByTitle("Output preview")).toBeVisible();
     await page.getByRole("button", { name: "Approve output" }).click();
     const downloadPromise = page.waitForEvent("download");

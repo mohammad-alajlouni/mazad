@@ -29,30 +29,31 @@ test("administrator completes manual and Excel input, uploads image, reviews and
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
+  await page.locator(".language-switcher").selectOption("en");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in to workspace" }).click();
   await expect(
-    page.getByRole("heading", { name: "Your workspace, at a glance." }),
+    page.getByRole("heading", { name: "Account administration" }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Create project", exact: true })
+    .getByRole("button", { name: "Create auction booklet", exact: true })
     .first()
     .click();
   await page
-    .getByLabel("Project name", { exact: true })
+    .getByLabel("Booklet / auction name", { exact: true })
     .fill("Browser workflow demo");
   await page.getByLabel("Reference code").fill("BROWSER-" + Date.now());
   await page.getByLabel("Customer / entity").fill("Development demo");
   await page
     .locator("form")
-    .getByRole("button", { name: "Create project" })
+    .getByRole("button", { name: "Create auction booklet" })
     .click();
   await expect(
     page.getByRole("heading", { name: "Browser workflow demo" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Items", exact: true }).click();
-  await page.getByRole("button", { name: "Add item", exact: true }).click();
+  await page.getByRole("button", { name: /Properties/ }).click();
+  await page.getByRole("button", { name: "Add property", exact: true }).click();
   await page.getByLabel("Item title").fill("وحدة طاقة تجريبية");
   await page.getByLabel("Quantity", { exact: true }).fill("2");
   await page.getByLabel("Unit financial value").fill("1200.50");
@@ -63,7 +64,9 @@ test("administrator completes manual and Excel input, uploads image, reviews and
   await expect(
     page.getByText("وحدة طاقة تجريبية", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Excel Import", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Import properties from Excel", exact: true })
+    .click();
   await page
     .getByLabel("Excel workbook")
     .setInputFiles(path.join(root, "samples/demo-assets.xlsx"));
@@ -72,11 +75,15 @@ test("administrator completes manual and Excel input, uploads image, reviews and
     page.getByText("3 valid rows · 0 invalid rows (will be skipped)"),
   ).toBeVisible();
   await page.getByRole("button", { name: "Import 3 valid rows" }).click();
-  await expect(page.locator(".project-tabs .selected")).toHaveText("Items");
+  await expect(page.locator(".workflow-steps .selected")).toContainText(
+    "Properties",
+  );
   await expect(
-    page.getByText("Industrial compressor", { exact: true }),
+    page
+      .locator("tbody strong")
+      .getByText("Industrial compressor", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Images", exact: true }).click();
+  await page.getByRole("button", { name: /Images and attachments/ }).click();
   await page
     .getByLabel("Attach to")
     .selectOption({ label: "وحدة طاقة تجريبية" });
@@ -85,10 +92,18 @@ test("administrator completes manual and Excel input, uploads image, reviews and
     .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
   await page.getByRole("button", { name: "Upload image", exact: true }).click();
   await expect(page.getByAltText("Uploaded project asset")).toBeVisible();
-  await page.getByRole("button", { name: "Generate", exact: true }).click();
+  await page.getByRole("button", { name: /Review and generate/ }).click();
+  await page
+    .getByRole("button", { name: "Additional tools and outputs", exact: true })
+    .click();
   await page.getByRole("button", { name: "Select all eight" }).click();
-  await page.getByRole("button", { name: "Generate 8 draft outputs" }).click();
-  await expect(page.locator(".output-card")).toHaveCount(8, {
+  await page
+    .locator(".generator-option")
+    .filter({ hasText: "Project Booklet" })
+    .locator("input")
+    .uncheck();
+  await page.getByRole("button", { name: "Generate 7 draft outputs" }).click();
+  await expect(page.locator(".output-card")).toHaveCount(7, {
     timeout: 120000,
   });
   await page

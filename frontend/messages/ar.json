@@ -376,7 +376,9 @@
     "Output_edited": "تم تعديل المخرج",
     "Output_approved": "تم اعتماد المخرج",
     "Output_regenerated": "تمت إعادة إنشاء المخرج",
-    "Settings_updated": "تم تحديث الإعدادات"
+    "Settings_updated": "تم تحديث الإعدادات",
+    "User_created": "إنشاء حساب مستخدم",
+    "User_status_updated": "تحديث حالة حساب"
   },
   "auction": {
     "summary": "بيان العقارات",
@@ -400,7 +402,7 @@
     "auction_end_date": "تاريخ النهاية",
     "start_time": "وقت البداية",
     "end_time": "وقت النهاية",
-    "physical_location": "موقع المزاد",
+    "physical_location": "عنوان إقامة المزاد",
     "electronic_platform_name": "المنصة الإلكترونية",
     "license_number": "رقم الترخيص",
     "supervising_authority": "الجهة المشرفة",
@@ -436,7 +438,7 @@
     "location_link": "الموقع",
     "other_document_link": "مستندات إضافية",
     "electronic_platform_url": "منصة المزاد",
-    "auction_location_url": "موقع المزاد",
+    "auction_location_url": "رابط موقع المزاد على الخريطة",
     "booklet_url": "كتيب المزاد",
     "contact_url": "التواصل",
     "contact": "للتواصل والاستفسار",
@@ -564,6 +566,12 @@
     "officialHelp": "يشمل الكتيّب الغلاف، مقدمة المزاد وشروطه، بيانات العقارات وصورها وحدودها وعقودها، وبيانات وكيل البيع والتواصل حسب المدخلات.",
     "notSaved": "لديك تغييرات لم تُحفظ. هل تريد الانتقال وتجاهلها؟",
     "adminHome": "لوحة إدارة الحسابات",
-    "adminHelp": "إدارة المستخدمين وإعدادات المنصة منفصلة عن مساحة إنشاء الكتيّبات."
+    "adminHelp": "إدارة المستخدمين وإعدادات المنصة منفصلة عن مساحة إنشاء الكتيّبات.",
+    "role": "نوع الحساب",
+    "uploadLogo": "رفع شعار وكيل البيع",
+    "logoHelp": "اختياري: ارفع الشعار هنا وسيُحفظ مع بيانات الوكيل.",
+    "propertyNumber": "العقار {number}",
+    "complete": "مكتمل",
+    "accountStatus": "حالة الحساب"
   }
 }

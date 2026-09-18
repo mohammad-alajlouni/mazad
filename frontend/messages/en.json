@@ -376,7 +376,9 @@
     "Output_edited": "Output edited",
     "Output_approved": "Output approved",
     "Output_regenerated": "Output regenerated",
-    "Settings_updated": "Settings updated"
+    "Settings_updated": "Settings updated",
+    "User_created": "User created",
+    "User_status_updated": "User status updated"
   },
   "auction": {
     "summary": "Property summary",
@@ -436,7 +438,7 @@
     "location_link": "Location",
     "other_document_link": "Other documents",
     "electronic_platform_url": "Auction platform",
-    "auction_location_url": "Auction location",
+    "auction_location_url": "Auction map URL",
     "booklet_url": "Auction booklet",
     "contact_url": "Contact",
     "contact": "Contact and enquiries",
@@ -564,6 +566,12 @@
     "officialHelp": "The booklet includes the cover, auction introduction and terms, property details, images, boundaries, rentals and selling agent contacts based on your data.",
     "notSaved": "You have unsaved changes. Leave this step and discard them?",
     "adminHome": "Account administration",
-    "adminHelp": "User management and platform settings are separate from the booklet creation workspace."
+    "adminHelp": "User management and platform settings are separate from the booklet creation workspace.",
+    "role": "Account role",
+    "uploadLogo": "Upload selling agent logo",
+    "logoHelp": "Optional: upload the logo here. It will be saved with the agent details.",
+    "propertyNumber": "Property {number}",
+    "complete": "Complete",
+    "accountStatus": "Account status"
   }
 }

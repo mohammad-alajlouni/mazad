@@ -37,10 +37,7 @@ export default function ProjectWorkspace({
   const tr = useTranslations();
   const confirm = useConfirm();
   const [outputLanguage, setOutputLanguage] = useState(
-    String(
-      detail.project.auction?.document_language ||
-        "ar",
-    ),
+    String(detail.project.auction?.document_language || "ar"),
   );
 
   useEffect(() => {
@@ -51,18 +48,34 @@ export default function ProjectWorkspace({
   const [selected, setSelected] = useState<string[]>(["project_booklet"]);
   const [otherTools, setOtherTools] = useState(false);
   const [dirty, setDirty] = useState(false);
-  useEffect(() => { setDirty(false); }, [detail]);
+  useEffect(() => {
+    setDirty(false);
+  }, [detail]);
   const steps = ["auction", "agent", "items", "images", "generate", "outputs"];
-  const stepKeys = ["auction", "agent", "properties", "images", "review", "export"];
+  const stepKeys = [
+    "auction",
+    "agent",
+    "properties",
+    "images",
+    "review",
+    "export",
+  ];
   const stepIndex = steps.indexOf(tab === "excel import" ? "items" : tab);
   const go = async (next: string) => {
-    if (dirty && !await confirm(tr("flow.notSaved"))) return;
-    setDirty(false); setItemEditor(null); setTab(next);
+    if (dirty && !(await confirm(tr("flow.notSaved")))) return;
+    setDirty(false);
+    setItemEditor(null);
+    setTab(next);
   };
   const [auctionValid, setAuctionValid] = useState(false);
   const [useAI, setUseAI] = useState(false);
   return (
-    <div className="booklet-workflow" onChangeCapture={(event) => { if ((event.target as HTMLElement).closest("form")) setDirty(true); }}>
+    <div
+      className="booklet-workflow"
+      onChangeCapture={(event) => {
+        if ((event.target as HTMLElement).closest("form")) setDirty(true);
+      }}
+    >
       <div className="project-meta">
         <Badge status={detail.project.status} />
         <span>{detail.project.customer || tr("ui.no_client_assigned")}</span>
@@ -70,15 +83,50 @@ export default function ProjectWorkspace({
         <span>{tr("common.imagesCount", { count: detail.images.length })}</span>
       </div>
       <section className="workflow-guide" aria-label={tr("flow.steps")}>
-        <div className="workflow-title"><h2>{tr("flow.steps")}</h2><span>{tr("flow.stepCount", {number: Math.max(stepIndex, 0) + 1})}</span></div>
+        <div className="workflow-title">
+          <h2>{tr("flow.steps")}</h2>
+          <span>
+            {tr("flow.stepCount", { number: Math.max(stepIndex, 0) + 1 })}
+          </span>
+        </div>
         <nav className="workflow-steps">
-          {steps.map((step, index) => <button key={step} disabled={busy} aria-current={stepIndex === index ? "step" : undefined} className={stepIndex === index ? "selected" : ""} onClick={() => void go(step)}><span>{formatNumber(index + 1)}</span>{tr("flow." + stepKeys[index])}</button>)}
+          {steps.map((step, index) => (
+            <button
+              key={step}
+              disabled={busy}
+              aria-current={stepIndex === index ? "step" : undefined}
+              className={stepIndex === index ? "selected" : ""}
+              onClick={() => void go(step)}
+            >
+              <span>{formatNumber(index + 1)}</span>
+              {tr("flow." + stepKeys[index])}
+            </button>
+          ))}
         </nav>
         {stepIndex >= 0 && <p>{tr("flow." + stepKeys[stepIndex] + "Help")}</p>}
         <p className="muted">{tr("flow.saveFirst")}</p>
       </section>
-      {(tab === "auction" || tab === "agent") && <AuctionWorkspace key={tab} section={tab} detail={detail} run={run} reload={reloadProject} onSaved={() => { setDirty(false); setTab(tab === "auction" ? "agent" : "items"); }} />}
-      {tab === "items" && !itemEditor && <div className="flow-actions"><p>{tr("flow.propertiesHelp")}</p><button className="secondary" onClick={() => void go("excel import")}>{tr("flow.importProperties")}</button></div>}
+      {(tab === "auction" || tab === "agent") && (
+        <AuctionWorkspace
+          key={tab}
+          section={tab}
+          detail={detail}
+          run={run}
+          reload={reloadProject}
+          onSaved={() => {
+            setDirty(false);
+            setTab(tab === "auction" ? "agent" : "items");
+          }}
+        />
+      )}
+      {tab === "items" && !itemEditor && (
+        <div className="flow-actions">
+          <p>{tr("flow.propertiesHelp")}</p>
+          <button className="secondary" onClick={() => void go("excel import")}>
+            {tr("flow.importProperties")}
+          </button>
+        </div>
+      )}
       {tab === "overview" && (
         <div className="project-overview">
           <section className="panel form-panel">
@@ -263,13 +311,30 @@ export default function ProjectWorkspace({
           onDone={() => void reloadProject()}
         />
       )}
-      {tab === "outputs" && <section className="panel form-panel"><h2>{tr("flow.preview")}</h2><p>{tr("flow.exportHelp")}</p>
-        {!detail.outputs.some(o => o.output_type === "project_booklet") && <><p>{tr("flow.emptyBooklet")}</p><button className="primary" onClick={() => void go("generate")}>{tr("flow.review")}</button></>}
-        <OutputList outputs={detail.outputs.filter(o => otherTools || o.output_type === "project_booklet")} onOpen={setReview} />
-      </section>}
+      {tab === "outputs" && (
+        <section className="panel form-panel">
+          <h2>{tr("flow.preview")}</h2>
+          <p>{tr("flow.exportHelp")}</p>
+          {!detail.outputs.some((o) => o.output_type === "project_booklet") && (
+            <>
+              <p>{tr("flow.emptyBooklet")}</p>
+              <button className="primary" onClick={() => void go("generate")}>
+                {tr("flow.review")}
+              </button>
+            </>
+          )}
+          <OutputList
+            outputs={detail.outputs.filter(
+              (o) => otherTools || o.output_type === "project_booklet",
+            )}
+            onOpen={setReview}
+          />
+        </section>
+      )}
       {tab === "generate" && (
         <section className="panel form-panel">
-          {(!otherTools || Object.keys(detail.project.auction || {}).length > 0) ? (
+          {!otherTools ||
+          Object.keys(detail.project.auction || {}).length > 0 ? (
             <AuctionReview
               detail={detail}
               run={run}
@@ -279,51 +344,59 @@ export default function ProjectWorkspace({
           ) : null}
           <div className="flex-row">
             <div>
-              <h2>{tr(otherTools ? "ui.one_project_a_complete_output_set" : "flow.generate")}</h2>
-              <p className="muted">
-                {tr("flow.generateHelp")}
-              </p>
+              <h2>
+                {tr(
+                  otherTools
+                    ? "ui.one_project_a_complete_output_set"
+                    : "flow.generate",
+                )}
+              </h2>
+              <p className="muted">{tr("flow.generateHelp")}</p>
             </div>
-            {otherTools && <button
-              className="text-button"
-              onClick={() =>
-                setSelected(
-                  selected.length === types.length
-                    ? []
-                    : types.map((t) => t.key),
-                )
-              }
-            >
-              {selected.length === types.length
-                ? tr("ui.clear_selection")
-                : tr("ui.select_all_eight")}
-            </button>}
-          </div>
-          {otherTools && <div className="generation-grid">
-            {types.map((t) => (
-              <label
-                className={
-                  "generator-option " +
-                  (selected.includes(t.key) ? "checked" : "")
+            {otherTools && (
+              <button
+                className="text-button"
+                onClick={() =>
+                  setSelected(
+                    selected.length === types.length
+                      ? []
+                      : types.map((t) => t.key),
+                  )
                 }
-                key={t.key}
               >
-                <input
-                  type="checkbox"
-                  checked={selected.includes(t.key)}
-                  onChange={(e) =>
-                    setSelected(
-                      e.target.checked
-                        ? [...selected, t.key]
-                        : selected.filter((k) => k !== t.key),
-                    )
+                {selected.length === types.length
+                  ? tr("ui.clear_selection")
+                  : tr("ui.select_all_eight")}
+              </button>
+            )}
+          </div>
+          {otherTools && (
+            <div className="generation-grid">
+              {types.map((t) => (
+                <label
+                  className={
+                    "generator-option " +
+                    (selected.includes(t.key) ? "checked" : "")
                   }
-                />
-                <Layers size={21} />
-                <span>{title(t.key)}</span>
-              </label>
-            ))}
-          </div>}
+                  key={t.key}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(t.key)}
+                    onChange={(e) =>
+                      setSelected(
+                        e.target.checked
+                          ? [...selected, t.key]
+                          : selected.filter((k) => k !== t.key),
+                      )
+                    }
+                  />
+                  <Layers size={21} />
+                  <span>{title(t.key)}</span>
+                </label>
+              ))}
+            </div>
+          )}
           <label>
             {tr("common.outputLanguage")}
             <select
@@ -357,21 +430,25 @@ export default function ProjectWorkspace({
             disabled={
               !selected.length ||
               busy ||
-              ((!otherTools || Object.keys(detail.project.auction || {}).length > 0) &&
+              ((!otherTools ||
+                Object.keys(detail.project.auction || {}).length > 0) &&
                 selected.includes("project_booklet") &&
                 !auctionValid)
             }
             className="primary"
             onClick={() =>
               void run(async () => {
-                const generated = await api<Output[]>(`/projects/${detail.project.id}/generate`, {
-                  method: "POST",
-                  body: send({
-                    types: selected,
-                    use_ai: useAI,
-                    output_language: outputLanguage,
-                  }),
-                });
+                const generated = await api<Output[]>(
+                  `/projects/${detail.project.id}/generate`,
+                  {
+                    method: "POST",
+                    body: send({
+                      types: selected,
+                      use_ai: useAI,
+                      output_language: outputLanguage,
+                    }),
+                  },
+                );
                 await reloadProject();
                 setTab("outputs");
                 if (!otherTools && generated[0]) setReview(generated[0]);
@@ -381,13 +458,50 @@ export default function ProjectWorkspace({
             <Sparkles size={17} />
             {busy
               ? tr("ui.generating_documents")
-              : otherTools ? tr("common.generateButton", { count: selected.length }) : tr("flow.generate")}
+              : otherTools
+                ? tr("common.generateButton", { count: selected.length })
+                : tr("flow.generate")}
           </button>
         </section>
       )}
-      {stepIndex >= 0 && <div className="workflow-navigation"><button className="secondary" disabled={busy || stepIndex === 0} onClick={() => void go(steps[stepIndex - 1])}>{tr("flow.previous")}</button><button className="secondary" disabled={busy || stepIndex === steps.length - 1} onClick={() => void go(steps[stepIndex + 1])}>{tr("flow.next")}</button></div>}
-      <div className="additional-tools"><button className="text-button" onClick={() => { setOtherTools(!otherTools); setSelected(["project_booklet"]); }}>{tr(otherTools ? "flow.hideTools" : "flow.otherTools")}</button>
-      {otherTools && <div className="tabs">{["overview", "details", "generate", "outputs"].map(key => <button key={key} onClick={() => void go(key)}>{title(key)}</button>)}</div>}</div>
+      {stepIndex >= 0 && (
+        <div className="workflow-navigation">
+          <button
+            className="secondary"
+            disabled={busy || stepIndex === 0}
+            onClick={() => void go(steps[stepIndex - 1])}
+          >
+            {tr("flow.previous")}
+          </button>
+          <button
+            className="secondary"
+            disabled={busy || stepIndex === steps.length - 1}
+            onClick={() => void go(steps[stepIndex + 1])}
+          >
+            {tr("flow.next")}
+          </button>
+        </div>
+      )}
+      <div className="additional-tools">
+        <button
+          className="text-button"
+          onClick={() => {
+            setOtherTools(!otherTools);
+            setSelected(["project_booklet"]);
+          }}
+        >
+          {tr(otherTools ? "flow.hideTools" : "flow.otherTools")}
+        </button>
+        {otherTools && (
+          <div className="tabs">
+            {["overview", "details", "generate", "outputs"].map((key) => (
+              <button key={key} onClick={() => void go(key)}>
+                {title(key)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

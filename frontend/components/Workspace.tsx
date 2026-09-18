@@ -28,7 +28,13 @@ import { ProjectForm } from "./ProjectForms";
 import OutputReview from "./OutputReview";
 import Settings, { Config } from "./Settings";
 type Page =
-  "dashboard" | "projects" | "create" | "outputs" | "settings" | "project" | "users";
+  | "dashboard"
+  | "projects"
+  | "create"
+  | "outputs"
+  | "settings"
+  | "project"
+  | "users";
 export default function Workspace() {
   const tr = useTranslations();
 
@@ -99,9 +105,27 @@ export default function Workspace() {
     }
   }, [notice]);
   const openProject = async (id: string) => {
-    setDetail(await api<Detail>("/projects/" + id));
+    const next = await api<Detail>("/projects/" + id);
+    setDetail(next);
     setPage("project");
-    setTab("auction");
+    const a = next.project.auction || {};
+    setTab(
+      !a.auction_name ||
+        !(a.auction_date || a.auction_start_date) ||
+        !a.start_time
+        ? "auction"
+        : !next.selling_agent?.name
+          ? "agent"
+          : !next.items.length ||
+              next.items.some(
+                (i) =>
+                  !i.property_data?.property_type || !i.property_data?.city,
+              )
+            ? "items"
+            : next.outputs.some((o) => o.output_type === "project_booklet")
+              ? "outputs"
+              : "generate",
+    );
     setReview(null);
   };
   const reloadProject = async () => {
@@ -126,7 +150,10 @@ export default function Workspace() {
     return (
       <Login
         run={run}
-        setUser={(account) => { setUser(account); setPage(account.role === "admin" ? "users" : "dashboard"); }}
+        setUser={(account) => {
+          setUser(account);
+          setPage(account.role === "admin" ? "users" : "dashboard");
+        }}
         refresh={refresh}
         error={error ? errorMessage(error) : ""}
         busy={busy}
@@ -206,20 +233,31 @@ export default function Workspace() {
             <br />
             <strong>{tr("ui.starts_with_good_data")}</strong>
           </div>
-          {user.role === "admin" && <>
-          <p className="nav-label">{tr("flow.adminArea")}</p>
-          <button className={page === "users" ? "active" : ""} onClick={() => navigate("users")}><Users size={18}/>{tr("flow.users")}</button>
-          <button
-            className={page === "settings" ? "active" : ""}
-            onClick={() => navigate("settings")}
-          >
-            <SettingsIcon size={18} />
-            {tr("ui.settings")}
-          </button></>}
+          {user.role === "admin" && (
+            <>
+              <p className="nav-label">{tr("flow.adminArea")}</p>
+              <button
+                className={page === "users" ? "active" : ""}
+                onClick={() => navigate("users")}
+              >
+                <Users size={18} />
+                {tr("flow.users")}
+              </button>
+              <button
+                className={page === "settings" ? "active" : ""}
+                onClick={() => navigate("settings")}
+              >
+                <SettingsIcon size={18} />
+                {tr("ui.settings")}
+              </button>
+            </>
+          )}
           <div className="account">
-            <div className="avatar">{tr("ui.ad_upper")}</div>
+            <div className="avatar">{user.email.slice(0, 2).toUpperCase()}</div>
             <div>
-              <strong>{tr(user.role === "admin" ? "flow.adminRole" : "flow.userRole")}</strong>
+              <strong>
+                {tr(user.role === "admin" ? "flow.adminRole" : "flow.userRole")}
+              </strong>
               <small title={user.email} dir="ltr">
                 {user.email}
               </small>
@@ -252,7 +290,11 @@ export default function Workspace() {
             {tr("ui.workspace")}
             <span>/</span>{" "}
             <strong>
-              {page === "users" ? tr("flow.users") : page === "dashboard" ? tr("flow.home") : title(page)}
+              {page === "users"
+                ? tr("flow.users")
+                : page === "dashboard"
+                  ? tr("flow.home")
+                  : title(page)}
             </strong>
           </div>
           <div className="topbar-right">
@@ -261,7 +303,9 @@ export default function Workspace() {
               <i />
               {tr(user.role === "admin" ? "flow.adminRole" : "flow.userRole")}
             </span>
-            <div className="avatar small">{tr("ui.ad_upper")}</div>
+            <div className="avatar small">
+              {user.email.slice(0, 2).toUpperCase()}
+            </div>
           </div>
         </header>
         <main className="main-content" aria-busy={busy}>
@@ -388,7 +432,9 @@ export default function Workspace() {
                   />
                 </>
               )}
-              {page === "users" && user.role === "admin" && <UserManagement run={run} busy={busy} />}
+              {page === "users" && user.role === "admin" && (
+                <UserManagement run={run} busy={busy} />
+              )}
               {page === "settings" && user.role === "admin" && config && (
                 <Settings config={config} run={run} reload={refresh} />
               )}

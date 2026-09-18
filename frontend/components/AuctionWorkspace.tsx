@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import FileInput from "./FileInput";
 import { api, send, Detail, Item, Run } from "./api";
 
 type Values = Record<string, unknown>;
@@ -235,6 +236,8 @@ export function AuctionWorkspace({
   const t = useTranslations("auction");
   const auction = detail.project.auction || {};
   const locale = useLocale();
+  const f = useTranslations("flow");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [covers, setCovers] = useState<
     { id: string; name_ar: string; name_en: string; thumbnail: string }[]
   >([]);
@@ -242,142 +245,168 @@ export function AuctionWorkspace({
     String(auction.selected_cover_template_id || "infath-2"),
   );
   useEffect(() => {
-    if (section === "auction") void run(async () => setCovers(await api("/booklet-templates")));
+    if (section === "auction")
+      void run(async () => setCovers(await api("/booklet-templates")));
   }, []);
   return (
     <div className="auction-workspace">
-      {section === "auction" && <form
-        className="panel form-panel"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const values = Object.fromEntries(new FormData(event.currentTarget));
-          delete values["cover-choice"];
-          void run(async () => {
-            await api(`/projects/${detail.project.id}`, {
-              method: "PUT",
-              body: send({
-                ...detail.project,
-                auction: { ...values, selected_cover_template_id: cover },
-              }),
-            });
-            await reload();
-            onSaved?.();
-          }, t("saved"));
-        }}
-      >
-        <h2>{t("auction_setup")}</h2>
-        <p className="muted">{t("setup_help")}</p>
-        <label>
-          {t("auction_type")}
-          <select
-            name="auction_type"
-            defaultValue={String(auction.auction_type || "physical")}
-          >
-            {["physical", "electronic", "hybrid"].map((k) => (
-              <option key={k} value={k}>
-                {t(k)}
-              </option>
-            ))}
-          </select>
-        </label>
-        {auctionGroups.map((fields, index) => (
-          <details key={index} open={index < 3}>
-            <summary>
-              {t(
-                [
-                  "auction_information",
-                  "schedule",
-                  "location_links",
-                  "legal_information",
-                ][index],
-              )}
-            </summary>
-            <Fields fields={fields} values={auction} />
-          </details>
-        ))}
-        <label>
-          {t("document_language")}
-          <select
-            name="document_language"
-            defaultValue={String(auction.document_language || "ar")}
-          >
-            <option value="ar">العربية</option>
-            <option value="en">English</option>
-          </select>
-        </label>
-        <h3>{t("select_cover")}</h3>
-        <div className="cover-options">
-          {covers.map((c) => (
-            <label
-              key={c.id}
-              className={
-                cover === c.id ? "cover-option selected" : "cover-option"
-              }
+      {section === "auction" && (
+        <form
+          className="panel form-panel"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const values = Object.fromEntries(
+              new FormData(event.currentTarget),
+            );
+            delete values["cover-choice"];
+            void run(async () => {
+              await api(`/projects/${detail.project.id}`, {
+                method: "PUT",
+                body: send({
+                  ...detail.project,
+                  auction: { ...values, selected_cover_template_id: cover },
+                }),
+              });
+              await reload();
+              onSaved?.();
+            }, t("saved"));
+          }}
+        >
+          <h2>{t("auction_setup")}</h2>
+          <p className="muted">{t("setup_help")}</p>
+          <label>
+            {t("auction_type")}
+            <select
+              name="auction_type"
+              defaultValue={String(auction.auction_type || "physical")}
             >
-              <input
-                type="radio"
-                name="cover-choice"
-                value={c.id}
-                checked={cover === c.id}
-                onChange={() => setCover(c.id)}
-              />
-              <img
-                src={c.thumbnail}
-                alt={t("cover", { number: c.id.slice(-1) })}
-              />
-              <span>{locale === "ar" ? c.name_ar : c.name_en}</span>
-            </label>
-          ))}
-        </div>
-        <button className="primary">{t("save_auction")}</button>
-      </form>}
-      {section === "agent" && <form
-        className="panel form-panel"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const values = Object.fromEntries(new FormData(event.currentTarget));
-          void run(async () => {
-            await api(`/projects/${detail.project.id}/selling-agent`, {
-              method: "PUT",
-              body: send(values),
-            });
-            await reload();
-            onSaved?.();
-          }, t("saved"));
-        }}
-      >
-        <h2>{t("selling_agent")}</h2>
-        <Fields
-          fields={[
-            "name",
-            "description",
-            "website",
-            "phone",
-            "whatsapp",
-            "contact_information",
-            "social_accounts",
-          ]}
-          values={detail.selling_agent || {}}
-        />
-        <label>
-          {t("agent_logo")}
-          <select
-            name="logo_image_id"
-            defaultValue={String(detail.selling_agent?.logo_image_id || "")}
-          >
-            <option value="">-</option>
-            {detail.images
-              .filter((i) => !i.item_id)
-              .map((image, index) => (
-                <option key={image.id} value={image.id}>
-                  {image.caption || t("image_number", { number: index + 1 })}
+              {["physical", "electronic", "hybrid"].map((k) => (
+                <option key={k} value={k}>
+                  {t(k)}
                 </option>
               ))}
-          </select>
-        </label>
-        <p className="muted">{t("upload_logo_help")}</p>
-        <button className="primary">{t("save_agent")}</button>
-      </form>}
+            </select>
+          </label>
+          {auctionGroups.map((fields, index) => (
+            <details key={index} open={index < 3}>
+              <summary>
+                {t(
+                  [
+                    "auction_information",
+                    "schedule",
+                    "location_links",
+                    "legal_information",
+                  ][index],
+                )}
+              </summary>
+              <Fields fields={fields} values={auction} />
+            </details>
+          ))}
+          <label>
+            {t("document_language")}
+            <select
+              name="document_language"
+              defaultValue={String(auction.document_language || "ar")}
+            >
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          <h3>{t("select_cover")}</h3>
+          <div className="cover-options">
+            {covers.map((c) => (
+              <label
+                key={c.id}
+                className={
+                  cover === c.id ? "cover-option selected" : "cover-option"
+                }
+              >
+                <input
+                  type="radio"
+                  name="cover-choice"
+                  value={c.id}
+                  checked={cover === c.id}
+                  onChange={() => setCover(c.id)}
+                />
+                <img
+                  src={c.thumbnail}
+                  alt={t("cover", { number: c.id.slice(-1) })}
+                />
+                <span>{locale === "ar" ? c.name_ar : c.name_en}</span>
+              </label>
+            ))}
+          </div>
+          <button className="primary">{t("save_auction")}</button>
+        </form>
+      )}
+      {section === "agent" && (
+        <form
+          className="panel form-panel"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const values = Object.fromEntries(
+              new FormData(event.currentTarget),
+            );
+            void run(async () => {
+              if (logoFile) {
+                const data = new FormData();
+                data.append("file", logoFile);
+                data.append("category", "agent_logo");
+                const image = await api<{ id: string }>(
+                  `/projects/${detail.project.id}/images`,
+                  { method: "POST", body: data },
+                );
+                values.logo_image_id = image.id;
+              }
+              await api(`/projects/${detail.project.id}/selling-agent`, {
+                method: "PUT",
+                body: send(values),
+              });
+              await reload();
+              onSaved?.();
+            }, t("saved"));
+          }}
+        >
+          <h2>{t("selling_agent")}</h2>
+          <Fields
+            fields={[
+              "name",
+              "description",
+              "website",
+              "phone",
+              "whatsapp",
+              "contact_information",
+              "social_accounts",
+            ]}
+            values={detail.selling_agent || {}}
+          />
+          <label>
+            {t("agent_logo")}
+            <select
+              name="logo_image_id"
+              defaultValue={String(detail.selling_agent?.logo_image_id || "")}
+            >
+              <option value="">-</option>
+              {detail.images
+                .filter((i) => !i.item_id)
+                .map((image, index) => (
+                  <option key={image.id} value={image.id}>
+                    {image.caption || t("image_number", { number: index + 1 })}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label>
+            {f("uploadLogo")}
+            <FileInput
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+            />
+          </label>
+          <p className="muted">{f("logoHelp")}</p>
+          <button className="primary">{t("save_agent")}</button>
+        </form>
+      )}
     </div>
   );
 }
@@ -413,6 +442,19 @@ export function AuctionReview({
     });
   }, [detail]);
   if (!review) return <p>{t("checking")}</p>;
+  const fieldLabel = (field: string) => {
+    const parts = field.split(".");
+    const key = parts.at(-1)!;
+    const label = t.has(key)
+      ? t(key)
+      : key === "properties"
+        ? f("properties")
+        : key;
+    return parts[0] === "properties" && parts.length > 1
+      ? f("propertyNumber", { number: parts[1] }) + " · " + label
+      : label;
+  };
+
   return (
     <section className="auction-review">
       <h2>{t("review")}</h2>
@@ -478,18 +520,36 @@ export function AuctionReview({
       <p className="muted">{f("requiredLegend")}</p>
       {review.errors.map((e, i) => (
         <p className="error" key={i}>
-          {t(e.code)}:{" "}
-          {t.has(e.field.split(".").at(-1)!)
-            ? t(e.field.split(".").at(-1)!)
-            : e.field}
-          {onFix && <button className="text-button" onClick={() => onFix(e.field.startsWith("selling_agent") ? "agent" : e.field.startsWith("properties") ? "items" : "auction")}>{f(e.field.startsWith("selling_agent") ? "fixAgent" : e.field.startsWith("properties") ? "fixProperties" : "fixAuction")}</button>}
+          {t(e.code)}: {fieldLabel(e.field)}
+          {onFix && (
+            <button
+              className="text-button"
+              onClick={() =>
+                onFix(
+                  e.field.startsWith("selling_agent")
+                    ? "agent"
+                    : e.field.startsWith("properties")
+                      ? "items"
+                      : "auction",
+                )
+              }
+            >
+              {f(
+                e.field.startsWith("selling_agent")
+                  ? "fixAgent"
+                  : e.field.startsWith("properties")
+                    ? "fixProperties"
+                    : "fixAuction",
+              )}
+            </button>
+          )}
         </p>
       ))}
       <details>
         <summary>{t("warnings", { count: review.warnings.length })}</summary>
         {review.warnings.map((w, i) => (
           <p key={i}>
-            {t(w.code)}: {w.field}
+            {t(w.code)}: {fieldLabel(w.field)}
           </p>
         ))}
       </details>

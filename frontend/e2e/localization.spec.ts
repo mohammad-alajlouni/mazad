@@ -56,9 +56,9 @@ for (const locale of ["en", "ar"] as const)
         .getByRole("button", { name: t("ui.sign_in_to_workspace") })
         .click();
       await expect(
-        page.getByRole("heading", { name: t("ui.your_workspace_at_a_glance") }),
+        page.getByRole("heading", { name: t("flow.adminHome") }),
       ).toBeVisible();
-      await expect(page.locator(".metric")).toHaveCount(3);
+      await expect(page.locator(".admin-grid")).toBeVisible();
       const noOverflow = async () =>
         expect(
           await page.evaluate(
@@ -129,7 +129,7 @@ for (const locale of ["en", "ar"] as const)
         await page.request.get("/api/projects").then((r) => r.json())
       ).find((p: { name: string }) => p.name === projectName).id;
       await page
-        .getByRole("button", { name: t("labels.items"), exact: true })
+        .getByRole("button", { name: new RegExp(t("flow.properties")) })
         .click();
       await page
         .getByRole("button", { name: t("ui.add_item"), exact: true })
@@ -137,6 +137,10 @@ for (const locale of ["en", "ar"] as const)
       await page.getByLabel(t("ui.item_title")).fill("مولد Generator A-01");
       await page.getByLabel(t("ui.quantity"), { exact: true }).fill("2");
       await page.getByLabel(t("ui.unit_financial_value")).fill("1200.50");
+      await page
+        .locator("form summary")
+        .filter({ hasText: t("flow.otherTools") })
+        .click();
       await page.getByLabel(t("ui.additional_attributes_json")).fill("invalid");
       await page
         .getByRole("button", { name: t("ui.save_item"), exact: true })
@@ -169,7 +173,7 @@ for (const locale of ["en", "ar"] as const)
         page.getByText("مولد Generator A-01", { exact: true }),
       ).toBeVisible();
       await page
-        .getByRole("button", { name: t("labels.excel_import"), exact: true })
+        .getByRole("button", { name: t("flow.importProperties"), exact: true })
         .click();
       await page
         .getByLabel(t("ui.excel_workbook"))
@@ -183,14 +187,16 @@ for (const locale of ["en", "ar"] as const)
       await page
         .getByRole("button", { name: t("common.importButton", { count: 3 }) })
         .click();
-      await expect(page.locator(".project-tabs .selected")).toHaveText(
-        t("labels.items"),
+      await expect(page.locator(".workflow-steps .selected")).toContainText(
+        t("flow.properties"),
       );
       await expect(
-        page.getByText("Industrial compressor", { exact: true }),
+        page
+          .locator("tbody strong")
+          .getByText("Industrial compressor", { exact: true }),
       ).toBeVisible();
       await page
-        .getByRole("button", { name: t("labels.images"), exact: true })
+        .getByRole("button", { name: new RegExp(t("flow.images")) })
         .click();
       await page
         .getByLabel(t("ui.image"), { exact: true })
@@ -202,19 +208,27 @@ for (const locale of ["en", "ar"] as const)
         page.getByAltText(t("ui.uploaded_project_asset")),
       ).toBeVisible();
       await page
-        .getByRole("button", { name: t("labels.generate"), exact: true })
+        .getByRole("button", { name: new RegExp(t("flow.review")) })
         .click();
       await page
         .getByLabel(t("common.outputLanguage"), { exact: true })
         .selectOption(locale);
       await page
+        .getByRole("button", { name: t("flow.otherTools"), exact: true })
+        .click();
+      await page
         .getByRole("button", { name: t("ui.select_all_eight") })
         .click();
+      await page
+        .locator(".generator-option")
+        .filter({ hasText: t("labels.project_booklet") })
+        .locator("input")
+        .uncheck();
       await noOverflow();
       await page
-        .getByRole("button", { name: t("common.generateButton", { count: 8 }) })
+        .getByRole("button", { name: t("common.generateButton", { count: 7 }) })
         .click();
-      await expect(page.locator(".output-card")).toHaveCount(8, {
+      await expect(page.locator(".output-card")).toHaveCount(7, {
         timeout: 120000,
       });
       await page

@@ -57,8 +57,8 @@ export default function Login({
               method: "POST",
               body: send(data),
             });
-            setUser(u);
             await refresh();
+            setUser(u);
           }, tr("ui.welcome_to_your_workspace"));
         }}
       >
@@ -98,9 +98,7 @@ export default function Login({
           {busy ? tr("ui.signing_in") : tr("ui.sign_in_to_workspace")}{" "}
           <ArrowRight size={17} />
         </button>
-        <small className="muted">
-          {tr("flow.accountHelp")}
-        </small>
+        <small className="muted">{tr("flow.accountHelp")}</small>
       </form>
     </main>
   );
