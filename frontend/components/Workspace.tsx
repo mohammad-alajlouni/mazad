@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import Login from "./Login";
 import UserManagement from "./UserManagement";
 import DashboardView, { Dashboard } from "./Dashboard";
+import BannerWorkspace, { BannerCreate } from "./BannerWorkspace";
 import ProjectWorkspace from "./ProjectWorkspace";
 import { useEffect, useState, useCallback } from "react";
 import {
@@ -34,7 +35,9 @@ type Page =
   | "outputs"
   | "settings"
   | "project"
-  | "users";
+  | "users"
+  | "banners"
+  | "banner-create";
 export default function Workspace() {
   const tr = useTranslations();
 
@@ -67,7 +70,7 @@ export default function Workspace() {
     setProjects(p);
     setOutputs(o);
     setConfig(c);
-    setTypes(t);
+    setTypes(t.filter((kind) => kind.key !== "banners"));
   }, []);
   const run: Run = async (fn, success) => {
     setBusy(true);
@@ -160,6 +163,8 @@ export default function Workspace() {
       />
     );
   const heading: Record<Page, [string, string]> = {
+    banners: [tr("banner.home"), tr("banner.independent")],
+    "banner-create": [tr("banner.create"), tr("banner.independent")],
     users: [tr("flow.adminHome"), tr("flow.usersHelp")],
     dashboard: [
       tr("ui.your_workspace_at_a_glance"),
@@ -183,7 +188,9 @@ export default function Workspace() {
     ],
     project: [
       detail?.project.name || tr("ui.project"),
-      tr("ui.one_source_of_truth_for_every_output"),
+      detail?.project.workspace_type === "banners"
+        ? tr("banner.independent")
+        : tr("ui.one_source_of_truth_for_every_output"),
     ],
   };
   return (
@@ -204,6 +211,7 @@ export default function Workspace() {
                 icon: LayoutDashboard,
               },
               { id: "projects", label: tr("ui.projects"), icon: FolderOpen },
+              { id: "banners", label: tr("banner.home"), icon: Files },
               { id: "create", label: tr("ui.create_project"), icon: Plus },
               { id: "outputs", label: tr("ui.outputs"), icon: Files },
             ] as const
@@ -211,7 +219,13 @@ export default function Workspace() {
             <button
               key={n.id}
               className={
-                page === n.id || (n.id === "projects" && page === "project")
+                page === n.id ||
+                (page === "project" &&
+                  n.id ===
+                    (detail?.project.workspace_type === "banners"
+                      ? "banners"
+                      : "projects")) ||
+                (page === "banner-create" && n.id === "banners")
                   ? "active"
                   : ""
               }
@@ -221,7 +235,10 @@ export default function Workspace() {
               {n.label}
               {n.id === "projects" && (
                 <span className="nav-count">
-                  {formatNumber(projects.length)}
+                  {formatNumber(
+                    projects.filter((p) => p.workspace_type !== "banners")
+                      .length,
+                  )}
                 </span>
               )}
             </button>
@@ -295,7 +312,12 @@ export default function Workspace() {
                 ? tr("flow.users")
                 : page === "dashboard"
                   ? tr("flow.home")
-                  : title(page)}
+                  : page === "banners" ||
+                      page === "banner-create" ||
+                      (page === "project" &&
+                        detail?.project.workspace_type === "banners")
+                    ? tr("banner.home")
+                    : title(page)}
             </strong>
           </div>
           <div className="topbar-right">
@@ -376,7 +398,10 @@ export default function Workspace() {
                     <h2>
                       {tr("ui.all_projects")}{" "}
                       <span className="count">
-                        {formatNumber(projects.length)}
+                        {formatNumber(
+                          projects.filter((p) => p.workspace_type !== "banners")
+                            .length,
+                        )}
                       </span>
                     </h2>
                     <label className="search">
@@ -390,14 +415,45 @@ export default function Workspace() {
                     </label>
                   </div>
                   <ProjectList
-                    projects={projects.filter((p) =>
-                      (p.name + " " + p.code + " " + p.customer)
-                        .toLowerCase()
-                        .includes(query.toLowerCase()),
+                    projects={projects.filter(
+                      (p) =>
+                        p.workspace_type !== "banners" &&
+                        (p.name + " " + p.code + " " + p.customer)
+                          .toLowerCase()
+                          .includes(query.toLowerCase()),
                     )}
                     onOpen={(id) => void run(() => openProject(id))}
                   />
                 </section>
+              )}
+              {page === "banners" && (
+                <section className="panel form-panel">
+                  <div className="flex-row">
+                    <h2>{tr("banner.home")}</h2>
+                    <button
+                      className="primary"
+                      onClick={() => navigate("banner-create")}
+                    >
+                      {tr("banner.create")}
+                    </button>
+                  </div>
+                  <p>{tr("banner.independent")}</p>
+                  <ProjectList
+                    projects={projects.filter(
+                      (p) => p.workspace_type === "banners",
+                    )}
+                    onOpen={(id) => void run(() => openProject(id))}
+                  />
+                </section>
+              )}
+              {page === "banner-create" && (
+                <BannerCreate
+                  run={run}
+                  onDone={(id) => {
+                    void openProject(id);
+                    void refresh();
+                  }}
+                />
               )}
               {page === "create" && (
                 <ProjectForm
@@ -427,7 +483,9 @@ export default function Workspace() {
                   </div>
                   <OutputList
                     outputs={outputs.filter(
-                      (o) => filter === "ALL" || o.status === filter,
+                      (o) =>
+                        o.output_type !== "banners" &&
+                        (filter === "ALL" || o.status === filter),
                     )}
                     onOpen={setReview}
                   />
@@ -439,20 +497,31 @@ export default function Workspace() {
               {page === "settings" && user.role === "admin" && config && (
                 <Settings config={config} run={run} reload={refresh} />
               )}
-              {page === "project" && detail && (
-                <ProjectWorkspace
-                  key={detail.project.id}
-                  detail={detail}
-                  config={config}
-                  types={types}
-                  busy={busy}
-                  run={run}
-                  tab={tab}
-                  setTab={setTab}
-                  reloadProject={reloadProject}
-                  setReview={setReview}
-                />
-              )}
+              {page === "project" &&
+                detail &&
+                (detail.project.workspace_type === "banners" ? (
+                  <BannerWorkspace
+                    key={detail.project.id}
+                    detail={detail}
+                    busy={busy}
+                    run={run}
+                    reloadProject={reloadProject}
+                    setReview={setReview}
+                  />
+                ) : (
+                  <ProjectWorkspace
+                    key={detail.project.id}
+                    detail={detail}
+                    config={config}
+                    types={types}
+                    busy={busy}
+                    run={run}
+                    tab={tab}
+                    setTab={setTab}
+                    reloadProject={reloadProject}
+                    setReview={setReview}
+                  />
+                ))}
             </>
           )}
           <footer className="workspace-footer">

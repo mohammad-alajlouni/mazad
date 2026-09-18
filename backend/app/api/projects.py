@@ -26,13 +26,18 @@ def dashboard(db=Depends(get_db)):
         "total_projects": db.scalar(
             select(func.count())
             .select_from(Project)
-            .where(Project.owner_id == db.info.get("user_id"))
+            .where(
+                Project.owner_id == db.info.get("user_id"),
+                Project.workspace_type == "booklet",
+            )
         ),
         "draft_projects": db.scalar(
             select(func.count())
             .select_from(Project)
             .where(
-                Project.status == "DRAFT", Project.owner_id == db.info.get("user_id")
+                Project.status == "DRAFT",
+                Project.owner_id == db.info.get("user_id"),
+                Project.workspace_type == "booklet",
             )
         ),
         "approved_outputs": db.scalar(
@@ -42,11 +47,15 @@ def dashboard(db=Depends(get_db)):
             .where(
                 GeneratedOutput.status == "APPROVED",
                 Project.owner_id == db.info.get("user_id"),
+                Project.workspace_type == "booklet",
             )
         ),
         "projects": db.scalars(
             select(Project)
-            .where(Project.owner_id == db.info.get("user_id"))
+            .where(
+                Project.owner_id == db.info.get("user_id"),
+                Project.workspace_type == "booklet",
+            )
             .order_by(Project.created_at.desc())
             .limit(6)
         ).all(),
@@ -123,6 +132,8 @@ def project_detail(id: str, db=Depends(get_db)):
 @router.put("/projects/{id}")
 def update_project(id: str, body: ProjectInput, db=Depends(get_db)):
     p = get_project(db, id, True)
+    if body.workspace_type != p.workspace_type:
+        raise HTTPException(400, "Workspace type cannot be changed")
     for k, v in body.model_dump(mode="json").items():
         if k == "auction" and v is None:
             continue

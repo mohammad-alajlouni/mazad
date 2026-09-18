@@ -1,0 +1,58 @@
+<!doctype html><html lang="{{ output_language }}" dir="{{ 'rtl' if output_language=='ar' else 'ltr' }}"><head><meta charset="utf-8">
+{% set b=banner %}{% set a=project.auction %}{% set ar=output_language=='ar' %}{% set square=b.layout=='square' %}{% set wide=b.layout=='panoramic' %}{% set unit=b.width_mm/300 %}
+<style>
+@font-face{font-family:Ruaq;src:url('{{ asset('RuaqArabic-Medium.ttf') }}')}@font-face{font-family:Ruaq;src:url('{{ asset('RuaqArabic-Bold.ttf') }}');font-weight:700}
+@page{size:{{ b.width_mm }}mm {{ b.height_mm }}mm;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Ruaq,sans-serif;color:#171d49}.board{width:{{ b.width_mm }}mm;height:{{ b.height_mm }}mm;position:relative;break-before:page;overflow:hidden}.board:first-child{break-before:auto}
+.hero{position:absolute;top:4%;left:4%;width:92%;height:{{ 70 if square else 58 if not wide else 44 }}%;background:#12a4a4;color:white;}
+.rail{position:absolute;right:0;top:0;width:{{ 26 if square else 18 if not wide else 14 }}%;height:100%;background:#171d49;text-align:center;padding:{{ 4*unit }}mm}
+.infath{width:94%;height:{{ 43*unit if square else 31*unit if not wide else 22*unit }}mm;object-fit:contain}
+.headline{position:absolute;right:{{ 29 if square else 21 if not wide else 16 }}%;top:{{ 3 if square else 1 }}%;width:{{ 66 if square else 54 if not wide else 66 }}%;font-size:{{ (29 if square else 27 if not wide else 22)*unit }}pt;line-height:1.35;font-weight:700;text-align:center;margin:0}
+.legal{position:absolute;bottom:{{ 22 if square else 6 }}%;right:{{ 29 if square else 21 if not wide else 16 }}%;width:{{ 66 if square else 72 if not wide else 67 }}%;text-align:center;font-size:{{ (4.5 if square else 5)*unit }}pt;line-height:1.5;overflow-wrap:anywhere}
+.qr-block{position:absolute;left:3%;top:{{ 80 if square else 9 }}%;width:{{ 36 if square else 24 if not wide else 16 }}%;display:flex;align-items:center;gap:{{ 2*unit }}mm;text-align:center;font-size:{{ (10 if square else 14 if not wide else 9)*unit }}pt;line-height:1.3}
+.qr-block img{width:{{ (25 if square else 35 if not wide else 16)*unit }}mm;height:{{ (25 if square else 35 if not wide else 16)*unit }}mm;background:white;padding:{{ unit }}mm}
+.property-type{position:absolute;left:3%;bottom:{{ 4 if square else 9 }}%;background:#087b8e;padding:{{ 2*unit }}mm {{ 3*unit }}mm;width:{{ 35 if square else 29 if not wide else 18 }}%;text-align:center;font-size:{{ (11 if square else 14 if not wide else 7)*unit }}pt;line-height:1.25;overflow-wrap:anywhere}
+.schedule{font-size:{{ (5 if square else 4.8)*unit }}pt;line-height:1.6;overflow-wrap:anywhere}.schedule p{margin:{{ 2*unit }}mm 0}.schedule strong{display:block}.rail .auction-logo,.rail .agent-logo{width:90%;height:{{ 17*unit }}mm;object-fit:contain;margin-top:{{ 3*unit }}mm;background:white}.rail .agent-name{font-size:{{ 4*unit }}pt;line-height:1.3}
+.lower{position:absolute;left:4%;top:{{ 77 if square else 65 if not wide else 53 }}%;width:92%;height:{{ 12 if square else 15 if not wide else 23 }}%;display:flex;align-items:center;justify-content:space-between;gap:{{ 3*unit }}mm;direction:ltr}
+.phone{font-size:{{ (25 if square else 23 if not wide else 16)*unit }}pt;line-height:1;letter-spacing:{{ unit }}pt;white-space:nowrap;max-width:54%}
+.licence{text-align:center;max-width:20%;font-size:{{ 7*unit }}pt;overflow-wrap:anywhere}.licence small{display:block;color:#12a4a4;font-size:{{ 4.5*unit }}pt}
+.brand-logos{display:flex;align-items:center;gap:{{ 2*unit }}mm;max-width:28%;font-size:{{ 4.5*unit }}pt;text-align:center}.brand-logos img{width:{{ 29*unit }}mm;height:{{ 17*unit }}mm;object-fit:contain}.brand-logos .name{max-width:{{ 25*unit }}mm;overflow-wrap:anywhere}
+.wide-schedule{position:absolute;left:39%;top:53%;width:19%;font-size:{{ 4.3*unit }}pt;text-align:center;line-height:1.5}.wide-schedule p{margin:0}
+.facts{position:absolute;bottom:{{ 2 if square else 3 }}%;left:4%;width:92%;display:table;table-layout:fixed;direction:rtl;text-align:center}.fact{display:table-cell;padding:0 {{ 1.5*unit }}mm}.fact .label{display:block;background:#171d49;color:white;padding:{{ 1.2*unit }}mm 0;font-size:{{ (4.5 if square else 5)*unit }}pt;line-height:1.25}.fact .value{display:block;font-size:{{ (4.5 if square else 5)*unit }}pt;padding-top:{{ 1.4*unit }}mm;line-height:1.3;overflow-wrap:anywhere}
+
+/* Absolute blocks keep print geometry independent of RTL flex implementations. */
+.headline{font-size:{{ (88 if square else 53 if not wide else 36)*unit*(1 if ar else 0.58) }}pt;line-height:1.18;text-align:{{ 'right' if ar else 'center' }}}
+.legal{font-size:{{ (8 if square else 8 if not wide else 5.8)*unit }}pt}
+.qr-block{display:block;right:auto;left:{{ 42 if square else 3 }}%;width:{{ 29 if square else 28 if not wide else 15 }}%;height:{{ 25*unit }}mm;font-size:{{ (19 if square else 21 if not wide else 8)*unit }}pt;direction:ltr}
+.qr-block a{position:absolute;left:0;top:0;display:block}
+.qr-block span{position:absolute;left:{{ 29*unit if square else 38*unit if not wide else 18*unit }}mm;top:0;white-space:nowrap}
+.property-type{font-size:{{ (20 if square else 22 if not wide else 9)*unit }}pt}
+.schedule{font-size:{{ (10 if square else 9)*unit }}pt;line-height:1.45}
+.rail .auction-logo,.rail .agent-logo{height:{{ 20*unit }}mm}.rail .agent-name{font-size:{{ 7*unit }}pt}
+.lower{display:block;direction:ltr}
+.phone{position:absolute;left:0;top:10%;max-width:none;font-size:{{ (60 if square else 44 if not wide else 25)*unit*([1,10/(a.auction_contact_number|length)]|min) }}pt;letter-spacing:0}
+.licence{position:absolute;right:{{ 0 if square else 34 if not wide else 77 }}%;top:15%;width:{{ 24 if square else 18 if not wide else 20 }}%;max-width:none;font-size:{{ (20 if square else 15 if not wide else 7)*unit }}pt}
+.licence small{font-size:{{ (11 if square else 8 if not wide else 5)*unit }}pt}
+.brand-logos{position:absolute;right:0;top:0;width:30%;max-width:none;display:table;table-layout:fixed}.brand-logos>div{display:table-cell;width:50%;text-align:center}.brand-logos .name{max-width:none;font-size:{{ 7*unit }}pt}
+{% if wide %}.headline{top:12%}.phone{left:auto;right:0}.brand-logos{right:auto;left:23%;width:23%}.brand-logos img{width:{{ 24*unit }}mm}.wide-schedule{left:46%;width:20%;font-size:{{ 6*unit }}pt}{% endif %}
+.fact .label{font-size:{{ (7 if square else 8 if not wide else 6)*unit }}pt}.fact .value{font-size:{{ (7 if square else 8 if not wide else 6)*unit }}pt}
+</style></head><body>
+{% macro schedule() %}
+{% if a.auction_type in ['electronic','hybrid'] %}<p><strong>{{ 'يبدأ' if ar else 'Starts' }}</strong><span dir="ltr">{{ a.auction_start_date }} {{ a.start_time[:5] }}</span></p><p><strong>{{ 'ينتهي' if ar else 'Ends' }}</strong><span dir="ltr">{{ a.auction_end_date }} {{ a.end_time[:5] }}</span></p><p>{{ a.electronic_platform_name }}</p>{% else %}<p dir="ltr">{{ a.auction_date }}</p><p dir="ltr">{{ a.start_time[:5] }}</p>{% endif %}
+{% if a.auction_type in ['physical','hybrid'] %}<p>{{ a.physical_location }}</p>{% endif %}
+{% endmacro %}
+{% for item in items %}<section class="board">
+<div class="hero">
+<div class="rail"><img class="infath" src="{{ asset('infath-white.png') }}">{% if not wide %}<div class="schedule">{{ schedule() }}</div>{% endif %}{% if square %}<img class="auction-logo" src="{{ project.auction_logo }}"><div class="agent-name">{{ project.selling_agent.name }}</div><img class="agent-logo" src="{{ project.agent_logo }}">{% endif %}</div>
+<h1 class="headline">{% if ar %}{% if wide %}للبيع بالمزاد العلني{% elif square %}للبيع<br>بالمزاد<br>العلني{% else %}للبيع<br>بالمزاد العلني{% endif %}{% else %}For sale<br>by public auction{% endif %}</h1>
+<div class="legal">{{ a.legal_announcement_text }} {{ a.court_decision_text }}</div>
+<div class="qr-block"><a href="{{ a.booklet_url }}"><img src="{{ qr(a.booklet_url) }}"></a><span>{{ 'كتيب' if ar else 'Auction' }}<br>{{ 'المزاد' if ar else 'booklet' }}</span></div>
+<div class="property-type">{{ item.property_data.property_type }}</div>
+</div>
+<div class="lower" {% if wide %}style="direction:rtl"{% endif %}>
+<div class="phone" dir="ltr">{{ a.auction_contact_number }}</div>
+{% if not square %}<div class="brand-logos"><div><img src="{{ project.auction_logo }}"><div class="name">{{ a.auction_name }}</div></div><div><img src="{{ project.agent_logo }}"><div class="name">{{ project.selling_agent.name }}</div></div></div>{% endif %}
+<div class="licence"><small>{{ bt('license_number') }}</small><span dir="ltr">{{ a.license_number }}</span></div>
+</div>
+{% if wide %}<div class="wide-schedule">{{ schedule() }}</div>{% endif %}
+<div class="facts">{% for key in (['district','area','plan_number','plot_number','deed_number','execution_request_number'] if wide else ['district','usage','area','plan_number','plot_number','deed_number','execution_request_number']) %}<div class="fact"><span class="label">{{ bt(key) }}</span><span class="value" dir="{{ item.property_data.get(key)|direction }}">{{ display(item.property_data.get(key)) }}</span></div>{% endfor %}</div>
+</section>{% endfor %}</body></html>

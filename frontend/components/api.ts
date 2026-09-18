@@ -25,6 +25,8 @@ export async function api<T = unknown>(
 export const send = (body: unknown) => JSON.stringify(body);
 export type Account = { email: string; role: "admin" | "user" };
 export type Project = {
+  workspace_type?: "booklet" | "banners";
+  banner_config?: { size: string; property_ids: string[] };
   auction?: Record<string, unknown>;
   id: string;
   name: string;
@@ -53,6 +55,7 @@ export type Item = {
   attributes: Record<string, unknown>;
 };
 export type Output = {
+  banner?: { size: string; scale: string } | null;
   official_booklet?: boolean;
   id: string;
   project_id: string;

@@ -330,7 +330,11 @@
     "APPROVED_WORKBOOK_LIMIT": "Template limit exceeded: at most 100 sheets, 200 rows and 30 columns per sheet.",
     "APPROVED_WORKBOOK_EMPTY": "The template is empty. Enter at least one property and upload again.",
     "APPROVED_WORKBOOK_ERRORS": "Correct every workbook error and preview again. No properties were saved.",
-    "APPROVED_WORKBOOK_DUPLICATE": "Some properties already exist in this project. Nothing was imported; remove duplicate sheets and upload again."
+    "APPROVED_WORKBOOK_DUPLICATE": "Some properties already exist in this project. Nothing was imported; remove duplicate sheets and upload again.",
+    "WORKSPACE_TYPE_FIXED": "Workspace type cannot be changed.",
+    "BANNER_WORKSPACE_REQUIRED": "Use the banner workspace to generate banners only.",
+    "INVALID_BANNER_SELECTION": "Invalid property selection. Select the properties again.",
+    "COMPLETE_BANNER_REVIEW": "Complete the banner review before generating."
   },
   "fields": {
     "name": "Project name",
@@ -579,7 +583,8 @@
     "logoHelp": "Optional: upload the logo here. It will be saved with the agent details.",
     "propertyNumber": "Property {number}",
     "complete": "Complete",
-    "accountStatus": "Account status"
+    "accountStatus": "Account status",
+    "saveAuctionOnly": "Save auction and continue"
   },
   "excel": {
     "title": "Import properties from the approved template",
@@ -629,5 +634,51 @@
     },
     "city": "City for all workbook properties (optional)",
     "cityHelp": "The template has no city cell. Set a common city here, or complete it separately for each property after import."
+  },
+  "banner": {
+    "home": "Banners",
+    "create": "Create banner campaign",
+    "independent": "A separate workspace for auction boards, with its own data, templates and outputs.",
+    "campaignName": "Banner campaign name",
+    "reference": "Campaign reference",
+    "steps": "Banner production steps",
+    "step": {
+      "template": "Template and size",
+      "auction": "Auction details",
+      "items": "Properties",
+      "images": "Agent and logos",
+      "generate": "Review and generate",
+      "outputs": "Generated banners"
+    },
+    "chooseTemplate": "Choose a board layout and size",
+    "referenceHelp": "Illustrations from the supplied Infath guide. Click to view the full reference; your campaign data and logos replace the examples.",
+    "layouts": {
+      "panoramic": "Panoramic board",
+      "landscape": "Landscape board",
+      "square": "Square board"
+    },
+    "referenceImage": "{layout} reference",
+    "guidePage": "Identity guide — page {page}",
+    "printScale": "Listed sizes are final dimensions in metres. PDFs use a 1:10 scale; print at 1000%. PNGs are 2400-pixel-wide previews, not full-size print files.",
+    "selectProperties": "Included properties",
+    "allProperties": "No selection means one banner per property. Select specific properties to include only those.",
+    "resetSelection": "Include all properties",
+    "saveTemplate": "Save template and continue",
+    "propertiesHelp": "Add properties manually or with the approved spreadsheet. Complete the execution request number, usage and board details for each property.",
+    "logos": "Board logos",
+    "logosHelp": "Upload the selling agent logo in the form above and save the agent. Upload the auction logo below using the Auction logo category, without attaching it to a property.",
+    "review": "Banner readiness review",
+    "ready": "Ready to generate {count} banners.",
+    "missing": "Complete these details before generation. Select a field to open its section.",
+    "generate": "Generate banners",
+    "exportHelp": "Review and approve the output to download a PDF and a PNG for each property. Changes to campaign data require regeneration and approval.",
+    "fields": {
+      "properties": "Add at least one property",
+      "agent_name": "Selling agent name",
+      "property_selection": "Correct property selection",
+      "property_limit": "Select no more than 100 properties"
+    },
+    "tooLong": "{field}: shorten to {limit} characters to fit the board.",
+    "auctionHelp": "Enter the legal announcement, booklet link, contact number and schedule. Board data is independent of booklet projects."
   }
 }

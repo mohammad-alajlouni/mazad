@@ -227,9 +227,9 @@ for (const locale of ["en", "ar"] as const)
         .uncheck();
       await noOverflow();
       await page
-        .getByRole("button", { name: t("common.generateButton", { count: 7 }) })
+        .getByRole("button", { name: t("common.generateButton", { count: 6 }) })
         .click();
-      await expect(page.locator(".output-card")).toHaveCount(7, {
+      await expect(page.locator(".output-card")).toHaveCount(6, {
         timeout: 120000,
       });
       await page

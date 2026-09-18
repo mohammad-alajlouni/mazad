@@ -2,6 +2,10 @@
 
 A working administrator workspace for entering or importing project data, generating eight deliverables, reviewing drafts, approving them, and downloading final files. Next.js/React/TypeScript/Tailwind frontend; FastAPI/Pydantic/SQLAlchemy backend; PostgreSQL with JSONB metadata. No developer-owned cloud service is required.
 
+## Auction authoring workspaces
+
+Booklets and banners have separate navigation, campaign data and generation flows. See the [approved Excel template](docs/approved-excel-template.md) and [banner workflow, sizes and rendered examples](docs/banner-workspace.md).
+
 ## Quick start with Docker
 
 Requires Docker Engine/Desktop with Compose v2.

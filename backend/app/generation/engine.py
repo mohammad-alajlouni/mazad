@@ -161,6 +161,15 @@ def snapshot(db, project):
 
 def build_content(db, project, kind, output_language=None):
     project_data, items = snapshot(db, project)
+    if kind == "banners" and project.workspace_type == "banners":
+        from ..banner_schemas import BannerConfig
+
+        config = BannerConfig.model_validate(project.banner_config or {})
+        items = [
+            i
+            for i in items
+            if not config.property_ids or i["id"] in config.property_ids
+        ]
     reports = [
         {
             "output_type": o.output_type,
@@ -172,6 +181,10 @@ def build_content(db, project, kind, output_language=None):
         )
     ]
     content = GENERATORS[kind].build(project_data, items, reports)
+    if kind == "banners" and project.workspace_type == "banners":
+        from ..services.banners import SIZES
+
+        content["banner"] = {**SIZES[config.size], "size": config.size, "scale": "1:10"}
     branding = db.get(SystemSetting, "global")
     content["branding"] = dict(branding.data) if branding else {}
     language = (
@@ -247,6 +260,8 @@ def render(db, output):
     content = dict(output.content)
     if output.output_type == "banners" and content["project"].get("auction"):
         template_file = "infath/banners.html"
+    if content.get("banner"):
+        template_file = "infath/board.html"
     if content.get("booklet"):
         template_file = "infath/booklet.html"
     content.setdefault(
@@ -291,7 +306,13 @@ def render(db, output):
                     (
                         "png",
                         "image/png",
-                        page.get_pixmap(matrix=pymupdf.Matrix(1.3, 1.3)).tobytes("png"),
+                        page.get_pixmap(
+                            matrix=pymupdf.Matrix(
+                                2400 / page.rect.width, 2400 / page.rect.width
+                            )
+                            if content.get("banner")
+                            else pymupdf.Matrix(1.3, 1.3)
+                        ).tobytes("png"),
                     )
                 )
     if output.output_type == "social_content":

@@ -1,6 +1,10 @@
 """Stable public error codes; English detail is retained for API compatibility."""
 
 ERROR_CODES = {
+    "Workspace type cannot be changed": "WORKSPACE_TYPE_FIXED",
+    "Use the banner workspace": "BANNER_WORKSPACE_REQUIRED",
+    "Invalid banner property selection": "INVALID_BANNER_SELECTION",
+    "Complete the banner review before generation": "COMPLETE_BANNER_REVIEW",
     "Approved template requires .xlsx": "APPROVED_XLSX_REQUIRED",
     "Approved workbook exceeds limits": "APPROVED_WORKBOOK_LIMIT",
     "Approved workbook contains no properties": "APPROVED_WORKBOOK_EMPTY",

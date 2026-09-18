@@ -83,6 +83,7 @@ export default function OutputReview({
           </button>
         </div>
       </div>
+      {output.banner && <p className="notice">{tr("banner.printScale")}</p>}
       {output.status === "NEEDS_REGENERATION" && (
         <div className="notice">
           {tr(
@@ -133,8 +134,14 @@ export default function OutputReview({
           </a>
         </div>
         <aside className="panel form-panel">
-          {output.official_booklet ? (
-            <p>{tr("auction.fixed_content_help")}</p>
+          {output.official_booklet || output.banner ? (
+            <p>
+              {tr(
+                output.banner
+                  ? "banner.exportHelp"
+                  : "auction.fixed_content_help",
+              )}
+            </p>
           ) : (
             <>
               <h2>{tr("ui.review_narrative")}</h2>

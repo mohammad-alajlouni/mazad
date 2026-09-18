@@ -105,8 +105,8 @@ test("administrator completes manual and Excel input, uploads image, reviews and
     .filter({ hasText: "Project Booklet" })
     .locator("input")
     .uncheck();
-  await page.getByRole("button", { name: "Generate 7 draft outputs" }).click();
-  await expect(page.locator(".output-card")).toHaveCount(7, {
+  await page.getByRole("button", { name: "Generate 6 draft outputs" }).click();
+  await expect(page.locator(".output-card")).toHaveCount(6, {
     timeout: 120000,
   });
   await page

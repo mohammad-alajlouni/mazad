@@ -225,15 +225,18 @@ export function AuctionWorkspace({
   run,
   reload,
   section = "auction",
+  bannerMode = false,
   onSaved,
 }: {
   detail: Detail;
   run: Run;
   reload: () => Promise<void>;
   section?: "auction" | "agent";
+  bannerMode?: boolean;
   onSaved?: () => void;
 }) {
   const t = useTranslations("auction");
+  const bt = useTranslations("banner");
   const auction = detail.project.auction || {};
   const locale = useLocale();
   const f = useTranslations("flow");
@@ -245,7 +248,7 @@ export function AuctionWorkspace({
     String(auction.selected_cover_template_id || "infath-2"),
   );
   useEffect(() => {
-    if (section === "auction")
+    if (section === "auction" && !bannerMode)
       void run(async () => setCovers(await api("/booklet-templates")));
   }, []);
   return (
@@ -273,7 +276,9 @@ export function AuctionWorkspace({
           }}
         >
           <h2>{t("auction_setup")}</h2>
-          <p className="muted">{t("setup_help")}</p>
+          <p className="muted">
+            {bannerMode ? bt("auctionHelp") : t("setup_help")}
+          </p>
           <label>
             {t("auction_type")}
             <select
@@ -288,7 +293,7 @@ export function AuctionWorkspace({
             </select>
           </label>
           {auctionGroups.map((fields, index) => (
-            <details key={index} open={index < 3}>
+            <details key={index} open={bannerMode || index < 3}>
               <summary>
                 {t(
                   [
@@ -312,31 +317,37 @@ export function AuctionWorkspace({
               <option value="en">English</option>
             </select>
           </label>
-          <h3>{t("select_cover")}</h3>
-          <div className="cover-options">
-            {covers.map((c) => (
-              <label
-                key={c.id}
-                className={
-                  cover === c.id ? "cover-option selected" : "cover-option"
-                }
-              >
-                <input
-                  type="radio"
-                  name="cover-choice"
-                  value={c.id}
-                  checked={cover === c.id}
-                  onChange={() => setCover(c.id)}
-                />
-                <img
-                  src={c.thumbnail}
-                  alt={t("cover", { number: c.id.slice(-1) })}
-                />
-                <span>{locale === "ar" ? c.name_ar : c.name_en}</span>
-              </label>
-            ))}
-          </div>
-          <button className="primary">{t("save_auction")}</button>
+          {!bannerMode && (
+            <>
+              <h3>{t("select_cover")}</h3>
+              <div className="cover-options">
+                {covers.map((c) => (
+                  <label
+                    key={c.id}
+                    className={
+                      cover === c.id ? "cover-option selected" : "cover-option"
+                    }
+                  >
+                    <input
+                      type="radio"
+                      name="cover-choice"
+                      value={c.id}
+                      checked={cover === c.id}
+                      onChange={() => setCover(c.id)}
+                    />
+                    <img
+                      src={c.thumbnail}
+                      alt={t("cover", { number: c.id.slice(-1) })}
+                    />
+                    <span>{locale === "ar" ? c.name_ar : c.name_en}</span>
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+          <button className="primary">
+            {bannerMode ? f("saveAuctionOnly") : t("save_auction")}
+          </button>
         </form>
       )}
       {section === "agent" && (

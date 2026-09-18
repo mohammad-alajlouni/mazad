@@ -50,7 +50,7 @@ def invalidate(db, project):
         select(GeneratedOutput).where(GeneratedOutput.project_id == project.id)
     ):
         o.status = "NEEDS_REGENERATION"
-        if not o.content.get("booklet"):
+        if not o.content.get("booklet") and not o.content.get("banner"):
             o.approved_at = None
 
 
@@ -71,6 +71,7 @@ def output_view(db, o):
         "updated_at": o.updated_at,
         "approved_at": o.approved_at,
         "official_booklet": bool(o.content.get("booklet")),
+        "banner": o.content.get("banner"),
         "cover_id": o.content.get("booklet", {}).get("cover_id"),
         "page_manifest": [
             {"kind": p["kind"], "property_number": p.get("item", {}).get("number")}

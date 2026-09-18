@@ -53,6 +53,13 @@ async def generate(id: str, body: GenerationInput, db=Depends(get_db)):
         and not validate_project(db, p)["valid"]
     ):
         raise HTTPException(422, "Complete the auction review before generation")
+    if p.workspace_type == "banners":
+        if set(body.types) != {"banners"}:
+            raise HTTPException(400, "Use the banner workspace")
+        from ..services.banners import review_banners
+
+        if not review_banners(db, p)["valid"]:
+            raise HTTPException(422, "Complete the banner review before generation")
     result = []
     for kind in dict.fromkeys(body.types):
         template = db.scalar(select(Template).where(Template.output_type == kind))
@@ -149,7 +156,7 @@ def edit_output(id: str, body: ReviewInput, db=Depends(get_db)):
     o = get_output(db, id)
     if o.status == "NEEDS_REGENERATION":
         raise HTTPException(409, "Source data changed. Regenerate first.")
-    if o.content.get("booklet"):
+    if o.content.get("booklet") or o.content.get("banner"):
         raise HTTPException(409, "Edit auction data and regenerate the booklet")
     o.content = {**o.content, "review_text": body.review_text}
     o.status = "DRAFT"
@@ -194,6 +201,21 @@ def regenerate(id: str, db=Depends(get_db)):
             )
             db.add(o)
             db.flush()
+    if o.output_type == "banners" and p.workspace_type == "banners":
+        from ..services.banners import review_banners
+
+        if not review_banners(db, p)["valid"]:
+            raise HTTPException(422, "Complete the banner review before generation")
+        if o.approved_at:
+            o = GeneratedOutput(
+                project_id=p.id,
+                output_type=o.output_type,
+                template_id=o.template_id,
+                content={},
+                revision=p.revision,
+            )
+            db.add(o)
+            db.flush()
     o.content = build_content(db, p, o.output_type, output_language)
     o.status = "DRAFT"
     o.revision = p.revision
@@ -214,6 +236,8 @@ def generated_file(id: str, download: bool = False, db=Depends(get_db)):
         raise HTTPException(409, "Approve this output before exporting it")
     suffix = file.key.rsplit(".", 1)[-1]
     filename = f"{o.output_type}.{suffix}"
+    if o.content.get("banner"):
+        filename = f"banner-{o.content['banner']['size']}-{file.id[:8]}.{suffix}"
     if o.content.get("booklet"):
         import re
 

@@ -1,7 +1,16 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -28,13 +37,21 @@ class User(Record, Base):
     password_hash: Mapped[str] = mapped_column(Text)
     token_version: Mapped[int] = mapped_column(Integer, default=0)
     role: Mapped[str] = mapped_column(String(20), default="user", server_default="user")
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )
 
 
 class Project(Record, Base):
     __tablename__ = "projects"
     owner_id: Mapped[str | None] = mapped_column(
         ForeignKey("users.id"), nullable=True, index=True
+    )
+    workspace_type: Mapped[str] = mapped_column(
+        String(20), default="booklet", server_default="booklet"
+    )
+    banner_config: Mapped[dict] = mapped_column(
+        JSONType, default=dict, server_default="{}"
     )
     auction: Mapped[dict] = mapped_column(JSONType, default=dict)
     name: Mapped[str] = mapped_column(String(200))

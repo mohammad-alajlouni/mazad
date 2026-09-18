@@ -3,10 +3,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .banner_schemas import BannerConfig
 from .auction_schemas import AuctionData, PropertyData
 
 
 class ProjectInput(BaseModel):
+    workspace_type: Literal["booklet", "banners"] = "booklet"
+    banner_config: BannerConfig = Field(default_factory=BannerConfig)
     auction: AuctionData | None = None
     status: Literal["DRAFT", "ACTIVE", "COMPLETED"] = "DRAFT"
     name: str = Field(min_length=1, max_length=200)

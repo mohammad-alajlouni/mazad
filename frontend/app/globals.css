@@ -1548,3 +1548,4 @@ html:lang(ar) .brand-tag {
 .excel-facts dd { margin: 6px 0; }
 .excel-acknowledge { display: flex; align-items: start; gap: 10px; margin-block: 16px; }
 .excel-acknowledge input { width: auto; margin-top: 5px; }
+.banner-template-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.banner-template-card{border:1px solid var(--line);border-radius:12px;padding:14px}.banner-template-card img{width:100%;height:170px;object-fit:contain}.banner-template-card input{width:auto}.banner-property-row{display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--line);padding:14px 0;flex-wrap:wrap}.banner-property-row strong{flex:1}.banner-missing{display:block;border:0;background:#fff2df;color:#713c15;text-align:start;padding:12px;margin:5px 0;border-radius:8px;width:100%}@media(max-width:800px){.banner-template-grid{grid-template-columns:1fr}}

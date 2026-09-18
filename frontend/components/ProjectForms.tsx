@@ -31,7 +31,11 @@ export function ProjectForm({
               body: send({
                 ...data,
                 ...(existing
-                  ? { auction: existing.auction }
+                  ? {
+                      auction: existing.auction,
+                      workspace_type: existing.workspace_type,
+                      banner_config: existing.banner_config,
+                    }
                   : {
                       auction: {
                         auction_name: data.name,
