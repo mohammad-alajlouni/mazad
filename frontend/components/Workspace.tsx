@@ -142,7 +142,7 @@ export default function Workspace() {
   if (!ready)
     return (
       <div className="startup">
-        <div className="brand-symbol">a</div>
+        <div className="brand-symbol">{tr("ui.brand_symbol")}</div>
         <p>{tr("ui.opening_your_workspace")}</p>
       </div>
     );
@@ -190,7 +190,8 @@ export default function Workspace() {
     <div className="app-shell">
       <aside className={"sidebar " + (mobile ? "open" : "")}>
         <div className="brand">
-          <span className="brand-symbol">a</span>atlas
+          <span className="brand-symbol">{tr("ui.brand_symbol")}</span>
+          {tr("ui.brand_name")}
           <span className="brand-tag">{tr("ui.workspace_upper")}</span>
         </div>
         <p className="nav-label">{tr("flow.authorArea")}</p>

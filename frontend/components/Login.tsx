@@ -25,7 +25,8 @@ export default function Login({
       </div>
       <div className="login-story">
         <div className="brand">
-          <span className="brand-symbol">a</span>atlas
+          <span className="brand-symbol">{tr("ui.brand_symbol")}</span>
+          {tr("ui.brand_name")}
           <span className="brand-tag">{tr("ui.workspace_upper")}</span>
         </div>
         <div>

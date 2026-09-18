@@ -14,7 +14,7 @@ from .errors import ERROR_CODES, violations
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s"
 )
-app = FastAPI(title="Atlas Automation API", version="1.0.0")
+app = FastAPI(title="Kutayyib Automation API", version="1.0.0")
 origins = settings().cors_origins.split(",")
 app.add_middleware(
     CORSMiddleware,
