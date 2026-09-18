@@ -1,0 +1,49 @@
+name: Deploy Kutayyib
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kutayyib-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment:
+      name: production
+      url: http://148.230.111.160
+    steps:
+      - name: Configure deployment SSH credentials
+        env:
+          DEPLOY_KEY: ${{ secrets.MAZAD_DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.MAZAD_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          umask 077
+          mkdir -p "$RUNNER_TEMP/mazad-ssh"
+          printf '%s\n' "$DEPLOY_KEY" > "$RUNNER_TEMP/mazad-ssh/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$RUNNER_TEMP/mazad-ssh/known_hosts"
+      - name: Build, back up, deploy and check the live site
+        run: |
+          set -o pipefail
+          ssh -T -i "$RUNNER_TEMP/mazad-ssh/key" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/mazad-ssh/known_hosts" \
+            -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
+            root@148.230.111.160 deploy | tee "$RUNNER_TEMP/deployment.log"
+          {
+            echo '### Kutayyib deployment'
+            echo 'Server builds the latest main under a deployment lock.'
+            tail -n 5 "$RUNNER_TEMP/deployment.log"
+            echo '[Open site](http://148.230.111.160)'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove deployment credentials
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/mazad-ssh"

@@ -2,19 +2,31 @@
 
 Repository: `mohammad-alajlouni/mazad`. Deployment branch: `main`.
 Application: http://148.230.111.160
-Webhook: `http://148.230.111.160/hooks/github` (GitHub push event).
 
-Push to `main` to deploy. Other branches and branch deletion are ignored.
-The receiver verifies GitHub's HMAC-SHA256 signature and repository before queueing work.
-It runs as an unprivileged account without Docker access. Port 9000 binds only to
-the Docker host bridge; Nginx exposes the signed endpoint on port 80.
-The secret is stored outside Git in `/etc/mazad/webhook.env` with mode 600.
-This server currently uses HTTP; configure trusted TLS when a domain is available.
+## GitHub Actions
 
-A separate systemd worker serializes deployments. Each deployment fetches the latest
-`main`, so overlapping or late push events converge to current main instead of deploying
-an older commit. Duplicate delivery IDs are ignored. Pending work survives restart.
-The receiver returns 202 immediately; this means accepted, not deployment completed.
+The active deployment path is `.github/workflows/deploy.yml`. Every push to `main`
+starts **Deploy Kutayyib** in the repository Actions tab. Manual runs are supported
+through **Run workflow** on `main`. The production environment links to the live site.
+Build output, backup/activation messages, health checks and failures appear in the run.
+
+Actions connects over SSH using `MAZAD_DEPLOY_SSH_KEY` and the pinned host key in
+`MAZAD_DEPLOY_KNOWN_HOSTS` (repository Actions secrets). The dedicated SSH key is
+restricted in the server's `authorized_keys` to the deployment script with a 30-minute
+time limit; it cannot open an interactive shell, forward ports or execute other commands.
+The server password is not stored in GitHub. To rotate access, replace this dedicated
+public key on the server and update the private-key secret.
+
+Actions serializes production jobs without cancelling a deployment in progress. The
+server also takes a deployment lock and fetches the latest `main`; queued runs converge
+to current main. The log reports the actual deployed SHA, which can be newer than the
+commit that triggered a queued run. An already-deployed SHA is a successful no-op.
+
+The previous direct GitHub webhook (ID `681048495`) is disabled, and its systemd
+receiver/worker are stopped and disabled to avoid duplicate triggers. Their source is
+retained for reference. Historical webhook deployments do not appear as Actions runs.
+`last-deployment.json` is a legacy webhook record; Actions is the current run history,
+and `/var/lib/mazad-deploy/current` identifies the active release.
 
 Images are tagged with the full commit SHA and built before switching the live application.
 The existing database and generated-file volumes are retained. Database and file snapshots
@@ -28,10 +40,7 @@ interruption; this is a single-host deployment, not a zero-downtime cluster.
 ## Operations (SSH on server)
 
 ```sh
-systemctl status mazad-webhook mazad-deploy
-journalctl -u mazad-deploy -n 100 --no-pager
 cat /var/lib/mazad-deploy/current
-cat /var/lib/mazad-deploy/last-deployment.json
 # Retry or deploy latest main manually (uses the same deployment lock):
 /usr/local/lib/mazad-deploy/deploy.sh
 ```
@@ -39,7 +48,7 @@ cat /var/lib/mazad-deploy/last-deployment.json
 Release source lives in `/var/lib/mazad-deploy/releases/<sha>`; `/opt/mazad/.env` is the
 shared application configuration. Compose project remains `mazad`. Server override and
 Nginx configuration are under `/etc/mazad`. Do not run the old Compose override to update
-this installation: use the worker or deployment script. Host integration scripts are installed
+this installation: use Actions or the deployment script. Host integration scripts are installed
 under `/usr/local/lib/mazad-deploy`; repository changes to these scripts require an explicit
 operator installation via `deploy/webhook/install.sh` and service restart.
 
