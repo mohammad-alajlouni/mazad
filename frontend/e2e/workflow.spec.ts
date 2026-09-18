@@ -105,13 +105,13 @@ test("administrator completes manual and Excel input, uploads image, reviews and
     .filter({ hasText: "Project Booklet" })
     .locator("input")
     .uncheck();
-  await page.getByRole("button", { name: "Generate 6 draft outputs" }).click();
-  await expect(page.locator(".output-card")).toHaveCount(6, {
+  await page.getByRole("button", { name: "Generate 5 draft outputs" }).click();
+  await expect(page.locator(".output-card")).toHaveCount(5, {
     timeout: 120000,
   });
   await page
     .locator(".output-card")
-    .filter({ has: page.getByRole("heading", { name: "Social Content" }) })
+    .filter({ has: page.getByRole("heading", { name: "Asset Study" }) })
     .click();
   await page
     .getByLabel("Editable content")
@@ -127,7 +127,7 @@ test("administrator completes manual and Excel input, uploads image, reviews and
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("link", { name: "Download document · PDF ↓" }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("social_content.pdf");
+  expect(download.suggestedFilename()).toBe("asset_study.pdf");
   await page.screenshot({
     path: path.join(root, "output/browser-review.png"),
     fullPage: true,

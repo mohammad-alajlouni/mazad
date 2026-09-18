@@ -37,7 +37,9 @@ type Page =
   | "project"
   | "users"
   | "banners"
-  | "banner-create";
+  | "banner-create"
+  | "social"
+  | "social-create";
 export default function Workspace() {
   const tr = useTranslations();
 
@@ -70,7 +72,9 @@ export default function Workspace() {
     setProjects(p);
     setOutputs(o);
     setConfig(c);
-    setTypes(t.filter((kind) => kind.key !== "banners"));
+    setTypes(
+      t.filter((kind) => !["banners", "social_content"].includes(kind.key)),
+    );
   }, []);
   const run: Run = async (fn, success) => {
     setBusy(true);
@@ -162,7 +166,11 @@ export default function Workspace() {
         busy={busy}
       />
     );
+  const campaignMode =
+    detail?.project.workspace_type === "social" ? "social" : "banner";
   const heading: Record<Page, [string, string]> = {
+    social: [tr("social.home"), tr("social.independent")],
+    "social-create": [tr("social.create"), tr("social.independent")],
     banners: [tr("banner.home"), tr("banner.independent")],
     "banner-create": [tr("banner.create"), tr("banner.independent")],
     users: [tr("flow.adminHome"), tr("flow.usersHelp")],
@@ -188,8 +196,8 @@ export default function Workspace() {
     ],
     project: [
       detail?.project.name || tr("ui.project"),
-      detail?.project.workspace_type === "banners"
-        ? tr("banner.independent")
+      ["banners", "social"].includes(detail?.project.workspace_type || "")
+        ? tr(`${campaignMode}.independent`)
         : tr("ui.one_source_of_truth_for_every_output"),
     ],
   };
@@ -212,6 +220,7 @@ export default function Workspace() {
               },
               { id: "projects", label: tr("ui.projects"), icon: FolderOpen },
               { id: "banners", label: tr("banner.home"), icon: Files },
+              { id: "social", label: tr("social.home"), icon: Files },
               { id: "create", label: tr("ui.create_project"), icon: Plus },
               { id: "outputs", label: tr("ui.outputs"), icon: Files },
             ] as const
@@ -222,10 +231,13 @@ export default function Workspace() {
                 page === n.id ||
                 (page === "project" &&
                   n.id ===
-                    (detail?.project.workspace_type === "banners"
-                      ? "banners"
-                      : "projects")) ||
-                (page === "banner-create" && n.id === "banners")
+                    (detail?.project.workspace_type === "social"
+                      ? "social"
+                      : detail?.project.workspace_type === "banners"
+                        ? "banners"
+                        : "projects")) ||
+                (page === "banner-create" && n.id === "banners") ||
+                (page === "social-create" && n.id === "social")
                   ? "active"
                   : ""
               }
@@ -236,8 +248,12 @@ export default function Workspace() {
               {n.id === "projects" && (
                 <span className="nav-count">
                   {formatNumber(
-                    projects.filter((p) => p.workspace_type !== "banners")
-                      .length,
+                    projects.filter(
+                      (p) =>
+                        !["banners", "social"].includes(
+                          p.workspace_type || "booklet",
+                        ),
+                    ).length,
                   )}
                 </span>
               )}
@@ -312,12 +328,17 @@ export default function Workspace() {
                 ? tr("flow.users")
                 : page === "dashboard"
                   ? tr("flow.home")
-                  : page === "banners" ||
-                      page === "banner-create" ||
+                  : page === "social" ||
+                      page === "social-create" ||
                       (page === "project" &&
-                        detail?.project.workspace_type === "banners")
-                    ? tr("banner.home")
-                    : title(page)}
+                        detail?.project.workspace_type === "social")
+                    ? tr("social.home")
+                    : page === "banners" ||
+                        page === "banner-create" ||
+                        (page === "project" &&
+                          detail?.project.workspace_type === "banners")
+                      ? tr("banner.home")
+                      : title(page)}
             </strong>
           </div>
           <div className="topbar-right">
@@ -399,8 +420,12 @@ export default function Workspace() {
                       {tr("ui.all_projects")}{" "}
                       <span className="count">
                         {formatNumber(
-                          projects.filter((p) => p.workspace_type !== "banners")
-                            .length,
+                          projects.filter(
+                            (p) =>
+                              !["banners", "social"].includes(
+                                p.workspace_type || "booklet",
+                              ),
+                          ).length,
                         )}
                       </span>
                     </h2>
@@ -417,7 +442,9 @@ export default function Workspace() {
                   <ProjectList
                     projects={projects.filter(
                       (p) =>
-                        p.workspace_type !== "banners" &&
+                        !["banners", "social"].includes(
+                          p.workspace_type || "booklet",
+                        ) &&
                         (p.name + " " + p.code + " " + p.customer)
                           .toLowerCase()
                           .includes(query.toLowerCase()),
@@ -425,6 +452,36 @@ export default function Workspace() {
                     onOpen={(id) => void run(() => openProject(id))}
                   />
                 </section>
+              )}
+              {page === "social" && (
+                <section className="panel form-panel">
+                  <div className="flex-row">
+                    <h2>{tr("social.home")}</h2>
+                    <button
+                      className="primary"
+                      onClick={() => navigate("social-create")}
+                    >
+                      {tr("social.create")}
+                    </button>
+                  </div>
+                  <p>{tr("social.independent")}</p>
+                  <ProjectList
+                    projects={projects.filter(
+                      (p) => p.workspace_type === "social",
+                    )}
+                    onOpen={(id) => void run(() => openProject(id))}
+                  />
+                </section>
+              )}
+              {page === "social-create" && (
+                <BannerCreate
+                  mode="social"
+                  run={run}
+                  onDone={(id) => {
+                    void openProject(id);
+                    void refresh();
+                  }}
+                />
               )}
               {page === "banners" && (
                 <section className="panel form-panel">
@@ -484,7 +541,9 @@ export default function Workspace() {
                   <OutputList
                     outputs={outputs.filter(
                       (o) =>
-                        o.output_type !== "banners" &&
+                        !["banners", "social_content"].includes(
+                          o.output_type,
+                        ) &&
                         (filter === "ALL" || o.status === filter),
                     )}
                     onOpen={setReview}
@@ -499,8 +558,11 @@ export default function Workspace() {
               )}
               {page === "project" &&
                 detail &&
-                (detail.project.workspace_type === "banners" ? (
+                (["banners", "social"].includes(
+                  detail.project.workspace_type || "",
+                ) ? (
                   <BannerWorkspace
+                    mode={campaignMode}
                     key={detail.project.id}
                     detail={detail}
                     busy={busy}

@@ -1,0 +1,13 @@
+{
+  "source": "\u062f\u0644\u064a\u0644-\u0627\u0644\u062a\u0633\u0648\u064a\u0642-\u0648\u0627\u0644\u0647\u0648\u064a\u0629-\u0627\u0644\u0628\u0635\u0631\u064a\u0629-\u0644\u0644\u0645\u0632\u0627\u062f\u0627\u062a-V2.pdf",
+  "sha256": "fd11e308185c2867a7a8e17d3c03d7bd49e674756b6f4e3ccd8b96f2c9563cbf",
+  "page": 6,
+  "region_points": [
+    138.99000549316406,
+    231.59170532226562,
+    243.22760009765625,
+    310.4389953613281
+  ],
+  "paths": 13,
+  "method": "Unmodified vector path geometry from supplied PDF; navy and white permitted identity variants; no background, no distortion."
+}

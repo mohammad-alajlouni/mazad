@@ -227,15 +227,15 @@ for (const locale of ["en", "ar"] as const)
         .uncheck();
       await noOverflow();
       await page
-        .getByRole("button", { name: t("common.generateButton", { count: 6 }) })
+        .getByRole("button", { name: t("common.generateButton", { count: 5 }) })
         .click();
-      await expect(page.locator(".output-card")).toHaveCount(6, {
+      await expect(page.locator(".output-card")).toHaveCount(5, {
         timeout: 120000,
       });
       await page
         .locator(".output-card")
         .filter({
-          has: page.getByRole("heading", { name: t("labels.social_content") }),
+          has: page.getByRole("heading", { name: t("labels.asset_study") }),
         })
         .click();
       await page
@@ -253,7 +253,7 @@ for (const locale of ["en", "ar"] as const)
       const downloadPromise = page.waitForEvent("download");
       await link.click();
       const download = await downloadPromise;
-      expect(download.suggestedFilename()).toBe("social_content.pdf");
+      expect(download.suggestedFilename()).toBe("asset_study.pdf");
       await download.saveAs(
         path.join(
           root,

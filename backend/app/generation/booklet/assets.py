@@ -8,7 +8,9 @@ ASSETS = Path(__file__).resolve().parents[2] / "templates/infath/assets"
 @lru_cache(maxsize=32)
 def asset(name):
     mime = (
-        "image/png"
+        "image/svg+xml"
+        if name.endswith(".svg")
+        else "image/png"
         if name.endswith(".png")
         else "font/otf"
         if name.endswith(".otf")

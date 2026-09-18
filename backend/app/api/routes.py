@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from . import banners, auctions, ingestion, outputs, projects, settings, users
+from . import social, banners, auctions, ingestion, outputs, projects, settings, users
 
 router = APIRouter()
-for module in (projects, ingestion, outputs, settings, auctions, users, banners):
+for module in (projects, ingestion, outputs, settings, auctions, users, banners, social):
     router.include_router(module.router)

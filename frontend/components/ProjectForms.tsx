@@ -35,6 +35,7 @@ export function ProjectForm({
                       auction: existing.auction,
                       workspace_type: existing.workspace_type,
                       banner_config: existing.banner_config,
+                      social_config: existing.social_config,
                     }
                   : {
                       auction: {

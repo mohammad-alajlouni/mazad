@@ -11,13 +11,13 @@ from test_workflow import image_data
 from app.services.banners import SIZES
 
 
-def campaign(c, kind="physical"):
+def campaign(c, kind="physical", workspace="banners"):
     r = c.post(
         "/api/projects",
         json={
             "name": "حملة بنرات تجريبية",
             "code": "BOARD-" + kind,
-            "workspace_type": "banners",
+            "workspace_type": workspace,
             "auction": {
                 "auction_name": "مزاد آفاق",
                 "auction_type": kind,

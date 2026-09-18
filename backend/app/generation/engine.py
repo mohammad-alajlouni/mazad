@@ -170,6 +170,15 @@ def build_content(db, project, kind, output_language=None):
             for i in items
             if not config.property_ids or i["id"] in config.property_ids
         ]
+    if kind == "social_content" and project.workspace_type == "social":
+        from ..social_schemas import SocialConfig
+
+        social_config = SocialConfig.model_validate(project.social_config or {})
+        items = [
+            i
+            for i in items
+            if not social_config.property_ids or i["id"] in social_config.property_ids
+        ]
     reports = [
         {
             "output_type": o.output_type,
@@ -237,6 +246,14 @@ def build_content(db, project, kind, output_language=None):
         from .booklet.composer import compose
 
         content["booklet"] = compose(project_data, items)
+    if kind == "social_content" and project.workspace_type == "social":
+        from ..services.social import FORMATS, caption
+
+        content["social"] = {
+            **social_config.model_dump(),
+            **FORMATS[social_config.format],
+        }
+        content["review_text"] = caption(project_data, social_config, items, language)
     return content
 
 
@@ -262,6 +279,8 @@ def render(db, output):
         template_file = "infath/banners.html"
     if content.get("banner"):
         template_file = "infath/board.html"
+    if content.get("social"):
+        template_file = "infath/social.html"
     if content.get("booklet"):
         template_file = "infath/booklet.html"
     content.setdefault(
@@ -273,6 +292,8 @@ def render(db, output):
     from .booklet.composer import FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
     from .booklet.labels import label
 
+    from .social_art import photo_frame
+
     html = env.get_template(template_file).render(
         **content,
         t=lambda key, **values: labels.get(key, key).format(**values),
@@ -280,6 +301,7 @@ def render(db, output):
         font_data=font_data,
         font_bold=font_bold,
         asset=asset,
+        photo_frame=photo_frame,
         qr=qr,
         bt=lambda key: label(key, content["output_language"]),
         display=lambda value: "-" if value in (None, "") else str(value),
@@ -295,9 +317,17 @@ def render(db, output):
             raise ValueError("External resource loading is disabled")
         return default_url_fetcher(url)
 
-    pdf = HTML(string=html, url_fetcher=safe_fetch).write_pdf()
+    from .preflight import check_layout, inspect_pdf
+
+    document = HTML(string=html, url_fetcher=safe_fetch).render()
+    check_layout(document, content)
+    pdf = document.write_pdf()
+    preflight = inspect_pdf(pdf, content)
+    if preflight:
+        output.content = {**output.content, "preflight": preflight}
+
     files = [("pdf", "application/pdf", pdf)]
-    if output.output_type == "banners":
+    if output.output_type == "banners" or content.get("social"):
         import pymupdf
 
         with pymupdf.open(stream=pdf, filetype="pdf") as document:
@@ -308,9 +338,20 @@ def render(db, output):
                         "image/png",
                         page.get_pixmap(
                             matrix=pymupdf.Matrix(
-                                2400 / page.rect.width, 2400 / page.rect.width
+                                (
+                                    content["social"]["width_px"]
+                                    if content.get("social")
+                                    else 2400
+                                )
+                                / page.rect.width,
+                                (
+                                    content["social"]["width_px"]
+                                    if content.get("social")
+                                    else 2400
+                                )
+                                / page.rect.width,
                             )
-                            if content.get("banner")
+                            if content.get("banner") or content.get("social")
                             else pymupdf.Matrix(1.3, 1.3)
                         ).tobytes("png"),
                     )

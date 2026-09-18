@@ -4,11 +4,13 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .banner_schemas import BannerConfig
+from .social_schemas import SocialConfig
 from .auction_schemas import AuctionData, PropertyData
 
 
 class ProjectInput(BaseModel):
-    workspace_type: Literal["booklet", "banners"] = "booklet"
+    workspace_type: Literal["booklet", "banners", "social"] = "booklet"
+    social_config: SocialConfig = Field(default_factory=SocialConfig)
     banner_config: BannerConfig = Field(default_factory=BannerConfig)
     auction: AuctionData | None = None
     status: Literal["DRAFT", "ACTIVE", "COMPLETED"] = "DRAFT"

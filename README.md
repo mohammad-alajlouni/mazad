@@ -4,7 +4,7 @@ A working administrator workspace for entering or importing project data, genera
 
 ## Auction authoring workspaces
 
-Booklets and banners have separate navigation, campaign data and generation flows. See the [approved Excel template](docs/approved-excel-template.md) and [banner workflow, sizes and rendered examples](docs/banner-workspace.md).
+Booklets, banners and social posts have separate navigation, campaign data and generation flows. See the [approved Excel template](docs/approved-excel-template.md) and [banner workflow, sizes and rendered examples](docs/banner-workspace.md), and [social post specifications and publication checks](docs/social-workspace.md).
 
 ## Quick start with Docker
 

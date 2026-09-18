@@ -13,6 +13,10 @@ import {
 import { AuctionWorkspace } from "./AuctionWorkspace";
 import { ItemForm, ExcelUpload, ImageUpload } from "./ProjectForms";
 import { OutputList } from "./shared";
+import SocialTemplateFields, {
+  socialDefaults,
+  type SocialConfig,
+} from "./SocialTemplateFields";
 import { useConfirm } from "./Confirmation";
 
 type Template = {
@@ -35,11 +39,13 @@ type Review = {
 export function BannerCreate({
   run,
   onDone,
+  mode = "banner",
 }: {
   run: Run;
   onDone: (id: string) => void;
+  mode?: "banner" | "social";
 }) {
-  const t = useTranslations("banner");
+  const t = useTranslations(mode);
   return (
     <form
       className="panel form-panel"
@@ -52,7 +58,7 @@ export function BannerCreate({
             body: send({
               name: form.get("name"),
               code: form.get("code"),
-              workspace_type: "banners",
+              workspace_type: mode === "social" ? "social" : "banners",
               auction: {
                 auction_name: form.get("name"),
                 auction_type: "physical",
@@ -84,16 +90,24 @@ export default function BannerWorkspace({
   reloadProject,
   setReview,
   busy,
+  mode = "banner",
 }: {
   detail: Detail;
   run: Run;
   reloadProject: () => Promise<void>;
   setReview: (o: Output) => void;
   busy: boolean;
+  mode?: "banner" | "social";
 }) {
-  const t = useTranslations("banner"),
+  const t = useTranslations(mode),
     tr = useTranslations(),
     at = useTranslations("auction");
+  const isSocial = mode === "social";
+  const outputType = isSocial ? "social_content" : "banners";
+  const [social, setSocial] = useState<SocialConfig>({
+    ...socialDefaults,
+    ...detail.project.social_config,
+  });
   const confirm = useConfirm();
   const [step, setStep] = useState("template"),
     [editor, setEditor] = useState<Item | "new" | null>(null),
@@ -102,7 +116,8 @@ export default function BannerWorkspace({
     [check, setCheck] = useState<Review | null>(null);
   const [size, setSize] = useState(detail.project.banner_config?.size || "4x2");
   const [ids, setIds] = useState<string[]>(
-    detail.project.banner_config?.property_ids || [],
+    (isSocial ? detail.project.social_config : detail.project.banner_config)
+      ?.property_ids || [],
   );
   const [language, setLanguage] = useState(
     String(detail.project.auction?.document_language || "ar"),
@@ -116,7 +131,7 @@ export default function BannerWorkspace({
     "outputs",
   ];
   useEffect(() => {
-    void run(async () => setTemplates(await api("/banner-templates")));
+    void run(async () => setTemplates(await api(`/${mode}-templates`)));
   }, []);
   useEffect(() => {
     setDirty(false);
@@ -125,7 +140,7 @@ export default function BannerWorkspace({
   useEffect(() => {
     if (step === "generate")
       void run(async () =>
-        setCheck(await api(`/projects/${detail.project.id}/banner-review`)),
+        setCheck(await api(`/projects/${detail.project.id}/${mode}-review`)),
       );
   }, [step, detail]);
   const go = async (next: string) => {
@@ -168,9 +183,13 @@ export default function BannerWorkspace({
           onSubmit={(event) => {
             event.preventDefault();
             void run(async () => {
-              await api(`/projects/${detail.project.id}/banner-config`, {
+              await api(`/projects/${detail.project.id}/${mode}-config`, {
                 method: "PUT",
-                body: send({ size, property_ids: ids }),
+                body: send(
+                  isSocial
+                    ? { ...social, property_ids: ids }
+                    : { size, property_ids: ids },
+                ),
               });
               await reloadProject();
               setStep("auction");
@@ -179,49 +198,53 @@ export default function BannerWorkspace({
         >
           <h2>{t("chooseTemplate")}</h2>
           <p>{t("referenceHelp")}</p>
-          <div className="banner-template-grid">
-            {["panoramic", "landscape", "square"].map((layout) => (
-              <article key={layout} className="banner-template-card">
-                <h3>{t(`layouts.${layout}`)}</h3>
-                <a
-                  href={`/banner-references/${layout}.png`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <img
-                    src={`/banner-references/${layout}.png`}
-                    alt={t("referenceImage", {
-                      layout: t(`layouts.${layout}`),
+          {isSocial ? (
+            <SocialTemplateFields value={social} onChange={setSocial} />
+          ) : (
+            <div className="banner-template-grid">
+              {["panoramic", "landscape", "square"].map((layout) => (
+                <article key={layout} className="banner-template-card">
+                  <h3>{t(`layouts.${layout}`)}</h3>
+                  <a
+                    href={`/banner-references/${layout}.png`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <img
+                      src={`/banner-references/${layout}.png`}
+                      alt={t("referenceImage", {
+                        layout: t(`layouts.${layout}`),
+                      })}
+                    />
+                  </a>
+                  <p>
+                    {t("guidePage", {
+                      page:
+                        layout === "panoramic"
+                          ? 28
+                          : layout === "landscape"
+                            ? 30
+                            : 32,
                     })}
-                  />
-                </a>
-                <p>
-                  {t("guidePage", {
-                    page:
-                      layout === "panoramic"
-                        ? 28
-                        : layout === "landscape"
-                          ? 30
-                          : 32,
-                  })}
-                </p>
-                {templates
-                  .filter((v) => v.layout === layout)
-                  .map((v) => (
-                    <label className="checkbox-label" key={v.id}>
-                      <input
-                        type="radio"
-                        name="size"
-                        value={v.id}
-                        checked={size === v.id}
-                        onChange={() => setSize(v.id)}
-                      />
-                      <bdi>{v.id.replace("x", " × ")} m</bdi>
-                    </label>
-                  ))}
-              </article>
-            ))}
-          </div>
+                  </p>
+                  {templates
+                    .filter((v) => v.layout === layout)
+                    .map((v) => (
+                      <label className="checkbox-label" key={v.id}>
+                        <input
+                          type="radio"
+                          name="size"
+                          value={v.id}
+                          checked={size === v.id}
+                          onChange={() => setSize(v.id)}
+                        />
+                        <bdi>{v.id.replace("x", " × ")} m</bdi>
+                      </label>
+                    ))}
+                </article>
+              ))}
+            </div>
+          )}
           <p className="notice">{t("printScale")}</p>
           {!!detail.items.length && (
             <details>
@@ -264,6 +287,7 @@ export default function BannerWorkspace({
           run={run}
           reload={reloadProject}
           bannerMode
+          socialMode={isSocial}
           onSaved={() => setStep("items")}
         />
       )}
@@ -342,6 +366,7 @@ export default function BannerWorkspace({
             reload={reloadProject}
             section="agent"
             bannerMode
+            socialMode={isSocial}
           />
           <section className="panel">
             <h2>{t("logos")}</h2>
@@ -374,10 +399,9 @@ export default function BannerWorkspace({
                   {issue.item ? `${issue.item}: ` : ""}
                   {issue.limit
                     ? t("tooLong", {
-                        field:
-                          issue.field === "agent_name"
-                            ? t("fields.agent_name")
-                            : at(issue.field),
+                        field: ["agent_name", "headline"].includes(issue.field)
+                          ? t(`fields.${issue.field}`)
+                          : at(issue.field),
                         limit: issue.limit,
                       })
                     : [
@@ -385,6 +409,9 @@ export default function BannerWorkspace({
                           "agent_name",
                           "property_selection",
                           "property_limit",
+                          "headline",
+                          "campaign_image",
+                          "main_image",
                         ].includes(issue.field)
                       ? t(`fields.${issue.field}`)
                       : at(issue.field)}{" "}
@@ -413,7 +440,7 @@ export default function BannerWorkspace({
                   {
                     method: "POST",
                     body: send({
-                      types: ["banners"],
+                      types: [outputType],
                       output_language: language,
                     }),
                   },
@@ -434,7 +461,7 @@ export default function BannerWorkspace({
           <p>{t("exportHelp")}</p>
           <p>{t("printScale")}</p>
           <OutputList
-            outputs={detail.outputs.filter((o) => o.output_type === "banners")}
+            outputs={detail.outputs.filter((o) => o.output_type === outputType)}
             onOpen={setReview}
           />
         </section>

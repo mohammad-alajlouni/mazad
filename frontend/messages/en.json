@@ -318,7 +318,7 @@
     "UNKNOWN": "Request failed. Please try again.",
     "VALIDATION_ERROR": "Check the highlighted values.",
     "COMPLETE_AUCTION_REVIEW": "Complete the auction review before generation.",
-    "EDIT_AUCTION_DATA": "Edit auction data and regenerate the booklet.",
+    "EDIT_AUCTION_DATA": "Edit the auction or campaign data and regenerate.",
     "DUPLICATE_COLUMN_MAPPING": "Multiple columns map to the same field. Correct the mapping.",
     "PROJECT_LOGO_REQUIRED": "Choose a logo uploaded to this project.",
     "INVALID_PROPERTY_ORDER": "Include each project property exactly once.",
@@ -334,7 +334,10 @@
     "WORKSPACE_TYPE_FIXED": "Workspace type cannot be changed.",
     "BANNER_WORKSPACE_REQUIRED": "Use the banner workspace to generate banners only.",
     "INVALID_BANNER_SELECTION": "Invalid property selection. Select the properties again.",
-    "COMPLETE_BANNER_REVIEW": "Complete the banner review before generating."
+    "COMPLETE_BANNER_REVIEW": "Complete the banner review before generating.",
+    "SOCIAL_WORKSPACE_REQUIRED": "Use the social workspace to generate posts without AI rewriting.",
+    "COMPLETE_SOCIAL_REVIEW": "Complete the social post review before generation.",
+    "LAYOUT_PREFLIGHT_FAILED": "Generation stopped because content does not fit the template or dimensions are incorrect. Shorten long project text and retry; no approvable file was created."
   },
   "fields": {
     "name": "Project name",
@@ -557,7 +560,7 @@
     "userRole": "Booklet author",
     "adminRole": "System administrator",
     "adminArea": "System administration",
-    "authorArea": "My booklet workspace",
+    "authorArea": "Production workspace",
     "users": "Users",
     "usersHelp": "Create, enable or disable booklet author accounts. Each user’s auctions and files remain private to their account.",
     "newUser": "New user account",
@@ -680,5 +683,81 @@
     },
     "tooLong": "{field}: shorten to {limit} characters to fit the board.",
     "auctionHelp": "Enter the legal announcement, booklet link, contact number and schedule. Board data is independent of booklet projects."
+  },
+  "social": {
+    "home": "Social posts",
+    "create": "Create social campaign",
+    "independent": "A separate workspace for auction and property posts based on the supplied guide, with fixed dimensions and review before download.",
+    "campaignName": "Social campaign name",
+    "reference": "Campaign reference",
+    "steps": "Social post production steps",
+    "step": {
+      "template": "Platform and design",
+      "auction": "Auction details",
+      "items": "Properties",
+      "images": "Photos and logos",
+      "generate": "Review and generate",
+      "outputs": "Generated posts"
+    },
+    "chooseTemplate": "Choose a platform and post type",
+    "referenceHelp": "Guide references: X on page 35, Instagram on page 36 and Snapchat on page 37. Examples illustrate layout and are not campaign data.",
+    "layouts": {
+      "panoramic": "Panoramic board",
+      "landscape": "Landscape board",
+      "square": "Square board"
+    },
+    "referenceImage": "{layout} reference",
+    "guidePage": "Identity guide — page {page}",
+    "printScale": "Export dimensions: Instagram 1080×1080, Snapchat 1080×1920, X 1080×660 pixels. Ratios follow the guide; pixel resolutions are a project-approved technical choice, not numerical dimensions stated in the guide.",
+    "selectProperties": "Included properties",
+    "allProperties": "No selection includes every property. Announcements show the selected property count; property posts produce one image per selected property.",
+    "resetSelection": "Include all properties",
+    "saveTemplate": "Save design and continue",
+    "propertiesHelp": "Enter properties manually or using the approved workbook. Property posts require type, city, district, area, deed and a main photo for each property.",
+    "logos": "Required photos and logos",
+    "logosHelp": "Save the agent logo above. Upload the auction logo as a campaign image. For announcements, upload a campaign image with Auction cover category. For property posts, upload a Main image attached to each property. Photos preserve their aspect ratio, with two diagonal corners matching the template; verify details in the preview.",
+    "review": "Social post readiness review",
+    "ready": "Ready to generate {count} posts.",
+    "missing": "Complete these details before generation. Select a field to open its section.",
+    "generate": "Generate social posts",
+    "exportHelp": "Review images and the companion caption, then approve. Download PNG images at the stated dimensions and the companion text to publish with them. PDF is a combined review copy. Changes require regeneration and approval.",
+    "fields": {
+      "properties": "Add at least one property",
+      "agent_name": "Selling agent name",
+      "property_selection": "Correct property selection",
+      "property_limit": "Select at most 30 properties",
+      "headline": "Marketing headline",
+      "campaign_image": "Auction announcement photo",
+      "main_image": "Property main photo"
+    },
+    "tooLong": "{field}: shorten to {limit} characters to fit the board.",
+    "auctionHelp": "Enter the schedule, contact, licence and legal announcement exactly as supplied. The companion text includes the legal announcement and licence and should be reviewed and published with the images.",
+    "formats": {
+      "x": "X — landscape",
+      "instagram": "Instagram — square",
+      "story": "Snapchat — portrait"
+    },
+    "postKind": "Post type",
+    "announcement": "Auction announcement",
+    "property": "Property post",
+    "theme": "Colour variant",
+    "themes": {
+      "white": "White background",
+      "teal": "Teal gradient",
+      "navy": "Navy background"
+    },
+    "headline": "Marketing headline",
+    "tagline": "Additional marketing line",
+    "caption": "Additional companion text (optional)",
+    "captionHelp": "Your text is preserved without rewriting. Auction details, legal announcement and licence are added to the text file; no legal wording is invented.",
+    "companionCaption": "Companion caption",
+    "exactSize": "Actual dimensions per image: {width} × {height} pixels.",
+    "downloadPost": "Download post {number} · PNG",
+    "postNumber": "Post {number} · PNG",
+    "previewAlt": "Social post preview"
+  },
+  "quality": {
+    "passed": "Technical size and text-bound checks passed — {count} pages. Review content and identity visually before approval.",
+    "bookletSize": "Booklet pages are A4: 210 × 297 mm. Review every page, text and image before approval."
   }
 }

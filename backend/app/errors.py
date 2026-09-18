@@ -1,6 +1,9 @@
 """Stable public error codes; English detail is retained for API compatibility."""
 
 ERROR_CODES = {
+    "Use the social workspace": "SOCIAL_WORKSPACE_REQUIRED",
+    "Complete the social review before generation": "COMPLETE_SOCIAL_REVIEW",
+    "Generated layout failed preflight": "LAYOUT_PREFLIGHT_FAILED",
     "Workspace type cannot be changed": "WORKSPACE_TYPE_FIXED",
     "Use the banner workspace": "BANNER_WORKSPACE_REQUIRED",
     "Invalid banner property selection": "INVALID_BANNER_SELECTION",

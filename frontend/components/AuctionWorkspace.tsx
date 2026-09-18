@@ -226,6 +226,7 @@ export function AuctionWorkspace({
   reload,
   section = "auction",
   bannerMode = false,
+  socialMode = false,
   onSaved,
 }: {
   detail: Detail;
@@ -233,10 +234,11 @@ export function AuctionWorkspace({
   reload: () => Promise<void>;
   section?: "auction" | "agent";
   bannerMode?: boolean;
+  socialMode?: boolean;
   onSaved?: () => void;
 }) {
   const t = useTranslations("auction");
-  const bt = useTranslations("banner");
+  const bt = useTranslations(socialMode ? "social" : "banner");
   const auction = detail.project.auction || {};
   const locale = useLocale();
   const f = useTranslations("flow");

@@ -24,7 +24,7 @@ export default function OutputReview({
   const selected =
     output.files.find((f) => f.id === fileId) ||
     output.files.find((f) =>
-      output.output_type === "banners"
+      output.output_type === "banners" || output.social
         ? f.media_type === "image/png"
         : f.media_type === "application/pdf",
     ) ||
@@ -83,6 +83,22 @@ export default function OutputReview({
           </button>
         </div>
       </div>
+      {output.official_booklet && (
+        <p className="notice">{tr("quality.bookletSize")}</p>
+      )}
+      {output.social && (
+        <p className="notice">
+          {tr("social.exactSize", {
+            width: output.social.width_px,
+            height: output.social.height_px,
+          })}
+        </p>
+      )}
+      {output.preflight?.passed && (
+        <p className="notice">
+          {tr("quality.passed", { count: output.preflight.page_count })}
+        </p>
+      )}
       {output.banner && <p className="notice">{tr("banner.printScale")}</p>}
       {output.status === "NEEDS_REGENERATION" && (
         <div className="notice">
@@ -103,7 +119,12 @@ export default function OutputReview({
               {output.files.map((f, i) => (
                 <option key={f.id} value={f.id}>
                   {f.media_type.startsWith("image")
-                    ? tr("common.bannerNumber", { number: i })
+                    ? tr(
+                        output.social
+                          ? "social.postNumber"
+                          : "common.bannerNumber",
+                        { number: i },
+                      )
                     : f.media_type.startsWith("text")
                       ? tr("ui.text")
                       : tr("ui.pdf_upper")}
@@ -116,7 +137,11 @@ export default function OutputReview({
               <img
                 className="banner-preview"
                 src={"/api/files/" + selected.id}
-                alt={tr("ui.generated_banner_preview")}
+                alt={tr(
+                  output.social
+                    ? "social.previewAlt"
+                    : "ui.generated_banner_preview",
+                )}
               />
             ) : (
               <iframe
@@ -134,12 +159,20 @@ export default function OutputReview({
           </a>
         </div>
         <aside className="panel form-panel">
-          {output.official_booklet || output.banner ? (
+          {output.social && (
+            <>
+              <h2>{tr("social.companionCaption")}</h2>
+              <pre className="social-caption">{output.content.review_text}</pre>
+            </>
+          )}
+          {output.official_booklet || output.banner || output.social ? (
             <p>
               {tr(
-                output.banner
-                  ? "banner.exportHelp"
-                  : "auction.fixed_content_help",
+                output.social
+                  ? "social.exportHelp"
+                  : output.banner
+                    ? "banner.exportHelp"
+                    : "auction.fixed_content_help",
               )}
             </p>
           ) : (
@@ -202,7 +235,12 @@ export default function OutputReview({
                 href={"/api/files/" + f.id + "?download=true"}
               >
                 {f.media_type.startsWith("image")
-                  ? tr("common.downloadBanner", { number: i })
+                  ? tr(
+                      output.social
+                        ? "social.downloadPost"
+                        : "common.downloadBanner",
+                      { number: i },
+                    )
                   : tr(
                       f.media_type.startsWith("text")
                         ? "common.downloadText"

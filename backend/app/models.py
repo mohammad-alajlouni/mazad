@@ -53,6 +53,9 @@ class Project(Record, Base):
     banner_config: Mapped[dict] = mapped_column(
         JSONType, default=dict, server_default="{}"
     )
+    social_config: Mapped[dict] = mapped_column(
+        JSONType, default=dict, server_default="{}"
+    )
     auction: Mapped[dict] = mapped_column(JSONType, default=dict)
     name: Mapped[str] = mapped_column(String(200))
     code: Mapped[str] = mapped_column(String(100), unique=True)

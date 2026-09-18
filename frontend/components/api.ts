@@ -25,7 +25,8 @@ export async function api<T = unknown>(
 export const send = (body: unknown) => JSON.stringify(body);
 export type Account = { email: string; role: "admin" | "user" };
 export type Project = {
-  workspace_type?: "booklet" | "banners";
+  workspace_type?: "booklet" | "banners" | "social";
+  social_config?: import("./SocialTemplateFields").SocialConfig;
   banner_config?: { size: string; property_ids: string[] };
   auction?: Record<string, unknown>;
   id: string;
@@ -55,6 +56,13 @@ export type Item = {
   attributes: Record<string, unknown>;
 };
 export type Output = {
+  social?: { format: string; width_px: number; height_px: number } | null;
+  preflight?: {
+    passed: boolean;
+    page_count: number;
+    width_pt: number;
+    height_pt: number;
+  } | null;
   banner?: { size: string; scale: string } | null;
   official_booklet?: boolean;
   id: string;
