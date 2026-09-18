@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 35
     environment:
       name: production
-      url: http://148.230.111.160
+      url: https://kutayyib.io
     steps:
       - name: Configure deployment SSH credentials
         env:
@@ -42,7 +42,7 @@ jobs:
             echo '### Kutayyib deployment'
             echo 'Server builds the latest main under a deployment lock.'
             tail -n 5 "$RUNNER_TEMP/deployment.log"
-            echo '[Open site](http://148.230.111.160)'
+            echo '[Open site](https://kutayyib.io)'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Remove deployment credentials
         if: always()

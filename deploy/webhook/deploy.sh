@@ -36,8 +36,8 @@ printf '%s\n' "$previous" > "$backup/previous-release"
 echo "Activating $sha"
 if compose "$sha" "$release" up -d --no-build --wait --wait-timeout 180 && \
    docker exec mazad-nginx-1 nginx -s reload && \
-   curl --retry 5 --retry-all-errors --retry-delay 2 --max-time 15 -fsS http://127.0.0.1/api/health && \
-   curl --retry 5 --retry-all-errors --retry-delay 2 --max-time 15 -fsS -o /dev/null http://127.0.0.1/; then
+   curl --retry 5 --retry-all-errors --retry-delay 2 --max-time 15 -fsS https://kutayyib.io/api/health && \
+   curl --retry 5 --retry-all-errors --retry-delay 2 --max-time 15 -fsS -o /dev/null https://kutayyib.io/; then
     printf '%s\n' "$sha" > "$state/current.new"
     mv "$state/current.new" "$state/current"
     echo "Successfully deployed $sha"

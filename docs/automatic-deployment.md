@@ -1,7 +1,7 @@
 # Automatic deployment on the educational server
 
 Repository: `mohammad-alajlouni/mazad`. Deployment branch: `main`.
-Application: http://148.230.111.160
+Application: https://kutayyib.io
 
 ## GitHub Actions
 
@@ -58,3 +58,18 @@ GitHub repository is currently public, so the server fetches without a personal 
 If changed to private, configure a read-only deploy key before further deployments.
 
 Receiver checks: `python3 -m unittest discover -s deploy/webhook -p 'test_*.py'`.
+
+## HTTPS on the active server
+
+The canonical URL is https://kutayyib.io. HTTP and `www` redirect there.
+The server override publishes port 443 and mounts `/etc/letsencrypt` and
+`/var/www/letsencrypt` read-only into Nginx. The server's Nginx configuration
+serves ACME challenges over HTTP and uses the certificate for both domain names.
+These host-specific settings live in `/etc/mazad` and survive application releases;
+do not replace them with the original HTTP-only installation templates.
+
+Certbot uses the webroot authenticator. `certbot.timer` renews certificates
+automatically, and `/etc/letsencrypt/renewal-hooks/deploy/mazad-nginx` validates
+and reloads Nginx after renewal. Test with `certbot renew --dry-run --run-deploy-hooks`.
+The shared application environment enables secure cookies and permits the HTTPS
+origins. Deployment health checks verify the public HTTPS API and homepage.
