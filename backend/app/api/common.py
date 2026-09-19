@@ -44,11 +44,17 @@ def audit(db, action, detail):
     db.add(AuditLog(action=action, detail=detail, owner_id=db.info.get("user_id")))
 
 
-def invalidate(db, project):
+def invalidate(db, project, output_types=None):
+    previous_revision = project.revision
     project.revision += 1
     for o in db.scalars(
         select(GeneratedOutput).where(GeneratedOutput.project_id == project.id)
     ):
+        if output_types is not None and o.output_type not in output_types:
+            # Design-only edits do not change another output's source data.
+            if o.revision == previous_revision:
+                o.revision = project.revision
+            continue
         o.status = "NEEDS_REGENERATION"
         if (
             not o.content.get("booklet")

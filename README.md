@@ -4,7 +4,7 @@ A working administrator workspace for entering or importing project data, genera
 
 ## Auction authoring workspaces
 
-Booklets, banners and social posts have separate navigation, campaign data and generation flows. See the [approved Excel template](docs/approved-excel-template.md) and [banner workflow, sizes and rendered examples](docs/banner-workspace.md), and [social post specifications and publication checks](docs/social-workspace.md).
+A single auction project supplies shared data to its booklet, banners and social posts. Each output type has its own design and review steps; standalone campaigns are optional. See the [approved Excel template](docs/approved-excel-template.md) and [banner workflow, sizes and rendered examples](docs/banner-workspace.md), and [social post specifications and publication checks](docs/social-workspace.md).
 
 ## Quick start with Docker
 
@@ -236,3 +236,7 @@ Run migration `0002` before starting the updated backend. Existing projects are 
 For auction booklets, regenerating an approved version creates a new Draft and retains the earlier PDF and snapshot. A later project change marks previous outputs as needing regeneration and blocks final export until the current version is approved. Generic-output regeneration retains its original behavior.
 
 See [auction implementation and verification report](docs/auction-implementation-report.md) for the reference provenance, endpoints, schema, executed checks and remaining limits. Supplied assets are packaged under `backend/app/templates/infath/assets`; deployment does not depend on Downloads. `backend/scripts/extract_infath_assets.py` documents how those assets were extracted, and `provenance.json` records source fingerprints.
+
+## Shared auction project workflow
+
+Create one project and enter auction data, properties, images and selling agent once. The project contains Booklet, Banners and Social posts sections plus All project outputs. Design settings remain separate; shared data edits invalidate publications, while banner/social design edits invalidate only that type. Standalone booklet and campaign creation remain explicit opt-in choices. Migration 0006 upgrades existing booklet projects in place without copying data; standalone banner/social campaigns retain their scope. See [workflow details](docs/shared-project-workflow.md).

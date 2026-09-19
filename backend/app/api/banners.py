@@ -29,7 +29,7 @@ def review(id: str, db=Depends(get_db)):
 @router.put("/projects/{id}/banner-config")
 def configure(id: str, body: BannerConfig, db=Depends(get_db)):
     project = get_project(db, id, True)
-    if project.workspace_type != "banners":
+    if project.workspace_type not in ("project", "banners"):
         raise HTTPException(400, "Use the banner workspace")
     from sqlalchemy import select
     from ..models import ProjectItem
@@ -41,6 +41,6 @@ def configure(id: str, body: BannerConfig, db=Depends(get_db)):
     ):
         raise HTTPException(400, "Invalid banner property selection")
     project.banner_config = body.model_dump()
-    invalidate(db, project)
+    invalidate(db, project, output_types={"banners"})
     db.commit()
     return project.banner_config

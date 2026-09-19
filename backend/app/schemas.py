@@ -9,7 +9,7 @@ from .auction_schemas import AuctionData, PropertyData
 
 
 class ProjectInput(BaseModel):
-    workspace_type: Literal["booklet", "banners", "social"] = "booklet"
+    workspace_type: Literal["project", "booklet", "banners", "social"] = "project"
     social_config: SocialConfig = Field(default_factory=SocialConfig)
     banner_config: BannerConfig = Field(default_factory=BannerConfig)
     auction: AuctionData | None = None

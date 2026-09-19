@@ -17,6 +17,7 @@ def project(c, code="DEMO", name="مشروع المعدات"):
         "/api/projects",
         json={
             "name": name,
+            "workspace_type": "booklet",
             "code": code,
             "customer": "شركة التطوير",
             "description": "دراسة الأصول والمعدات",

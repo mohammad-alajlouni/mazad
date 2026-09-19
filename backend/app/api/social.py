@@ -26,7 +26,7 @@ def review(id: str, db=Depends(get_db)):
 @router.put("/projects/{id}/social-config")
 def configure(id: str, body: SocialConfig, db=Depends(get_db)):
     p = get_project(db, id, True)
-    if p.workspace_type != "social":
+    if p.workspace_type not in ("project", "social"):
         raise HTTPException(400, "Use the social workspace")
     known = set(db.scalars(select(ProjectItem.id).where(ProjectItem.project_id == id)))
     if (
@@ -35,6 +35,6 @@ def configure(id: str, body: SocialConfig, db=Depends(get_db)):
     ):
         raise HTTPException(400, "Invalid banner property selection")
     p.social_config = body.model_dump()
-    invalidate(db, p)
+    invalidate(db, p, output_types={"social_content"})
     db.commit()
     return p.social_config

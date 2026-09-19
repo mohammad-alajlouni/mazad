@@ -49,19 +49,23 @@ async def generate(id: str, body: GenerationInput, db=Depends(get_db)):
         raise HTTPException(400, "Add at least one item before generating outputs")
     if (
         "project_booklet" in body.types
-        and p.auction
+        and (p.auction or p.workspace_type == "project")
         and not validate_project(db, p)["valid"]
     ):
         raise HTTPException(422, "Complete the auction review before generation")
     if p.workspace_type == "banners":
         if set(body.types) != {"banners"}:
             raise HTTPException(400, "Use the banner workspace")
+    if "banners" in body.types and p.workspace_type in ("project", "banners"):
         from ..services.banners import review_banners
 
         if not review_banners(db, p)["valid"]:
             raise HTTPException(422, "Complete the banner review before generation")
     if p.workspace_type == "social":
         if set(body.types) != {"social_content"} or body.use_ai:
+            raise HTTPException(400, "Use the social workspace")
+    if "social_content" in body.types and p.workspace_type in ("project", "social"):
+        if body.use_ai:
             raise HTTPException(400, "Use the social workspace")
         from ..services.social import review_social
 
@@ -195,7 +199,9 @@ def regenerate(id: str, db=Depends(get_db)):
     o = get_output(db, id)
     p = get_project(db, o.project_id, True)
     output_language = o.content.get("output_language", "en")
-    if o.output_type == "project_booklet" and p.auction:
+    if o.output_type == "project_booklet" and (
+        p.auction or p.workspace_type == "project"
+    ):
         if not validate_project(db, p)["valid"]:
             raise HTTPException(422, "Complete the auction review before generation")
         if o.approved_at:
@@ -208,7 +214,7 @@ def regenerate(id: str, db=Depends(get_db)):
             )
             db.add(o)
             db.flush()
-    if o.output_type == "banners" and p.workspace_type == "banners":
+    if o.output_type == "banners" and p.workspace_type in ("project", "banners"):
         from ..services.banners import review_banners
 
         if not review_banners(db, p)["valid"]:
@@ -223,7 +229,7 @@ def regenerate(id: str, db=Depends(get_db)):
             )
             db.add(o)
             db.flush()
-    if o.output_type == "social_content" and p.workspace_type == "social":
+    if o.output_type == "social_content" and p.workspace_type in ("project", "social"):
         from ..services.social import review_social
 
         if not review_social(db, p)["valid"]:

@@ -22,15 +22,16 @@ for (const flow of ["manual", "excel"])
     await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in to workspace" }).click();
     await page
-      .getByRole("button", { name: "Create auction booklet", exact: true })
+      .getByRole("button", { name: "Create project", exact: true })
       .first()
       .click();
     const name = `Auction browser ${flow} ${Date.now()}`;
-    await page.getByLabel("Booklet / auction name", { exact: true }).fill(name);
+    await page.getByLabel("Project / auction name", { exact: true }).fill(name);
     await page.getByLabel("Reference code").fill(`AU-${flow}-${Date.now()}`);
+    await page.getByLabel("Project type").selectOption("booklet");
     await page
       .locator("form")
-      .getByRole("button", { name: "Create auction booklet" })
+      .getByRole("button", { name: "Create project" })
       .click();
     await page
       .getByRole("button", { name: /Auction and cover/, exact: true })

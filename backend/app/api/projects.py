@@ -28,7 +28,7 @@ def dashboard(db=Depends(get_db)):
             .select_from(Project)
             .where(
                 Project.owner_id == db.info.get("user_id"),
-                Project.workspace_type == "booklet",
+                Project.workspace_type.in_(("project", "booklet")),
             )
         ),
         "draft_projects": db.scalar(
@@ -37,7 +37,7 @@ def dashboard(db=Depends(get_db)):
             .where(
                 Project.status == "DRAFT",
                 Project.owner_id == db.info.get("user_id"),
-                Project.workspace_type == "booklet",
+                Project.workspace_type.in_(("project", "booklet")),
             )
         ),
         "approved_outputs": db.scalar(
@@ -47,14 +47,14 @@ def dashboard(db=Depends(get_db)):
             .where(
                 GeneratedOutput.status == "APPROVED",
                 Project.owner_id == db.info.get("user_id"),
-                Project.workspace_type == "booklet",
+                Project.workspace_type.in_(("project", "booklet")),
             )
         ),
         "projects": db.scalars(
             select(Project)
             .where(
                 Project.owner_id == db.info.get("user_id"),
-                Project.workspace_type == "booklet",
+                Project.workspace_type.in_(("project", "booklet")),
             )
             .order_by(Project.created_at.desc())
             .limit(6)

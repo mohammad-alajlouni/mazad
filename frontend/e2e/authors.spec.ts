@@ -70,6 +70,7 @@ test("Arabic default, administrator provisioning, private author booklet and app
   await page
     .getByLabel(t("ui.project_name"), { exact: true })
     .fill("مزاد المستخدم الجديد");
+  await page.getByLabel(t("projectFlow.scope")).selectOption("booklet");
   await page.getByLabel(t("ui.reference_code")).fill(`AUTHOR-${Date.now()}`);
   await page
     .locator("form")

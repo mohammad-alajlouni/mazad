@@ -105,6 +105,7 @@ for (const locale of ["en", "ar"] as const)
       await expect(
         page.getByLabel(t("ui.project_name"), { exact: true }),
       ).toHaveValue(projectName);
+      await page.getByLabel(t("projectFlow.scope")).selectOption("booklet");
       await page.getByLabel(t("ui.reference_code")).fill("L10N-" + Date.now());
       await expect(page.getByLabel(t("ui.reference_code"))).toHaveAttribute(
         "dir",

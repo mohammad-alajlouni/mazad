@@ -37,17 +37,18 @@ test("administrator completes manual and Excel input, uploads image, reviews and
     page.getByRole("heading", { name: "Account administration" }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Create auction booklet", exact: true })
+    .getByRole("button", { name: "Create project", exact: true })
     .first()
     .click();
   await page
-    .getByLabel("Booklet / auction name", { exact: true })
+    .getByLabel("Project / auction name", { exact: true })
     .fill("Browser workflow demo");
   await page.getByLabel("Reference code").fill("BROWSER-" + Date.now());
   await page.getByLabel("Customer / entity").fill("Development demo");
+  await page.getByLabel("Project type").selectOption("booklet");
   await page
     .locator("form")
-    .getByRole("button", { name: "Create auction booklet" })
+    .getByRole("button", { name: "Create project" })
     .click();
   await expect(
     page.getByRole("heading", { name: "Browser workflow demo" }),

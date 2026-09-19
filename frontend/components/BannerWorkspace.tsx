@@ -91,7 +91,11 @@ export default function BannerWorkspace({
   setReview,
   busy,
   mode = "banner",
+  shared = false,
+  onSharedFix,
 }: {
+  shared?: boolean;
+  onSharedFix?: (step: string) => void;
   detail: Detail;
   run: Run;
   reloadProject: () => Promise<void>;
@@ -122,14 +126,9 @@ export default function BannerWorkspace({
   const [language, setLanguage] = useState(
     String(detail.project.auction?.document_language || "ar"),
   );
-  const steps = [
-    "template",
-    "auction",
-    "items",
-    "images",
-    "generate",
-    "outputs",
-  ];
+  const steps = shared
+    ? ["template", "generate", "outputs"]
+    : ["template", "auction", "items", "images", "generate", "outputs"];
   useEffect(() => {
     void run(async () => setTemplates(await api(`/${mode}-templates`)));
   }, []);
@@ -147,7 +146,8 @@ export default function BannerWorkspace({
     if (dirty && !(await confirm(tr("flow.notSaved")))) return;
     setDirty(false);
     setEditor(null);
-    setStep(next);
+    if (shared && !steps.includes(next)) onSharedFix?.(next);
+    else setStep(next);
   };
   return (
     <div
@@ -158,7 +158,7 @@ export default function BannerWorkspace({
     >
       <section className="workflow-guide">
         <h2>{t("steps")}</h2>
-        <p>{t("independent")}</p>
+        <p>{shared ? tr("projectFlow.reused") : t("independent")}</p>
         <nav className="workflow-steps">
           {steps.map((key, index) => (
             <button
@@ -192,7 +192,7 @@ export default function BannerWorkspace({
                 ),
               });
               await reloadProject();
-              setStep("auction");
+              setStep(shared ? "generate" : "auction");
             }, at("saved"));
           }}
         >

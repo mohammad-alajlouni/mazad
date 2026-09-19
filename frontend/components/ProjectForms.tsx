@@ -58,6 +58,15 @@ export function ProjectForm({
         </h2>
         <p>{tr("ui.give_your_project_a_name_and_a_little_context")}</p>
       </div>
+      {!existing && (
+        <label>
+          {tr("projectFlow.scope")}
+          <select name="workspace_type" defaultValue="project">
+            <option value="project">{tr("projectFlow.sharedOption")}</option>
+            <option value="booklet">{tr("projectFlow.bookletOnly")}</option>
+          </select>
+        </label>
+      )}
       <div className="form-grid">
         {[
           ["name", tr("ui.project_name"), true],

@@ -25,7 +25,7 @@ export async function api<T = unknown>(
 export const send = (body: unknown) => JSON.stringify(body);
 export type Account = { email: string; role: "admin" | "user" };
 export type Project = {
-  workspace_type?: "booklet" | "banners" | "social";
+  workspace_type?: "project" | "booklet" | "banners" | "social";
   social_config?: import("./SocialTemplateFields").SocialConfig;
   banner_config?: { size: string; property_ids: string[] };
   auction?: Record<string, unknown>;

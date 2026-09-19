@@ -161,7 +161,7 @@ def snapshot(db, project):
 
 def build_content(db, project, kind, output_language=None):
     project_data, items = snapshot(db, project)
-    if kind == "banners" and project.workspace_type == "banners":
+    if kind == "banners" and project.workspace_type in ("project", "banners"):
         from ..banner_schemas import BannerConfig
 
         config = BannerConfig.model_validate(project.banner_config or {})
@@ -170,7 +170,7 @@ def build_content(db, project, kind, output_language=None):
             for i in items
             if not config.property_ids or i["id"] in config.property_ids
         ]
-    if kind == "social_content" and project.workspace_type == "social":
+    if kind == "social_content" and project.workspace_type in ("project", "social"):
         from ..social_schemas import SocialConfig
 
         social_config = SocialConfig.model_validate(project.social_config or {})
@@ -190,7 +190,7 @@ def build_content(db, project, kind, output_language=None):
         )
     ]
     content = GENERATORS[kind].build(project_data, items, reports)
-    if kind == "banners" and project.workspace_type == "banners":
+    if kind == "banners" and project.workspace_type in ("project", "banners"):
         from ..services.banners import SIZES
 
         content["banner"] = {**SIZES[config.size], "size": config.size, "scale": "1:10"}
@@ -246,7 +246,7 @@ def build_content(db, project, kind, output_language=None):
         from .booklet.composer import compose
 
         content["booklet"] = compose(project_data, items)
-    if kind == "social_content" and project.workspace_type == "social":
+    if kind == "social_content" and project.workspace_type in ("project", "social"):
         from ..services.social import FORMATS, caption
 
         content["social"] = {

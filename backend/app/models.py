@@ -48,7 +48,7 @@ class Project(Record, Base):
         ForeignKey("users.id"), nullable=True, index=True
     )
     workspace_type: Mapped[str] = mapped_column(
-        String(20), default="booklet", server_default="booklet"
+        String(20), default="project", server_default="project"
     )
     banner_config: Mapped[dict] = mapped_column(
         JSONType, default=dict, server_default="{}"

@@ -17,11 +17,12 @@ from app.models import GeneratedOutput, RentalContract, User
 from app.services.ingestion import normalize, parse_excel
 
 
-def create_auction(c, kind="hybrid", cover="infath-2"):
+def create_auction(c, kind="hybrid", cover="infath-2", workspace="project"):
     response = c.post(
         "/api/projects",
         json={
             "name": "مزاد العقارات التجريبي",
+            "workspace_type": workspace,
             "code": "AUCTION-" + kind + "-" + cover,
             "auction": {
                 "auction_name": "مزاد آفاق العقاري",
@@ -468,7 +469,7 @@ def test_summary_pagination_overflow_and_english(admin):
 
 
 def test_auction_banner_and_image_isolation(admin):
-    p = create_auction(admin)
+    p = create_auction(admin, workspace="booklet")
     first = add(admin, p, property_input(1))
     second = add(admin, p, property_input(2))
     image = admin.post(

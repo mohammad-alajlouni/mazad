@@ -10,6 +10,9 @@ import UserManagement from "./UserManagement";
 import DashboardView, { Dashboard } from "./Dashboard";
 import BannerWorkspace, { BannerCreate } from "./BannerWorkspace";
 import ProjectWorkspace from "./ProjectWorkspace";
+import SharedProjectWorkspace, {
+  ProjectSection,
+} from "./SharedProjectWorkspace";
 import { useEffect, useState, useCallback } from "react";
 import {
   LayoutDashboard,
@@ -56,6 +59,7 @@ export default function Workspace() {
     [detail, setDetail] = useState<Detail | null>(null),
     [config, setConfig] = useState<Config | null>(null),
     [review, setReview] = useState<Output | null>(null);
+  const [projectSection, setProjectSection] = useState<ProjectSection>("data");
   const [tab, setTab] = useState("overview"),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("ALL"),
@@ -111,7 +115,8 @@ export default function Workspace() {
       return () => clearTimeout(id);
     }
   }, [notice]);
-  const openProject = async (id: string) => {
+  const openProject = async (id: string, section: ProjectSection = "data") => {
+    setProjectSection(section);
     const next = await api<Detail>("/projects/" + id);
     setDetail(next);
     setPage("project");
@@ -169,9 +174,9 @@ export default function Workspace() {
   const campaignMode =
     detail?.project.workspace_type === "social" ? "social" : "banner";
   const heading: Record<Page, [string, string]> = {
-    social: [tr("social.home"), tr("social.independent")],
+    social: [tr("social.home"), tr("projectFlow.pickSocial")],
     "social-create": [tr("social.create"), tr("social.independent")],
-    banners: [tr("banner.home"), tr("banner.independent")],
+    banners: [tr("banner.home"), tr("projectFlow.pickBanner")],
     "banner-create": [tr("banner.create"), tr("banner.independent")],
     users: [tr("flow.adminHome"), tr("flow.usersHelp")],
     dashboard: [
@@ -458,13 +463,26 @@ export default function Workspace() {
                   <div className="flex-row">
                     <h2>{tr("social.home")}</h2>
                     <button
-                      className="primary"
+                      className="secondary"
                       onClick={() => navigate("social-create")}
                     >
-                      {tr("social.create")}
+                      {tr("projectFlow.independentSocial")}
                     </button>
                   </div>
-                  <p>{tr("social.independent")}</p>
+                  <p>{tr("projectFlow.pickSocial")}</p>
+                  <button
+                    className="primary"
+                    onClick={() => navigate("create")}
+                  >
+                    {tr("ui.create_project")}
+                  </button>
+                  <ProjectList
+                    projects={projects.filter(
+                      (p) => p.workspace_type === "project",
+                    )}
+                    onOpen={(id) => void run(() => openProject(id, "social"))}
+                  />
+                  <h3>{tr("projectFlow.independent")}</h3>
                   <ProjectList
                     projects={projects.filter(
                       (p) => p.workspace_type === "social",
@@ -488,13 +506,26 @@ export default function Workspace() {
                   <div className="flex-row">
                     <h2>{tr("banner.home")}</h2>
                     <button
-                      className="primary"
+                      className="secondary"
                       onClick={() => navigate("banner-create")}
                     >
-                      {tr("banner.create")}
+                      {tr("projectFlow.independentBanner")}
                     </button>
                   </div>
-                  <p>{tr("banner.independent")}</p>
+                  <p>{tr("projectFlow.pickBanner")}</p>
+                  <button
+                    className="primary"
+                    onClick={() => navigate("create")}
+                  >
+                    {tr("ui.create_project")}
+                  </button>
+                  <ProjectList
+                    projects={projects.filter(
+                      (p) => p.workspace_type === "project",
+                    )}
+                    onOpen={(id) => void run(() => openProject(id, "banner"))}
+                  />
+                  <h3>{tr("projectFlow.independent")}</h3>
                   <ProjectList
                     projects={projects.filter(
                       (p) => p.workspace_type === "banners",
@@ -540,11 +571,7 @@ export default function Workspace() {
                   </div>
                   <OutputList
                     outputs={outputs.filter(
-                      (o) =>
-                        !["banners", "social_content"].includes(
-                          o.output_type,
-                        ) &&
-                        (filter === "ALL" || o.status === filter),
+                      (o) => filter === "ALL" || o.status === filter,
                     )}
                     onOpen={setReview}
                   />
@@ -558,9 +585,24 @@ export default function Workspace() {
               )}
               {page === "project" &&
                 detail &&
-                (["banners", "social"].includes(
-                  detail.project.workspace_type || "",
-                ) ? (
+                (detail.project.workspace_type === "project" ? (
+                  <SharedProjectWorkspace
+                    key={detail.project.id + projectSection}
+                    initialSection={projectSection}
+                    detail={detail}
+                    config={config}
+                    types={types}
+                    busy={busy}
+                    run={run}
+                    reloadProject={reloadProject}
+                    setReview={(output) => {
+                      setProjectSection("outputs");
+                      setReview(output);
+                    }}
+                  />
+                ) : ["banners", "social"].includes(
+                    detail.project.workspace_type || "",
+                  ) ? (
                   <BannerWorkspace
                     mode={campaignMode}
                     key={detail.project.id}

@@ -27,7 +27,10 @@ test("social campaign validates media, exports exact pixels and remains separate
     .getByRole("button", { name: "Social posts", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Create social campaign", exact: true })
+    .getByRole("button", {
+      name: "Create standalone social campaign",
+      exact: true,
+    })
     .click();
   const name = "Social browser " + Date.now();
   await page.getByLabel("Social campaign name").fill(name);
@@ -137,7 +140,7 @@ test("social campaign validates media, exports exact pixels and remains separate
     .click();
   await page
     .locator(".sidebar")
-    .getByRole("button", { name: /My booklets/ })
+    .getByRole("button", { name: /My projects/ })
     .click();
   await expect(page.getByText(name, { exact: true })).toHaveCount(0);
   await page

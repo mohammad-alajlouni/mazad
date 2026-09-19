@@ -27,7 +27,10 @@ test("independent banner workspace validates, generates and exports", async ({
     .getByRole("button", { name: "Banners", exact: true })
     .click();
   await page
-    .getByRole("button", { name: "Create banner campaign", exact: true })
+    .getByRole("button", {
+      name: "Create standalone banner campaign",
+      exact: true,
+    })
     .click();
   const name = "Banner browser " + Date.now();
   await page.getByLabel("Banner campaign name").fill(name);
@@ -138,7 +141,7 @@ test("independent banner workspace validates, generates and exports", async ({
     .click();
   await page
     .locator(".sidebar")
-    .getByRole("button", { name: /My booklets/ })
+    .getByRole("button", { name: /My projects/ })
     .click();
   await expect(page.getByText(name, { exact: true })).toHaveCount(0);
   await page

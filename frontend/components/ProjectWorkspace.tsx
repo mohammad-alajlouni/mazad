@@ -23,7 +23,11 @@ export default function ProjectWorkspace({
   setTab,
   reloadProject,
   setReview,
+  sharedMode,
+  onSharedFix,
 }: {
+  sharedMode?: "data" | "booklet";
+  onSharedFix?: (step: string) => void;
   detail: Detail;
   config: Config | null;
   types: { key: string; title: string }[];
@@ -51,8 +55,13 @@ export default function ProjectWorkspace({
   useEffect(() => {
     setDirty(false);
   }, [detail]);
-  const steps = ["auction", "agent", "items", "images", "generate", "outputs"];
-  const stepKeys = [
+  const steps =
+    sharedMode === "data"
+      ? ["auction", "agent", "items", "images"]
+      : sharedMode === "booklet"
+        ? ["generate", "outputs"]
+        : ["auction", "agent", "items", "images", "generate", "outputs"];
+  const allStepKeys = [
     "auction",
     "agent",
     "properties",
@@ -60,12 +69,21 @@ export default function ProjectWorkspace({
     "review",
     "export",
   ];
+  const stepKeys = steps.map(
+    (step) =>
+      allStepKeys[
+        ["auction", "agent", "items", "images", "generate", "outputs"].indexOf(
+          step,
+        )
+      ],
+  );
   const stepIndex = steps.indexOf(tab === "excel import" ? "items" : tab);
   const go = async (next: string) => {
     if (dirty && !(await confirm(tr("flow.notSaved")))) return;
     setDirty(false);
     setItemEditor(null);
-    setTab(next);
+    if (sharedMode === "booklet" && !steps.includes(next)) onSharedFix?.(next);
+    else setTab(next);
   };
   const [auctionValid, setAuctionValid] = useState(false);
   const [useAI, setUseAI] = useState(false);
@@ -82,11 +100,23 @@ export default function ProjectWorkspace({
         <span>{tr("common.itemsCount", { count: detail.items.length })}</span>
         <span>{tr("common.imagesCount", { count: detail.images.length })}</span>
       </div>
-      <section className="workflow-guide" aria-label={tr("flow.steps")}>
+      <section
+        className="workflow-guide"
+        aria-label={tr(
+          sharedMode === "data" ? "projectFlow.data" : "flow.steps",
+        )}
+      >
         <div className="workflow-title">
-          <h2>{tr("flow.steps")}</h2>
+          <h2>
+            {tr(sharedMode === "data" ? "projectFlow.data" : "flow.steps")}
+          </h2>
           <span>
-            {tr("flow.stepCount", { number: Math.max(stepIndex, 0) + 1 })}
+            {sharedMode
+              ? tr("projectFlow.step", {
+                  number: Math.max(stepIndex, 0) + 1,
+                  total: steps.length,
+                })
+              : tr("flow.stepCount", { number: Math.max(stepIndex, 0) + 1 })}
           </span>
         </div>
         <nav className="workflow-steps">
@@ -482,26 +512,28 @@ export default function ProjectWorkspace({
           </button>
         </div>
       )}
-      <div className="additional-tools">
-        <button
-          className="text-button"
-          onClick={() => {
-            setOtherTools(!otherTools);
-            setSelected(["project_booklet"]);
-          }}
-        >
-          {tr(otherTools ? "flow.hideTools" : "flow.otherTools")}
-        </button>
-        {otherTools && (
-          <div className="tabs">
-            {["overview", "details", "generate", "outputs"].map((key) => (
-              <button key={key} onClick={() => void go(key)}>
-                {title(key)}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {sharedMode !== "data" && (
+        <div className="additional-tools">
+          <button
+            className="text-button"
+            onClick={() => {
+              setOtherTools(!otherTools);
+              setSelected(["project_booklet"]);
+            }}
+          >
+            {tr(otherTools ? "flow.hideTools" : "flow.otherTools")}
+          </button>
+          {otherTools && (
+            <div className="tabs">
+              {["overview", "details", "generate", "outputs"].map((key) => (
+                <button key={key} onClick={() => void go(key)}>
+                  {title(key)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
