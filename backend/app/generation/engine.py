@@ -65,6 +65,12 @@ def snapshot(db, project):
         )
 
     project_data = record_dict(project)
+    if project.auction:
+        from ..auction_schemas import AuctionData
+
+        project_data["auction"] = AuctionData.model_validate(
+            project.auction
+        ).model_dump(mode="json")
     agent = db.scalar(select(SellingAgent).where(SellingAgent.project_id == project.id))
     project_data["selling_agent"] = agent.data if agent else {}
     project_data["agent_logo"] = next(

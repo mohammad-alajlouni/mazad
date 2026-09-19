@@ -69,24 +69,14 @@ test("independent banner workspace validates, generates and exports", async ({
   }))
     await page.locator(`[name="property.${field}"]`).fill(value);
   await page.getByRole("button", { name: "Save item", exact: true }).click();
-  await page
-    .locator(".workflow-steps")
-    .getByRole("button", { name: /Review and generate/ })
-    .click();
   await expect(
-    page.getByRole("button", { name: "Generate banners", exact: true }),
-  ).toBeDisabled();
-  await expect(page.locator(".banner-missing")).toContainText([
-    "Selling agent name",
-    "Selling agent logo",
-    "Auction logo",
-    "Execution request number",
-  ]);
-  await page
-    .locator(".banner-missing")
-    .filter({ hasText: "Execution request number" })
-    .click();
-  await page.getByRole("button", { name: "Edit", exact: true }).click();
+    page.locator('[name="property.execution_request_number"]'),
+  ).toBeVisible();
+  expect(
+    await page
+      .locator('[name="property.execution_request_number"]')
+      .evaluate((e: HTMLInputElement) => e.validity.valid),
+  ).toBeFalsy();
   await page
     .locator('[name="property.execution_request_number"]')
     .fill("987654321");

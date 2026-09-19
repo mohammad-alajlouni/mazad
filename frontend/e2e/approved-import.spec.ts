@@ -1,3 +1,4 @@
+import { completeBookletBasics } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -30,11 +31,13 @@ test("approved template download, invalid files, atomic import and stale preview
   await page
     .getByLabel(t("ui.project_name"), { exact: true })
     .fill("فحص القالب المعتمد");
+  await page.getByLabel(t("projectFlow.scope")).selectOption("booklet");
   await page.getByLabel(t("ui.reference_code")).fill(`APPROVED-${Date.now()}`);
   await page
     .locator("form")
     .getByRole("button", { name: t("flow.create") })
     .click();
+  await completeBookletBasics(page);
   await page
     .getByRole("button", { name: new RegExp(t("flow.properties")) })
     .click();

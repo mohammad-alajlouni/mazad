@@ -41,12 +41,11 @@ for (const flow of ["manual", "excel"])
       .getByLabel("Auction name", { exact: true })
       .fill("مزاد الاختبار المتكامل");
     await auction.getByLabel("Auction type").selectOption("hybrid");
-    await auction
-      .getByLabel("Auction date", { exact: true })
-      .fill("2026-10-10");
+
     await auction.getByLabel("Start date", { exact: true }).fill("2026-10-10");
     await auction.getByLabel("End date", { exact: true }).fill("2026-10-12");
     await auction.getByLabel("Start time", { exact: true }).fill("16:00");
+    await auction.getByLabel("End time", { exact: true }).fill("18:00");
     await auction
       .getByLabel("Physical location", { exact: true })
       .fill("الرياض");

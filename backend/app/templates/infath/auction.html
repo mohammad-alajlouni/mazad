@@ -1,4 +1,8 @@
 <div class="intro-block center">{% if project.auction_logo %}<img class="auction-logo" src="{{ project.auction_logo }}">{% endif %}<h1>{{ auction.auction_name }}</h1><h3>{{ bt(auction.auction_type) }}</h3><p>{{ page.legal_announcement_text }}</p><p>{{ page.court_decision_text }}</p>
-{% for field in ['supervising_authority','license_number','auction_date','auction_start_date','auction_end_date','start_time','end_time'] %}<p>{{ bt(field) }}: {{ auction[field] or '-' }}</p>{% endfor %}
-{% if auction.auction_type in ['physical','hybrid'] %}<p>{{ bt('physical_location') }}: {{ auction.physical_location or '-' }}</p>{% endif %}
-{% if auction.auction_type in ['electronic','hybrid'] %}<p>{{ bt('electronic_platform_name') }}: {{ auction.electronic_platform_name or '-' }}</p>{% endif %}</div>
+{% for field in ['supervising_authority','license_number'] %}{% if auction[field] %}<p>{{ bt(field) }}: {{ auction[field] }}</p>{% endif %}{% endfor %}
+{% if auction.auction_type == 'physical' %}
+<div class="auction-mode-panel"><h3>{{ bt('physical') }}</h3><p>{{ bt('auction_date') }}: {{ auction.auction_date }}</p><p>{{ bt('start_time') }}: {{ auction.start_time }}{% if auction.end_time %} — {{ auction.end_time }}{% endif %}</p><p>{{ bt('physical_location') }}: {{ auction.physical_location }}</p></div>
+{% else %}
+<div class="auction-mode-panel"><h3>{{ bt('electronic') }}</h3><p>{{ bt('auction_start_date') }}: {{ auction.auction_start_date }} · {{ auction.start_time }}</p><p>{{ bt('auction_end_date') }}: {{ auction.auction_end_date }} · {{ auction.end_time }}</p><p>{{ bt('electronic_platform_name') }}: {{ auction.electronic_platform_name }}</p></div>
+{% if auction.auction_type == 'hybrid' %}<div class="auction-mode-panel"><h3>{{ bt('physical') }}</h3><p>{{ bt('physical_location') }}: {{ auction.physical_location }}</p></div>{% endif %}
+{% endif %}</div>

@@ -1,6 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
+import {
+  missingStage,
+  validateForms,
+  WorkflowProblems,
+} from "./workflowValidation";
 import { Detail, Output, Run } from "./api";
 import { Config } from "./Settings";
 import { useConfirm } from "./Confirmation";
@@ -33,13 +38,37 @@ export default function SharedProjectWorkspace({
   const t = useTranslations("projectFlow");
   const tr = useTranslations();
   const confirm = useConfirm();
-  const [section, setSection] = useState<ProjectSection>(initialSection);
+  const root = useRef<HTMLDivElement>(null);
+  const [blocked, setBlocked] = useState<string | null>(null);
+  const [section, setSection] = useState<ProjectSection>(
+    initialSection !== "outputs" && missingStage(detail)
+      ? "data"
+      : initialSection,
+  );
   const [dataTab, setDataTab] = useState("auction");
   const [bookletTab, setBookletTab] = useState("generate");
   const [dirty, setDirty] = useState(false);
-  useEffect(() => setDirty(false), [detail]);
+  useEffect(() => {
+    setDirty(false);
+    setBlocked(null);
+  }, [detail]);
   const select = async (next: ProjectSection) => {
     if (next === section) return;
+    if (next !== "data" && next !== "outputs") {
+      if (!validateForms(root.current)) return;
+      const missing = missingStage(detail);
+      if (missing) {
+        setBlocked(missing);
+        setDataTab(missing);
+        setSection("data");
+        return;
+      }
+      if (dirty) {
+        setBlocked(dataTab);
+        return;
+      }
+    }
+    setBlocked(null);
     if (dirty && !(await confirm(tr("flow.notSaved")))) return;
     setDirty(false);
     setSection(next);
@@ -50,6 +79,7 @@ export default function SharedProjectWorkspace({
   };
   return (
     <div
+      ref={root}
       className="shared-project"
       onChangeCapture={(event) => {
         if ((event.target as HTMLElement).closest("form")) setDirty(true);
@@ -86,6 +116,7 @@ export default function SharedProjectWorkspace({
           ))}
         </nav>
       </section>
+      <WorkflowProblems detail={detail} stage={blocked} />
       {section === "data" || section === "booklet" ? (
         <ProjectWorkspace
           key={section}

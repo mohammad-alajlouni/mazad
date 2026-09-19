@@ -120,7 +120,11 @@ export function ItemForm({
   run,
   onDone,
   existing,
+  requiredFields,
+  auctionType,
 }: {
+  requiredFields?: string[];
+  auctionType?: string;
   projectId: string;
   run: Run;
   onDone: () => void;
@@ -131,6 +135,7 @@ export function ItemForm({
   const [jsonError, setJsonError] = useState("");
   return (
     <form
+      data-stage-form
       className="panel form-panel"
       onSubmit={(e) => {
         e.preventDefault();
@@ -204,7 +209,11 @@ export function ItemForm({
           </label>
         ))}
       </div>
-      <PropertyFields existing={existing} />
+      <PropertyFields
+        existing={existing}
+        requiredFields={requiredFields}
+        auctionType={auctionType}
+      />
       {[
         ["description", tr("ui.description")],
         ["specifications", tr("ui.specifications")],

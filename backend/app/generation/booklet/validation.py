@@ -14,7 +14,10 @@ def validate_project(db, project):
 
     required("auction.auction_name", a.get("auction_name"))
     required(
-        "auction.auction_date", a.get("auction_date") or a.get("auction_start_date")
+        "auction.auction_date",
+        a.get("auction_date")
+        if a.get("auction_type") == "physical"
+        else a.get("auction_start_date"),
     )
     required("auction.start_time", a.get("start_time"))
     if a.get("auction_type") in ("physical", "hybrid"):
@@ -23,6 +26,7 @@ def validate_project(db, project):
         required("auction.electronic_platform_name", a.get("electronic_platform_name"))
         required("auction.electronic_platform_url", a.get("electronic_platform_url"))
         required("auction.auction_end_date", a.get("auction_end_date"))
+        required("auction.end_time", a.get("end_time"))
     agent = db.scalar(select(SellingAgent).where(SellingAgent.project_id == project.id))
     required("selling_agent.name", agent and agent.data.get("name"))
     items = db.scalars(

@@ -73,7 +73,7 @@ function LocalizedValidation({ children }: { children: React.ReactNode }) {
         ) {
           el.setCustomValidity(
             tr(
-              el.validity.valueMissing
+              el.validity.valueMissing || (el.required && !el.value.trim())
                 ? "required"
                 : el instanceof HTMLInputElement && el.type === "email"
                   ? "invalidEmail"

@@ -1,3 +1,4 @@
+import { completeBookletBasics } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -53,9 +54,12 @@ test("administrator completes manual and Excel input, uploads image, reviews and
   await expect(
     page.getByRole("heading", { name: "Browser workflow demo" }),
   ).toBeVisible();
+  await completeBookletBasics(page);
   await page.getByRole("button", { name: /Properties/ }).click();
   await page.getByRole("button", { name: "Add property", exact: true }).click();
   await page.getByLabel("Item title").fill("وحدة طاقة تجريبية");
+  await page.locator('[name="property.property_type"]').fill("معدات");
+  await page.locator('[name="property.city"]').fill("الرياض");
   await page.getByLabel("Quantity", { exact: true }).fill("2");
   await page.getByLabel("Unit financial value").fill("1200.50");
   await page

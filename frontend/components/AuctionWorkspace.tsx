@@ -68,17 +68,39 @@ function Fields({
   fields,
   prefix = "",
   values = {},
+  requiredFields = [],
 }: {
   fields: string[];
   prefix?: string;
   values?: Values;
+  requiredFields?: string[];
 }) {
   const t = useTranslations("auction");
+  const v = useTranslations("validationFlow");
+  const [invalid, setInvalid] = useState<Record<string, boolean>>({});
   return (
-    <div className="form-grid">
+    <div
+      className="form-grid"
+      onInvalidCapture={(e) => {
+        const target = e.target as HTMLInputElement;
+        setInvalid((current) => ({ ...current, [target.name]: true }));
+        let node = target.parentElement;
+        while (node) {
+          if (node instanceof HTMLDetailsElement) node.open = true;
+          node = node.parentElement;
+        }
+      }}
+      onInputCapture={(e) => {
+        const target = e.target as HTMLInputElement;
+        if (target.required && !target.value.trim())
+          target.setCustomValidity(v("required"));
+        setInvalid((current) => ({ ...current, [target.name]: false }));
+      }}
+    >
       {fields.map((key) => (
         <label key={key}>
           {t(key)}
+          {requiredFields.includes(key) && <span aria-hidden="true"> *</span>}
           {key.endsWith("_text") ||
           key.endsWith("_description") ||
           [
@@ -90,11 +112,35 @@ function Fields({
             <textarea
               rows={4}
               name={prefix + key}
+              aria-label={t(key)}
+              required={requiredFields.includes(key)}
+              onBlur={(e) => {
+                if (
+                  requiredFields.includes(key) &&
+                  !e.currentTarget.value.trim()
+                )
+                  setInvalid((current) => ({
+                    ...current,
+                    [prefix + key]: true,
+                  }));
+              }}
               defaultValue={String(values[key] ?? "")}
             />
           ) : (
             <input
               name={prefix + key}
+              aria-label={t(key)}
+              required={requiredFields.includes(key)}
+              onBlur={(e) => {
+                if (
+                  requiredFields.includes(key) &&
+                  !e.currentTarget.value.trim()
+                )
+                  setInvalid((current) => ({
+                    ...current,
+                    [prefix + key]: true,
+                  }));
+              }}
               defaultValue={String(values[key] ?? "")}
               type={
                 key.endsWith("_date")
@@ -113,9 +159,14 @@ function Fields({
                         ? "number"
                         : "text"
               }
-              min="0"
+              min={
+                key === "area" && requiredFields.includes(key) ? "0.0001" : "0"
+              }
               step="any"
             />
+          )}
+          {invalid[prefix + key] && (
+            <small className="field-error">{v("required")}</small>
           )}
         </label>
       ))}
@@ -141,7 +192,15 @@ export function readProperty(form: FormData) {
   values.rental_contracts = Object.values(rentals);
   return values;
 }
-export function PropertyFields({ existing }: { existing?: Item }) {
+export function PropertyFields({
+  existing,
+  requiredFields = [],
+  auctionType = "physical",
+}: {
+  existing?: Item;
+  requiredFields?: string[];
+  auctionType?: string;
+}) {
   const t = useTranslations("auction");
   const prop = existing?.property_data || {};
   const [rentals, setRentals] = useState<{ key: number; data: Values }[]>(
@@ -158,7 +217,16 @@ export function PropertyFields({ existing }: { existing?: Item }) {
           <summary>
             {t(index === 0 ? "property_details" : "property_links")}
           </summary>
-          <Fields fields={fields} prefix="property." values={prop} />
+          <Fields
+            fields={fields.filter(
+              (key) =>
+                auctionType !== "physical" ||
+                !["auction_close_date", "auction_close_time"].includes(key),
+            )}
+            prefix="property."
+            values={prop}
+            requiredFields={requiredFields}
+          />
         </details>
       ))}
       <details>
@@ -240,6 +308,10 @@ export function AuctionWorkspace({
   const t = useTranslations("auction");
   const bt = useTranslations(socialMode ? "social" : "banner");
   const auction = detail.project.auction || {};
+  const [kind, setKind] = useState(String(auction.auction_type || "physical"));
+  const [draft, setDraft] = useState<Values>({});
+  const rules = detail.workflow?.rules;
+  const fieldRules = rules?.auction[kind];
   const locale = useLocale();
   const f = useTranslations("flow");
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -257,7 +329,12 @@ export function AuctionWorkspace({
     <div className="auction-workspace">
       {section === "auction" && (
         <form
+          data-stage-form
           className="panel form-panel"
+          onChange={(event) => {
+            const form = event.currentTarget;
+            setDraft(Object.fromEntries(new FormData(form)));
+          }}
           onSubmit={(event) => {
             event.preventDefault();
             const values = Object.fromEntries(
@@ -285,7 +362,8 @@ export function AuctionWorkspace({
             {t("auction_type")}
             <select
               name="auction_type"
-              defaultValue={String(auction.auction_type || "physical")}
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
             >
               {["physical", "electronic", "hybrid"].map((k) => (
                 <option key={k} value={k}>
@@ -294,8 +372,16 @@ export function AuctionWorkspace({
               ))}
             </select>
           </label>
+          <p className="notice">{f("typeHelp_" + kind)}</p>
           {auctionGroups.map((fields, index) => (
-            <details key={index} open={bannerMode || index < 3}>
+            <details
+              key={index}
+              open={
+                bannerMode ||
+                index < 3 ||
+                fields.some((key) => fieldRules?.required.includes(key))
+              }
+            >
               <summary>
                 {t(
                   [
@@ -306,7 +392,13 @@ export function AuctionWorkspace({
                   ][index],
                 )}
               </summary>
-              <Fields fields={fields} values={auction} />
+              <Fields
+                fields={fields.filter(
+                  (key) => !fieldRules || fieldRules.visible.includes(key),
+                )}
+                values={{ ...auction, ...draft }}
+                requiredFields={fieldRules?.required}
+              />
             </details>
           ))}
           <label>
@@ -354,6 +446,7 @@ export function AuctionWorkspace({
       )}
       {section === "agent" && (
         <form
+          data-stage-form
           className="panel form-panel"
           onSubmit={(event) => {
             event.preventDefault();
@@ -392,11 +485,13 @@ export function AuctionWorkspace({
               "social_accounts",
             ]}
             values={detail.selling_agent || {}}
+            requiredFields={rules?.agent_required}
           />
           <label>
             {t("agent_logo")}
             <select
               name="logo_image_id"
+              required={rules?.agent_logo_required && !logoFile}
               defaultValue={String(detail.selling_agent?.logo_image_id || "")}
             >
               <option value="">-</option>
@@ -413,7 +508,13 @@ export function AuctionWorkspace({
             {f("uploadLogo")}
             <FileInput
               accept="image/png,image/jpeg,image/webp"
-              onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                setLogoFile(e.target.files?.[0] || null);
+                const select =
+                  e.target.form?.elements.namedItem("logo_image_id");
+                if (select instanceof HTMLSelectElement)
+                  select.setCustomValidity("");
+              }}
             />
           </label>
           <p className="muted">{f("logoHelp")}</p>

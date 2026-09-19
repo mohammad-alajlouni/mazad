@@ -96,7 +96,10 @@ def create_project(body: ProjectInput, db=Depends(get_db)):
 @router.get("/projects/{id}")
 def project_detail(id: str, db=Depends(get_db)):
     p = get_project(db, id)
+    from ..services.workflow import workflow
+
     return {
+        "workflow": workflow(db, p),
         "project": p,
         "selling_agent": (
             agent.data

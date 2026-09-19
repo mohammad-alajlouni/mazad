@@ -240,3 +240,5 @@ See [auction implementation and verification report](docs/auction-implementation
 ## Shared auction project workflow
 
 Create one project and enter auction data, properties, images and selling agent once. The project contains Booklet, Banners and Social posts sections plus All project outputs. Design settings remain separate; shared data edits invalidate publications, while banner/social design edits invalidate only that type. Standalone booklet and campaign creation remain explicit opt-in choices. Migration 0006 upgrades existing booklet projects in place without copying data; standalone banner/social campaigns retain their scope. See [workflow details](docs/shared-project-workflow.md).
+
+Auction fields and required-step checks now follow physical, electronic and hybrid modes. Inactive fields are removed on save and generation; users must complete and save required data before advancing. See [auction types and validation](docs/auction-types-and-validation.md).

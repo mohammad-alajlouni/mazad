@@ -587,7 +587,10 @@
     "propertyNumber": "Property {number}",
     "complete": "Complete",
     "accountStatus": "Account status",
-    "saveAuctionOnly": "Save auction and continue"
+    "saveAuctionOnly": "Save auction and continue",
+    "typeHelp_physical": "Physical: auction date, time and venue. Electronic platform fields are omitted from publications.",
+    "typeHelp_electronic": "Electronic: bidding start and end, and platform details. Physical venue fields are omitted.",
+    "typeHelp_hybrid": "Hybrid: electronic bidding period and platform, plus the physical venue. Both participation methods appear in publications."
   },
   "excel": {
     "title": "Import properties from the approved template",
@@ -781,5 +784,17 @@
     "scope": "Project type",
     "sharedOption": "Complete project: booklet, banners and posts (default)",
     "bookletOnly": "Standalone booklet only"
+  },
+  "validationFlow": {
+    "completeFirst": "Complete this step before continuing.",
+    "saveFirst": "Complete the indicated fields and save your changes. Required fields cannot be skipped.",
+    "required": "This field is required; enter a valid value.",
+    "fix": "Complete the data",
+    "maxLength": " (maximum {limit} characters)",
+    "agent_name": "Selling agent name",
+    "campaign_image": "Auction cover image",
+    "main_image": "Main property image",
+    "property_selection": "Property selection",
+    "property_limit": "Property count limit"
   }
 }

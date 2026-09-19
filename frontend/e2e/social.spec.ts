@@ -73,14 +73,10 @@ test("social campaign validates media, exports exact pixels and remains separate
     .locator(".workflow-steps")
     .getByRole("button", { name: /Review and generate/ })
     .click();
-  await expect(
-    page.getByRole("button", { name: "Generate social posts", exact: true }),
-  ).toBeDisabled();
-  await expect(
-    page
-      .locator(".banner-missing")
-      .filter({ hasText: "Auction announcement photo" }),
-  ).toBeVisible();
+  await expect(page.locator('.auction-workspace [name="name"]')).toBeVisible();
+  await expect(page.locator(".workflow-problems")).toContainText(
+    "Selling agent",
+  );
   await page
     .locator(".workflow-steps")
     .getByRole("button", { name: /Photos and logos/ })

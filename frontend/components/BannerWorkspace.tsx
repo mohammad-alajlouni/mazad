@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   api,
@@ -17,6 +17,11 @@ import SocialTemplateFields, {
   socialDefaults,
   type SocialConfig,
 } from "./SocialTemplateFields";
+import {
+  missingStage,
+  validateForms,
+  WorkflowProblems,
+} from "./workflowValidation";
 import { useConfirm } from "./Confirmation";
 
 type Template = {
@@ -106,6 +111,8 @@ export default function BannerWorkspace({
   const t = useTranslations(mode),
     tr = useTranslations(),
     at = useTranslations("auction");
+  const root = useRef<HTMLDivElement>(null);
+  const [blocked, setBlocked] = useState<string | null>(null);
   const isSocial = mode === "social";
   const outputType = isSocial ? "social_content" : "banners";
   const [social, setSocial] = useState<SocialConfig>({
@@ -134,6 +141,7 @@ export default function BannerWorkspace({
   }, []);
   useEffect(() => {
     setDirty(false);
+    setBlocked(null);
     setCheck(null);
   }, [detail]);
   useEffect(() => {
@@ -143,6 +151,32 @@ export default function BannerWorkspace({
       );
   }, [step, detail]);
   const go = async (next: string) => {
+    if (steps.indexOf(next) > steps.indexOf(step)) {
+      if (!validateForms(root.current)) return;
+      // Agent data belongs to the images step in standalone campaigns.
+      const relevant =
+        next === "items"
+          ? ["auction"]
+          : next === "images"
+            ? ["auction", "items"]
+            : next === "generate" || next === "outputs"
+              ? ["auction", "agent", "items", "images"]
+              : [];
+      const missing = relevant.find(
+        (key) => detail.workflow?.stages[key]?.valid === false,
+      );
+      if (missing) {
+        setBlocked(missing);
+        if (shared) onSharedFix?.(missing);
+        else setStep(missing === "agent" ? "images" : missing);
+        return;
+      }
+      if (dirty) {
+        setBlocked(step);
+        return;
+      }
+    }
+    setBlocked(null);
     if (dirty && !(await confirm(tr("flow.notSaved")))) return;
     setDirty(false);
     setEditor(null);
@@ -151,11 +185,13 @@ export default function BannerWorkspace({
   };
   return (
     <div
+      ref={root}
       className="banner-workflow"
       onChangeCapture={(event) => {
         if ((event.target as HTMLElement).closest("form")) setDirty(true);
       }}
     >
+      <WorkflowProblems detail={detail} stage={blocked} />
       <section className="workflow-guide">
         <h2>{t("steps")}</h2>
         <p>{shared ? tr("projectFlow.reused") : t("independent")}</p>
@@ -179,6 +215,7 @@ export default function BannerWorkspace({
       </section>
       {step === "template" && (
         <form
+          data-stage-form
           className="panel form-panel"
           onSubmit={(event) => {
             event.preventDefault();
@@ -295,6 +332,10 @@ export default function BannerWorkspace({
         (editor ? (
           <ItemForm
             projectId={detail.project.id}
+            requiredFields={detail.workflow?.rules.property_required}
+            auctionType={String(
+              detail.project.auction?.auction_type || "physical",
+            )}
             existing={editor === "new" ? undefined : editor}
             run={run}
             onDone={() => {

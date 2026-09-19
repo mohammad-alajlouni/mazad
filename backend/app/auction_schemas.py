@@ -68,6 +68,14 @@ class AuctionData(Structured):
 
     @model_validator(mode="after")
     def schedule(self):
+        # Inactive fields must not leak into another auction type's output.
+        if self.auction_type == "physical":
+            self.auction_start_date = self.auction_end_date = None
+            self.electronic_platform_name = self.electronic_platform_url = ""
+        else:
+            self.auction_date = None
+            if self.auction_type == "electronic":
+                self.physical_location = self.auction_location_url = ""
         if (
             self.auction_start_date
             and self.auction_end_date

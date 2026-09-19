@@ -1,3 +1,4 @@
+import { completeBookletBasics } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -129,6 +130,7 @@ for (const locale of ["en", "ar"] as const)
       const projectId = (
         await page.request.get("/api/projects").then((r) => r.json())
       ).find((p: { name: string }) => p.name === projectName).id;
+      await completeBookletBasics(page);
       await page
         .getByRole("button", { name: new RegExp(t("flow.properties")) })
         .click();
@@ -136,6 +138,8 @@ for (const locale of ["en", "ar"] as const)
         .getByRole("button", { name: t("ui.add_item"), exact: true })
         .click();
       await page.getByLabel(t("ui.item_title")).fill("مولد Generator A-01");
+      await page.locator('[name="property.property_type"]').fill("معدات");
+      await page.locator('[name="property.city"]').fill("الرياض");
       await page.getByLabel(t("ui.quantity"), { exact: true }).fill("2");
       await page.getByLabel(t("ui.unit_financial_value")).fill("1200.50");
       await page

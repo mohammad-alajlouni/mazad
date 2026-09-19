@@ -40,7 +40,8 @@
 .legal{height:{{ 10 if square else 13 }}%;width:{{ 66 if square else 60 if wide else 46 }}%}
 </style></head><body>
 {% macro schedule() %}
-{% if a.auction_type in ['electronic','hybrid'] %}<p><strong>{{ 'يبدأ' if ar else 'Starts' }}</strong><span dir="ltr">{{ a.auction_start_date }} {{ a.start_time[:5] }}</span></p><p><strong>{{ 'ينتهي' if ar else 'Ends' }}</strong><span dir="ltr">{{ a.auction_end_date }} {{ a.end_time[:5] }}</span></p><p>{{ a.electronic_platform_name }}</p>{% else %}<p dir="ltr">{{ a.auction_date }}</p><p dir="ltr">{{ a.start_time[:5] }}</p>{% endif %}
+<p class="auction-mode">{{ bt(a.auction_type) }}</p>
+{% if a.auction_type in ['electronic','hybrid'] %}<p><strong>{{ 'يبدأ' if ar else 'Starts' }}</strong><span dir="ltr">{{ a.auction_start_date }} {{ a.start_time[:5] }}</span></p><p><strong>{{ 'ينتهي' if ar else 'Ends' }}</strong><span dir="ltr">{{ a.auction_end_date }} {{ a.end_time[:5] }}</span></p><p>{{ a.electronic_platform_name }}</p>{% else %}<p dir="ltr">{{ a.auction_date }}</p><p dir="ltr">{{ a.start_time[:5] }}{% if a.end_time %} — {{ a.end_time[:5] }}{% endif %}</p>{% endif %}
 {% if a.auction_type in ['physical','hybrid'] %}<p>{{ a.physical_location }}</p>{% endif %}
 {% endmacro %}
 {% for item in items %}<section class="board">

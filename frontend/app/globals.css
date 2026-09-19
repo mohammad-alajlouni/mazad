@@ -1558,3 +1558,9 @@ html:lang(ar) .brand-tag {
 
 .shared-project > .panel { margin-bottom: 24px; }
 .project-sections { flex-wrap: wrap; gap: 8px; }
+
+.field-error { color: #a12626; font-size: 12px; }
+.workflow-problems { margin: 18px 0; }
+.workflow-problems ul { margin: 8px 0; padding-inline-start: 22px; }
+form[data-stage-form] input:user-invalid, form[data-stage-form] textarea:user-invalid,
+form[data-stage-form] select:user-invalid { border-color: #a12626; }

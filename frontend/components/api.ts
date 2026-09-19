@@ -83,6 +83,25 @@ export type ImageAsset = {
   caption?: string;
 };
 export type Detail = {
+  workflow?: {
+    rules: {
+      auction: Record<string, { visible: string[]; required: string[] }>;
+      property_required: string[];
+      agent_required: string[];
+      agent_logo_required: boolean;
+    };
+    stages: Record<
+      string,
+      {
+        valid: boolean;
+        missing: {
+          field: string;
+          item?: string | null;
+          limit?: number | null;
+        }[];
+      }
+    >;
+  };
   selling_agent?: Record<string, unknown>;
   project: Project;
   items: Item[];

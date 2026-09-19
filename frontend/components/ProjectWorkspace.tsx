@@ -1,8 +1,13 @@
+import {
+  missingStage,
+  validateForms,
+  WorkflowProblems,
+} from "./workflowValidation";
 import { AuctionWorkspace, AuctionReview } from "./AuctionWorkspace";
 import { useConfirm } from "./Confirmation";
 import { formatNumber, formatDate } from "../i18n/format";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ArrowUpRight, Plus, Layers, Sparkles } from "lucide-react";
 import { api, send, Detail, Item, Output, Run } from "./api";
 import { Config } from "./Settings";
@@ -40,6 +45,8 @@ export default function ProjectWorkspace({
 }) {
   const tr = useTranslations();
   const confirm = useConfirm();
+  const root = useRef<HTMLDivElement>(null);
+  const [blocked, setBlocked] = useState<string | null>(null);
   const [outputLanguage, setOutputLanguage] = useState(
     String(detail.project.auction?.document_language || "ar"),
   );
@@ -54,6 +61,7 @@ export default function ProjectWorkspace({
   const [dirty, setDirty] = useState(false);
   useEffect(() => {
     setDirty(false);
+    setBlocked(null);
   }, [detail]);
   const steps =
     sharedMode === "data"
@@ -79,6 +87,21 @@ export default function ProjectWorkspace({
   );
   const stepIndex = steps.indexOf(tab === "excel import" ? "items" : tab);
   const go = async (next: string) => {
+    if (steps.indexOf(next) > stepIndex || next === "generate") {
+      if (!validateForms(root.current)) return;
+      const missing = missingStage(detail, next);
+      if (missing) {
+        setBlocked(missing);
+        if (sharedMode === "booklet") onSharedFix?.(missing);
+        else setTab(missing);
+        return;
+      }
+      if (dirty) {
+        setBlocked(tab);
+        return;
+      }
+    }
+    setBlocked(null);
     if (dirty && !(await confirm(tr("flow.notSaved")))) return;
     setDirty(false);
     setItemEditor(null);
@@ -89,11 +112,13 @@ export default function ProjectWorkspace({
   const [useAI, setUseAI] = useState(false);
   return (
     <div
+      ref={root}
       className="booklet-workflow"
       onChangeCapture={(event) => {
         if ((event.target as HTMLElement).closest("form")) setDirty(true);
       }}
     >
+      <WorkflowProblems detail={detail} stage={blocked} />
       <div className="project-meta">
         <Badge status={detail.project.status} />
         <span>{detail.project.customer || tr("ui.no_client_assigned")}</span>
@@ -211,6 +236,10 @@ export default function ProjectWorkspace({
         (itemEditor ? (
           <ItemForm
             projectId={detail.project.id}
+            requiredFields={detail.workflow?.rules.property_required}
+            auctionType={String(
+              detail.project.auction?.auction_type || "physical",
+            )}
             existing={itemEditor === "new" ? undefined : itemEditor}
             run={run}
             onDone={() => {

@@ -127,7 +127,6 @@ def caption(project, config, items, language):
             in (
                 "auction_start_date",
                 "auction_end_date",
-                "end_time",
                 "electronic_platform_name",
             )
             and not electronic

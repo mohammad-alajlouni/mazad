@@ -83,12 +83,8 @@ test("Arabic default, administrator provisioning, private author booklet and app
   await expect(page.locator(".workflow-steps button")).toHaveCount(6);
   await step("review").click();
   await expect(
-    page.getByRole("button", { name: t("flow.generate"), exact: true }),
-  ).toBeDisabled();
-  await page
-    .getByRole("button", { name: t("flow.fixAuction"), exact: true })
-    .first()
-    .click();
+    page.locator('.auction-workspace [name="auction_date"]'),
+  ).toBeVisible();
   await page
     .getByLabel(t("auction.auction_date"), { exact: true })
     .fill("2026-11-10");
