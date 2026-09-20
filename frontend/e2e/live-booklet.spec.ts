@@ -1,3 +1,4 @@
+import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -22,6 +23,7 @@ for (const mobile of [false, true])
     await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
     await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in to workspace" }).click();
+    await completeAccount(page);
     if (mobile)
       await page.getByRole("button", { name: "Toggle navigation" }).click();
     await expect(

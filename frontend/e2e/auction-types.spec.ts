@@ -1,3 +1,4 @@
+import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -23,6 +24,7 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
     await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
     await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in to workspace" }).click();
+    await completeAccount(page);
     await page
       .locator(".sidebar")
       .getByRole("button", { name: "Create project", exact: true })
@@ -83,24 +85,6 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
     for (const [key, value] of Object.entries(values))
       await form.locator('[name="' + key + '"]').fill(value);
     await form.getByRole("button", { name: "Save auction and cover" }).click();
-    await expect(
-      page.locator('.auction-workspace [name="name"]'),
-    ).toBeVisible();
-    await page
-      .locator(".workflow-steps")
-      .getByRole("button", { name: /Properties/ })
-      .click();
-    await expect(
-      page.locator('.auction-workspace [name="name"]'),
-    ).toBeVisible();
-    // Save the agent once with its required logo, then verify property input gates.
-    await page.locator('.auction-workspace [name="name"]').fill("وكيل تجريبي");
-    await page
-      .locator('.auction-workspace input[type="file"]')
-      .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-    await page
-      .getByRole("button", { name: "Save selling agent", exact: true })
-      .click();
     await page
       .getByRole("button", { name: "Add property", exact: true })
       .click();

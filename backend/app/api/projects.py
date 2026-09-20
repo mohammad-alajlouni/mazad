@@ -12,6 +12,7 @@ from ..models import (
     ProjectItem,
     RentalContract,
     SellingAgent,
+    User,
 )
 from ..schemas import ItemInput, ProjectInput
 from ..services.properties import item_view, save_item
@@ -79,6 +80,8 @@ def projects(db=Depends(get_db)):
 
 @router.post("/projects", status_code=201)
 def create_project(body: ProjectInput, db=Depends(get_db)):
+    from ..services.agent_profile import apply_profile
+    user = db.scalar(select(User).where(User.id == db.info["user_id"]).with_for_update())
     data = body.model_dump(mode="json")
     data["auction"] = data["auction"] or {}
     p = Project(owner_id=db.info["user_id"], **data)
@@ -88,6 +91,7 @@ def create_project(body: ProjectInput, db=Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(409, "A project with this reference already exists")
+    apply_profile(db, user, p)
     audit(db, "Project created", p.name)
     db.commit()
     return p

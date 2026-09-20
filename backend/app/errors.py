@@ -1,6 +1,8 @@
 """Stable public error codes; English detail is retained for API compatibility."""
 
 ERROR_CODES = {
+    "Complete your selling agent profile": "AGENT_PROFILE_REQUIRED",
+    "Update selling agent information in account settings": "AGENT_PROFILE_MANAGED",
     "Use the social workspace": "SOCIAL_WORKSPACE_REQUIRED",
     "Complete the social review before generation": "COMPLETE_SOCIAL_REVIEW",
     "Generated layout failed preflight": "LAYOUT_PREFLIGHT_FAILED",

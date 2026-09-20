@@ -176,7 +176,7 @@
     "thoughtfully_organized_ready_for_what_s_next": "Thoughtfully organized. Ready for what’s next.",
     "toggle_navigation": "Toggle navigation",
     "total_projects": "My auctions",
-    "turn_project_data_into_polished_approved_deliverables": "Enter the auction, properties, images and selling agent once. Booklets, banners and social posts use this project’s shared data, with separate design settings and approvals.",
+    "turn_project_data_into_polished_approved_deliverables": "Enter auction details, properties and images once. Your account supplies the selling agent details automatically for booklets, banners and social posts.",
     "unavailable": "Unavailable",
     "unavailable_or_not_requested": "Unavailable or not requested",
     "unit_financial_value": "Unit financial value",
@@ -337,7 +337,9 @@
     "COMPLETE_BANNER_REVIEW": "Complete the banner review before generating.",
     "SOCIAL_WORKSPACE_REQUIRED": "Use the social workspace to generate posts without AI rewriting.",
     "COMPLETE_SOCIAL_REVIEW": "Complete the social post review before generation.",
-    "LAYOUT_PREFLIGHT_FAILED": "Generation stopped because content does not fit the template or dimensions are incorrect. Shorten long project text and retry; no approvable file was created."
+    "LAYOUT_PREFLIGHT_FAILED": "Generation stopped because content does not fit the template or dimensions are incorrect. Shorten long project text and retry; no approvable file was created.",
+    "AGENT_PROFILE_REQUIRED": "Complete your name, description, phone and logo, and check your links.",
+    "AGENT_PROFILE_MANAGED": "Update selling agent details in your account settings."
   },
   "fields": {
     "name": "Project name",
@@ -392,7 +394,8 @@
     "Output_regenerated": "Output regenerated",
     "Settings_updated": "Settings updated",
     "User_created": "User created",
-    "User_status_updated": "User status updated"
+    "User_status_updated": "User status updated",
+    "Account_profile_updated": "Account profile updated"
   },
   "auction": {
     "summary": "Property summary",
@@ -467,7 +470,7 @@
     "APPROVED": "Approved",
     "NEEDS_REGENERATION": "Needs regeneration",
     "auction_setup": "Auction setup",
-    "setup_help": "Save auction information and the selling agent, then add properties under Items.",
+    "setup_help": "Complete the auction details, then add properties. Selling agent details come from your account.",
     "auction_information": "Auction information",
     "schedule": "Schedule",
     "location_links": "Location, platform and links",
@@ -526,7 +529,7 @@
   },
   "flow": {
     "home": "Auction projects",
-    "homeHelp": "Enter the auction, properties, images and selling agent once. Booklets, banners and social posts use this project’s shared data, with separate design settings and approvals.",
+    "homeHelp": "Enter auction details, properties and images once. Your account supplies the selling agent details automatically for booklets, banners and social posts.",
     "create": "Create project",
     "myBooklets": "My projects",
     "bookletTitle": "Booklet / auction name",
@@ -539,9 +542,9 @@
     "review": "Review and generate",
     "export": "Preview and download",
     "auctionHelp": "Set the auction type, schedule, location and legal details, then choose a cover.",
-    "agentHelp": "Enter the selling agent’s details, contact channels and logo for the booklet.",
+    "agentHelp": "Selling agent details come from your account settings.",
     "propertiesHelp": "Add properties manually or import Excel. Complete deeds, boundaries, features and rental contracts.",
-    "imagesHelp": "Upload images and associate them with a property, including main images, maps and plans. Upload the agent logo without a property association.",
+    "imagesHelp": "Upload property photos, plans and the auction logo. Your selling agent logo comes from your account.",
     "reviewHelp": "Check details and missing fields. Complete required information, then generate a draft booklet.",
     "exportHelp": "Preview the pages, then approve the booklet to enable PDF download. Later data changes require regeneration.",
     "continue": "Continue booklet",
@@ -555,7 +558,7 @@
     "preview": "Preview and approve booklet",
     "emptyBooklet": "No booklet draft yet. Go to Review and generate.",
     "fixAuction": "Complete auction details",
-    "fixAgent": "Complete selling agent",
+    "fixAgent": "My account settings",
     "fixProperties": "Complete properties",
     "userRole": "Booklet author",
     "adminRole": "System administrator",
@@ -652,7 +655,7 @@
       "template": "Template and size",
       "auction": "Auction details",
       "items": "Properties",
-      "images": "Agent and logos",
+      "images": "Photos and logos",
       "generate": "Review and generate",
       "outputs": "Generated banners"
     },
@@ -672,7 +675,7 @@
     "saveTemplate": "Save template and continue",
     "propertiesHelp": "Add properties manually or with the approved spreadsheet. Complete the execution request number, usage and board details for each property.",
     "logos": "Board logos",
-    "logosHelp": "Upload the selling agent logo in the form above and save the agent. Upload the auction logo below using the Auction logo category, without attaching it to a property.",
+    "logosHelp": "Your selling agent logo comes from your account. Upload the auction logo below without attaching it to a property.",
     "review": "Banner readiness review",
     "ready": "Ready to generate {count} banners.",
     "missing": "Complete these details before generation. Select a field to open its section.",
@@ -718,7 +721,7 @@
     "saveTemplate": "Save design and continue",
     "propertiesHelp": "Enter properties manually or using the approved workbook. Property posts require type, city, district, area, deed and a main photo for each property.",
     "logos": "Required photos and logos",
-    "logosHelp": "Save the agent logo above. Upload the auction logo as a campaign image. For announcements, upload a campaign image with Auction cover category. For property posts, upload a Main image attached to each property. Photos preserve their aspect ratio, with two diagonal corners matching the template; verify details in the preview.",
+    "logosHelp": "Your selling agent logo comes from your account. Upload an auction logo and cover photo for announcements, or a main image for each property.",
     "review": "Social post readiness review",
     "ready": "Ready to generate {count} posts.",
     "missing": "Complete these details before generation. Select a field to open its section.",
@@ -765,7 +768,7 @@
   },
   "projectFlow": {
     "title": "One project, every auction publication",
-    "reused": "Enter the auction, properties, images and selling agent once. Booklets, banners and social posts use this project’s shared data, with separate design settings and approvals.",
+    "reused": "Enter auction details, properties and images once. Your account supplies the selling agent details automatically for booklets, banners and social posts.",
     "counts": "{items} properties and {images} images in this shared project",
     "sections": "Project sections",
     "data": "Project data",
@@ -842,5 +845,19 @@
     "generate": "Generate booklet, banners and social posts",
     "generating": "Generating project…",
     "done": "Project outputs generated for review."
+  },
+  "accountProfile": {
+    "title": "My account settings",
+    "welcome": "Complete your selling agent profile",
+    "intro": "Enter your details once. We will use them automatically in your booklets, banners and social posts.",
+    "help": "Your selling agent identity across all your projects.",
+    "optional": "Additional contact channels (optional)",
+    "updateHelp": "Changes apply to existing and new projects. Previous outputs need regeneration to use the updated details.",
+    "save": "Save my details",
+    "continue": "Save and start",
+    "saved": "Account details saved and projects updated.",
+    "failed": "Could not load your account details.",
+    "retry": "Try again",
+    "loading": "Loading your details…"
   }
 }

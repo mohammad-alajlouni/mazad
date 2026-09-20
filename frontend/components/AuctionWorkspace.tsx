@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import FileInput from "./FileInput";
 import { api, send, Detail, Item, Run } from "./api";
 
 type Values = Record<string, unknown>;
@@ -64,7 +63,7 @@ const rentalFields = [
   "next_due_date",
   "annual_rent_value",
 ];
-function Fields({
+export function Fields({
   fields,
   prefix = "",
   values = {},
@@ -314,7 +313,6 @@ export function AuctionWorkspace({
   const fieldRules = rules?.auction[kind];
   const locale = useLocale();
   const f = useTranslations("flow");
-  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [covers, setCovers] = useState<
     { id: string; name_ar: string; name_en: string; thumbnail: string }[]
   >([]);
@@ -443,84 +441,6 @@ export function AuctionWorkspace({
           <button className="primary">
             {bannerMode ? f("saveAuctionOnly") : t("save_auction")}
           </button>
-        </form>
-      )}
-      {section === "agent" && (
-        <form
-          data-stage-form
-          data-preview-form={section}
-          className="panel form-panel"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const values = Object.fromEntries(
-              new FormData(event.currentTarget),
-            );
-            void run(async () => {
-              if (logoFile) {
-                const data = new FormData();
-                data.append("file", logoFile);
-                data.append("category", "agent_logo");
-                const image = await api<{ id: string }>(
-                  `/projects/${detail.project.id}/images`,
-                  { method: "POST", body: data },
-                );
-                values.logo_image_id = image.id;
-              }
-              await api(`/projects/${detail.project.id}/selling-agent`, {
-                method: "PUT",
-                body: send(values),
-              });
-              await reload();
-              onSaved?.();
-            }, t("saved"));
-          }}
-        >
-          <h2>{t("selling_agent")}</h2>
-          <Fields
-            fields={[
-              "name",
-              "description",
-              "website",
-              "phone",
-              "whatsapp",
-              "contact_information",
-              "social_accounts",
-            ]}
-            values={detail.selling_agent || {}}
-            requiredFields={rules?.agent_required}
-          />
-          <label>
-            {t("agent_logo")}
-            <select
-              name="logo_image_id"
-              required={rules?.agent_logo_required && !logoFile}
-              defaultValue={String(detail.selling_agent?.logo_image_id || "")}
-            >
-              <option value="">-</option>
-              {detail.images
-                .filter((i) => !i.item_id)
-                .map((image, index) => (
-                  <option key={image.id} value={image.id}>
-                    {image.caption || t("image_number", { number: index + 1 })}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <label>
-            {f("uploadLogo")}
-            <FileInput
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(e) => {
-                setLogoFile(e.target.files?.[0] || null);
-                const select =
-                  e.target.form?.elements.namedItem("logo_image_id");
-                if (select instanceof HTMLSelectElement)
-                  select.setCustomValidity("");
-              }}
-            />
-          </label>
-          <p className="muted">{f("logoHelp")}</p>
-          <button className="primary">{t("save_agent")}</button>
         </form>
       )}
     </div>

@@ -1,3 +1,4 @@
+import { completeAccount } from "./account-setup";
 import { completeBookletBasics } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -34,6 +35,7 @@ test("administrator completes manual and Excel input, uploads image, reviews and
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in to workspace" }).click();
+  await completeAccount(page);
   await expect(
     page.getByRole("heading", { name: "Account administration" }),
   ).toBeVisible();

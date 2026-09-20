@@ -83,7 +83,11 @@ export default function GenerateProject({
         <button
           type="button"
           className="text-button"
-          onClick={() => onFix("data", stage)}
+          onClick={() =>
+            stage === "agent"
+              ? window.dispatchEvent(new Event("open-account-profile"))
+              : onFix("data", stage)
+          }
         >
           {t("fix")}
         </button>

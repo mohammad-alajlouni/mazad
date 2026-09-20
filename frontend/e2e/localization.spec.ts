@@ -1,3 +1,4 @@
+import { completeAccount } from "./account-setup";
 import { completeBookletBasics } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -56,6 +57,7 @@ for (const locale of ["en", "ar"] as const)
       await page
         .getByRole("button", { name: t("ui.sign_in_to_workspace") })
         .click();
+      await completeAccount(page);
       await expect(
         page.getByRole("heading", { name: t("flow.adminHome") }),
       ).toBeVisible();

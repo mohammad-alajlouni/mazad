@@ -1,3 +1,4 @@
+import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -28,6 +29,7 @@ test("Arabic default, administrator provisioning, private author booklet and app
   await page
     .getByRole("button", { name: t("ui.sign_in_to_workspace") })
     .click();
+  await completeAccount(page);
   await expect(
     page.getByRole("heading", { name: t("flow.adminHome") }),
   ).toBeVisible();
@@ -46,6 +48,7 @@ test("Arabic default, administrator provisioning, private author booklet and app
   await page
     .getByRole("button", { name: t("ui.sign_in_to_workspace") })
     .click();
+  await completeAccount(page);
   await expect(
     page.getByRole("heading", { name: t("flow.home") }),
   ).toBeVisible();
@@ -80,7 +83,7 @@ test("Arabic default, administrator provisioning, private author booklet and app
     page
       .locator(".workflow-steps")
       .getByRole("button", { name: new RegExp(t(`flow.${key}`)) });
-  await expect(page.locator(".workflow-steps button")).toHaveCount(6);
+  await expect(page.locator(".workflow-steps button")).toHaveCount(5);
   await step("review").click();
   await expect(
     page.locator('.auction-workspace [name="auction_date"]'),
@@ -93,16 +96,6 @@ test("Arabic default, administrator provisioning, private author booklet and app
     .getByLabel(t("auction.physical_location"), { exact: true })
     .fill("الرياض");
   await page.getByRole("button", { name: t("auction.save_auction") }).click();
-  await expect(page.locator(".workflow-steps .selected")).toContainText(
-    t("flow.agent"),
-  );
-  await page
-    .getByLabel(t("auction.name"), { exact: true })
-    .fill("وكيل المزاد التجريبي");
-  await page
-    .getByLabel(t("flow.uploadLogo"))
-    .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-  await page.getByRole("button", { name: t("auction.save_agent") }).click();
   await expect(page.locator(".workflow-steps .selected")).toContainText(
     t("flow.properties"),
   );

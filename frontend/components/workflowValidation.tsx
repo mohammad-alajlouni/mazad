@@ -1,10 +1,10 @@
 import { useTranslations } from "next-intl";
 import { Detail } from "./api";
-export const dataStages = ["auction", "agent", "items", "images"];
+export const dataStages = ["auction", "items", "images"];
 export function missingStage(detail: Detail, before = "generate") {
   const index = dataStages.indexOf(before);
   return dataStages
-    .slice(0, index < 0 ? 4 : index)
+    .slice(0, index < 0 ? dataStages.length : index)
     .find((key) => detail.workflow?.stages[key]?.valid === false);
 }
 export function validateForms(root: HTMLElement | null) {

@@ -1,3 +1,4 @@
+import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -21,6 +22,7 @@ for (const flow of ["manual", "excel"])
     await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
     await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in to workspace" }).click();
+    await completeAccount(page);
     await page
       .getByRole("button", { name: "Create project", exact: true })
       .first()
@@ -59,13 +61,6 @@ for (const flow of ["manual", "excel"])
     await auction
       .getByRole("button", { name: "Save auction and cover" })
       .click();
-    await expect(page.getByRole("status")).toContainText("Saved");
-    const agent = page.locator(".auction-workspace form").first();
-    await agent.getByLabel("Name", { exact: true }).fill("وكيل البيع التجريبي");
-    await agent
-      .getByLabel("Description", { exact: true })
-      .fill("وصف وكيل البيع للاختبار");
-    await agent.getByRole("button", { name: "Save selling agent" }).click();
     await expect(page.getByRole("status")).toContainText("Saved");
     if (flow === "manual") {
       for (let n = 1; n <= 2; n++) {
@@ -131,7 +126,7 @@ for (const flow of ["manual", "excel"])
       await page
         .getByRole("button", { name: "Upload image", exact: true })
         .click();
-      await expect(page.getByAltText("Uploaded project asset")).toHaveCount(2);
+      await expect(page.getByAltText("Uploaded project asset")).toHaveCount(3);
     } else {
       await page
         .getByRole("button", {

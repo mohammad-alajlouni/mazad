@@ -8,7 +8,7 @@ from ..db import get_db
 from ..generation.booklet.assets import ASSETS
 from ..generation.booklet.registry import COVERS, cover_options
 from ..generation.booklet.validation import validate_project
-from ..models import ProjectImage, ProjectItem, SellingAgent
+from ..models import ProjectImage, ProjectItem, SellingAgent, User
 from .common import get_project, invalidate
 
 router = APIRouter(dependencies=[Depends(current_user)], tags=["auctions"])
@@ -32,6 +32,9 @@ def thumbnail(id: str):
 @router.put("/projects/{id}/selling-agent")
 def save_agent(id: str, body: SellingAgentInput, db=Depends(get_db)):
     p = get_project(db, id, True)
+    from ..services.agent_profile import complete
+    if complete(db.get(User, p.owner_id)):
+        raise HTTPException(409, "Update selling agent information in account settings")
     if body.logo_image_id:
         image = db.get(ProjectImage, body.logo_image_id)
         if not image or image.project_id != id or image.item_id:

@@ -6,6 +6,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 
 import { useTranslations } from "next-intl";
 import Login from "./Login";
+import AccountProfile from "./AccountProfile";
 import UserManagement from "./UserManagement";
 import DashboardView, { Dashboard } from "./Dashboard";
 import BannerWorkspace, { BannerCreate } from "./BannerWorkspace";
@@ -32,6 +33,7 @@ import { ProjectForm } from "./ProjectForms";
 import OutputReview from "./OutputReview";
 import Settings, { Config } from "./Settings";
 type Page =
+  | "profile"
   | "dashboard"
   | "projects"
   | "create"
@@ -98,6 +100,11 @@ export default function Workspace() {
       setUser(null);
       setReview(null);
     };
+    const openProfile = () => {
+      setPage("profile");
+      setReview(null);
+    };
+    window.addEventListener("open-account-profile", openProfile);
     window.addEventListener("session-expired", expired);
     api<Account>("/auth/me")
       .then((u) => {
@@ -107,7 +114,10 @@ export default function Workspace() {
       })
       .catch(() => {})
       .finally(() => setReady(true));
-    return () => window.removeEventListener("session-expired", expired);
+    return () => {
+      window.removeEventListener("session-expired", expired);
+      window.removeEventListener("open-account-profile", openProfile);
+    };
   }, [refresh]);
   useEffect(() => {
     if (notice) {
@@ -126,17 +136,14 @@ export default function Workspace() {
         !(a.auction_date || a.auction_start_date) ||
         !a.start_time
         ? "auction"
-        : !next.selling_agent?.name
-          ? "agent"
-          : !next.items.length ||
-              next.items.some(
-                (i) =>
-                  !i.property_data?.property_type || !i.property_data?.city,
-              )
-            ? "items"
-            : next.outputs.some((o) => o.output_type === "project_booklet")
-              ? "outputs"
-              : "generate",
+        : !next.items.length ||
+            next.items.some(
+              (i) => !i.property_data?.property_type || !i.property_data?.city,
+            )
+          ? "items"
+          : next.outputs.some((o) => o.output_type === "project_booklet")
+            ? "outputs"
+            : "generate",
     );
     setReview(null);
   };
@@ -171,9 +178,42 @@ export default function Workspace() {
         busy={busy}
       />
     );
+  const saveProfile = async () => {
+    setUser(await api<Account>("/auth/me"));
+    await refresh();
+    if (detail) setDetail(await api<Detail>("/projects/" + detail.project.id));
+  };
+  if (!user.profile_complete)
+    return (
+      <div className="profile-onboarding">
+        <LanguageSwitcher />
+        {!!error && (
+          <div className="notice error" role="alert">
+            {errorMessage(error)}
+          </div>
+        )}
+        <AccountProfile
+          run={run}
+          busy={busy}
+          onboarding
+          onSaved={saveProfile}
+        />
+        <button
+          onClick={() =>
+            void run(async () => {
+              await api("/auth/logout", { method: "POST" });
+              setUser(null);
+            })
+          }
+        >
+          {tr("ui.log_out")}
+        </button>
+      </div>
+    );
   const campaignMode =
     detail?.project.workspace_type === "social" ? "social" : "banner";
   const heading: Record<Page, [string, string]> = {
+    profile: [tr("accountProfile.title"), tr("accountProfile.help")],
     social: [tr("social.home"), tr("projectFlow.pickSocial")],
     "social-create": [tr("social.create"), tr("social.independent")],
     banners: [tr("banner.home"), tr("projectFlow.pickBanner")],
@@ -272,6 +312,13 @@ export default function Workspace() {
             <br />
             <strong>{tr("ui.starts_with_good_data")}</strong>
           </div>
+          <button
+            className={page === "profile" ? "active" : ""}
+            onClick={() => navigate("profile")}
+          >
+            <SettingsIcon size={18} />
+            {tr("accountProfile.title")}
+          </button>
           {user.role === "admin" && (
             <>
               <p className="nav-label">{tr("flow.adminArea")}</p>
@@ -329,21 +376,23 @@ export default function Workspace() {
             {tr("ui.workspace")}
             <span>/</span>{" "}
             <strong>
-              {page === "users"
-                ? tr("flow.users")
-                : page === "dashboard"
-                  ? tr("flow.home")
-                  : page === "social" ||
-                      page === "social-create" ||
-                      (page === "project" &&
-                        detail?.project.workspace_type === "social")
-                    ? tr("social.home")
-                    : page === "banners" ||
-                        page === "banner-create" ||
+              {page === "profile"
+                ? tr("accountProfile.title")
+                : page === "users"
+                  ? tr("flow.users")
+                  : page === "dashboard"
+                    ? tr("flow.home")
+                    : page === "social" ||
+                        page === "social-create" ||
                         (page === "project" &&
-                          detail?.project.workspace_type === "banners")
-                      ? tr("banner.home")
-                      : title(page)}
+                          detail?.project.workspace_type === "social")
+                      ? tr("social.home")
+                      : page === "banners" ||
+                          page === "banner-create" ||
+                          (page === "project" &&
+                            detail?.project.workspace_type === "banners")
+                        ? tr("banner.home")
+                        : title(page)}
             </strong>
           </div>
           <div className="topbar-right">
@@ -375,7 +424,9 @@ export default function Workspace() {
             </div>
           )}
           {busy && <div className="loading-line" />}
-          {review ? (
+          {page === "profile" ? (
+            <AccountProfile run={run} busy={busy} onSaved={saveProfile} />
+          ) : review ? (
             <OutputReview
               key={review.id}
               output={review}

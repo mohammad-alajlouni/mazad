@@ -66,28 +66,23 @@ export default function ProjectWorkspace({
   }, [detail]);
   const steps =
     sharedMode === "data"
-      ? ["auction", "agent", "items", "images"]
+      ? ["auction", "items", "images"]
       : sharedMode === "booklet"
         ? ["generate", "outputs"]
-        : ["auction", "agent", "items", "images", "generate", "outputs"];
-  const allStepKeys = [
-    "auction",
-    "agent",
-    "properties",
-    "images",
-    "review",
-    "export",
-  ];
+        : ["auction", "items", "images", "generate", "outputs"];
+  const allStepKeys = ["auction", "properties", "images", "review", "export"];
   const stepKeys = steps.map(
     (step) =>
       allStepKeys[
-        ["auction", "agent", "items", "images", "generate", "outputs"].indexOf(
-          step,
-        )
+        ["auction", "items", "images", "generate", "outputs"].indexOf(step)
       ],
   );
   const stepIndex = steps.indexOf(tab === "excel import" ? "items" : tab);
   const go = async (next: string) => {
+    if (next === "agent") {
+      window.dispatchEvent(new Event("open-account-profile"));
+      return;
+    }
     if (steps.indexOf(next) > stepIndex || next === "generate") {
       if (!validateForms(root.current)) return;
       const missing = missingStage(detail, next);
@@ -167,7 +162,7 @@ export default function ProjectWorkspace({
           )}
           <p className="muted">{tr("flow.saveFirst")}</p>
         </section>
-        {(tab === "auction" || tab === "agent") && (
+        {tab === "auction" && (
           <AuctionWorkspace
             key={tab}
             section={tab}
@@ -176,7 +171,7 @@ export default function ProjectWorkspace({
             reload={reloadProject}
             onSaved={() => {
               setDirty(false);
-              setTab(tab === "auction" ? "agent" : "items");
+              setTab("items");
             }}
           />
         )}

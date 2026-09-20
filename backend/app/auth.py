@@ -12,6 +12,7 @@ from sqlalchemy import select
 from .config import settings
 from .db import get_db
 from .models import User
+from .services.agent_profile import complete
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 hasher = PasswordHash.recommended()
@@ -78,12 +79,12 @@ def login(body: Login, request: Request, response: Response, db=Depends(get_db))
         max_age=28800,
         path="/",
     )
-    return {"email": user.email, "role": user.role}
+    return {"email": user.email, "role": user.role, "profile_complete": complete(user)}
 
 
 @router.get("/me")
 def me(user=Depends(current_user)):
-    return {"email": user.email, "role": user.role}
+    return {"email": user.email, "role": user.role, "profile_complete": complete(user)}
 
 
 @router.post("/logout")

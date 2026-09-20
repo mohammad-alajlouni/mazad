@@ -245,12 +245,12 @@ export default function ApprovedExcelUpload({
               setBusy(true);
               setError("");
               try {
-                await api(
-                  `/projects/${projectId}/imports/${preview.id}/commit`,
-                  { method: "POST" },
-                );
-                setPreview(null);
                 await run(async () => {
+                  await api(
+                    `/projects/${projectId}/imports/${preview.id}/commit`,
+                    { method: "POST" },
+                  );
+                  setPreview(null);
                   await onDone();
                 }, tr("ui.excel_records_imported"));
               } catch (err) {

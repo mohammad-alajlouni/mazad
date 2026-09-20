@@ -33,6 +33,11 @@ async def upload_image(
     db=Depends(get_db),
 ):
     p = get_project(db, id, True)
+    if category == "agent_logo":
+        from ..models import User
+        from ..services.agent_profile import complete
+        if complete(db.get(User, p.owner_id)):
+            raise HTTPException(409, "Update selling agent information in account settings")
     if item_id:
         item = db.get(ProjectItem, item_id)
         if not item or item.project_id != id:

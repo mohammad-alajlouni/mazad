@@ -310,13 +310,11 @@ export function ImageUpload({
         <label>
           {at("image_category")}
           <select name="category">
-            {["additional", "main", "cover", "auction_logo", "agent_logo"].map(
-              (k) => (
-                <option key={k} value={k}>
-                  {at(k === "cover" ? "cover_image" : k)}
-                </option>
-              ),
-            )}
+            {["additional", "main", "cover", "auction_logo"].map((k) => (
+              <option key={k} value={k}>
+                {at(k === "cover" ? "cover_image" : k)}
+              </option>
+            ))}
           </select>
         </label>
         <label>

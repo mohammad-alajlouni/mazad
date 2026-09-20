@@ -1,3 +1,4 @@
+import { completeAccount } from "./account-setup";
 import { completeBookletBasics } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -24,6 +25,7 @@ test("approved template download, invalid files, atomic import and stale preview
   await page
     .getByRole("button", { name: t("ui.sign_in_to_workspace") })
     .click();
+  await completeAccount(page);
   await page
     .getByRole("button", { name: t("flow.create"), exact: true })
     .first()

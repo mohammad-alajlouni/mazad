@@ -33,6 +33,7 @@ class Record:
 
 class User(Record, Base):
     __tablename__ = "users"
+    agent_profile: Mapped[dict] = mapped_column(JSONType, default=dict, server_default="{}")
     email: Mapped[str] = mapped_column(String(255), unique=True)
     password_hash: Mapped[str] = mapped_column(Text)
     token_version: Mapped[int] = mapped_column(Integer, default=0)

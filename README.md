@@ -244,3 +244,5 @@ Create one project and enter auction data, properties, images and selling agent 
 Auction fields and required-step checks now follow physical, electronic and hybrid modes. Inactive fields are removed on save and generation; users must complete and save required data before advancing. See [auction types and validation](docs/auction-types-and-validation.md).
 
 A live PDF preview now follows each booklet input step, including unsaved fields and selected images. The shared project can generate booklet, banners and social posts together. Reference artwork, measured page layouts and verification details are documented in [live booklet preview](docs/live-booklet-preview.md).
+
+Account-level selling agent details and migration: [docs/account-profile.md](docs/account-profile.md).

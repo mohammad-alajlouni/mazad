@@ -1,3 +1,4 @@
+import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -22,6 +23,7 @@ test("one project reuses data for booklet, banners and social posts", async ({
   await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
   await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
   await page.getByRole("button", { name: "Sign in to workspace" }).click();
+  await completeAccount(page);
   await expect(page.locator(".sidebar")).toBeVisible();
   const before = await page.request.get("/api/projects").then((r) => r.json());
   await page
@@ -85,8 +87,7 @@ test("one project reuses data for booklet, banners and social posts", async ({
   );
   expect(itemResponse.ok()).toBeTruthy();
   const item = await itemResponse.json();
-  let logo = "";
-  for (const category of ["agent_logo", "auction_logo", "cover", "main"]) {
+  for (const category of ["auction_logo", "cover", "main"]) {
     const r = await page.request.post("/api/projects/" + p.id + "/images", {
       multipart: {
         category,
@@ -101,15 +102,7 @@ test("one project reuses data for booklet, banners and social posts", async ({
       },
     });
     expect(r.ok()).toBeTruthy();
-    if (category === "agent_logo") logo = (await r.json()).id;
   }
-  expect(
-    (
-      await page.request.put("/api/projects/" + p.id + "/selling-agent", {
-        data: { name: "وكيل تجريبي", logo_image_id: logo },
-      })
-    ).ok(),
-  ).toBeTruthy();
   await page
     .locator(".sidebar")
     .getByRole("button", { name: /My projects/ })

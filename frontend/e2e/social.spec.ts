@@ -1,3 +1,4 @@
+import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -22,6 +23,7 @@ test("social campaign validates media, exports exact pixels and remains separate
   await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
   await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
   await page.getByRole("button", { name: "Sign in to workspace" }).click();
+  await completeAccount(page);
   await page
     .locator(".sidebar")
     .getByRole("button", { name: "Social posts", exact: true })
@@ -73,22 +75,7 @@ test("social campaign validates media, exports exact pixels and remains separate
     .locator(".workflow-steps")
     .getByRole("button", { name: /Review and generate/ })
     .click();
-  await expect(page.locator('.auction-workspace [name="name"]')).toBeVisible();
-  await expect(page.locator(".workflow-problems")).toContainText(
-    "Selling agent",
-  );
-  await page
-    .locator(".workflow-steps")
-    .getByRole("button", { name: /Photos and logos/ })
-    .click();
-  await page.getByLabel("Name", { exact: true }).fill("وكيل تجريبي");
-  await page
-    .locator(".auction-workspace input[type=file]")
-    .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-  await page
-    .getByRole("button", { name: "Save selling agent", exact: true })
-    .click();
-  await expect(page.getByRole("status")).toContainText("Saved");
+  await expect(page.locator('.auction-workspace [name="name"]')).toHaveCount(0);
   for (const category of ["auction_logo", "cover"]) {
     await page.getByLabel("Image category").selectOption(category);
     await page

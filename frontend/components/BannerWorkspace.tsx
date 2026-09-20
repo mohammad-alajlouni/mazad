@@ -118,7 +118,16 @@ export default function BannerWorkspace({
   const [social, setSocial] = useState<SocialConfig>({
     ...socialDefaults,
     ...detail.project.social_config,
-    ...(shared && !detail.project.social_config?.headline ? {headline: String(detail.project.auction?.auction_name || "").length <= 48 ? String(detail.project.auction?.auction_name || "") : (detail.project.auction?.document_language === "en" ? "Property auction" : "مزاد عقاري")} : {}),
+    ...(shared && !detail.project.social_config?.headline
+      ? {
+          headline:
+            String(detail.project.auction?.auction_name || "").length <= 48
+              ? String(detail.project.auction?.auction_name || "")
+              : detail.project.auction?.document_language === "en"
+                ? "Property auction"
+                : "مزاد عقاري",
+        }
+      : {}),
   });
   const confirm = useConfirm();
   const [step, setStep] = useState("template"),
@@ -154,14 +163,14 @@ export default function BannerWorkspace({
   const go = async (next: string) => {
     if (steps.indexOf(next) > steps.indexOf(step)) {
       if (!validateForms(root.current)) return;
-      // Agent data belongs to the images step in standalone campaigns.
+      // Account identity is managed separately from campaign images.
       const relevant =
         next === "items"
           ? ["auction"]
           : next === "images"
             ? ["auction", "items"]
             : next === "generate" || next === "outputs"
-              ? ["auction", "agent", "items", "images"]
+              ? ["auction", "items", "images"]
               : [];
       const missing = relevant.find(
         (key) => detail.workflow?.stages[key]?.valid === false,
@@ -402,14 +411,6 @@ export default function BannerWorkspace({
       )}
       {step === "images" && (
         <>
-          <AuctionWorkspace
-            detail={detail}
-            run={run}
-            reload={reloadProject}
-            section="agent"
-            bannerMode
-            socialMode={isSocial}
-          />
           <section className="panel">
             <h2>{t("logos")}</h2>
             <p>{t("logosHelp")}</p>
@@ -436,7 +437,11 @@ export default function BannerWorkspace({
                 <button
                   className="banner-missing"
                   key={index}
-                  onClick={() => void go(issue.section)}
+                  onClick={() =>
+                    ["agent_name", "agent_logo"].includes(issue.field)
+                      ? window.dispatchEvent(new Event("open-account-profile"))
+                      : void go(issue.section)
+                  }
                 >
                   {issue.item ? `${issue.item}: ` : ""}
                   {issue.limit

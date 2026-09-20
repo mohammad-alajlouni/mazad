@@ -48,7 +48,7 @@ export function formatTime(value: string) {
   }).format(new Date(value));
 }
 export function localizeKnownMessage(value: string): string {
-  for (const ns of ["ui", "common"] as const)
+  for (const ns of ["ui", "common", "accountProfile"] as const)
     for (const [key, en] of Object.entries(messages.en[ns])) {
       const ar = (messages.ar[ns] as Record<string, string>)[key];
       if (value === en || value === ar) return translate(ns + "." + key);

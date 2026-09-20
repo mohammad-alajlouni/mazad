@@ -75,6 +75,10 @@ export default function SharedProjectWorkspace({
     setSection(next);
   };
   const fix = (step: string) => {
+    if (step === "agent") {
+      window.dispatchEvent(new Event("open-account-profile"));
+      return;
+    }
     setDataTab(step);
     setSection("data");
   };

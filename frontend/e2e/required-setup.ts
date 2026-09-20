@@ -6,7 +6,5 @@ export async function completeBookletBasics(page: Page) {
   await form.locator('[name="start_time"]').fill("16:00");
   await form.locator('[name="physical_location"]').fill("الرياض");
   await form.locator("button.primary").click();
-  await form.locator('[name="name"]').fill("وكيل تجريبي");
-  await form.locator("button.primary").click();
   await expect(page.locator(".auction-workspace form")).toHaveCount(0);
 }

@@ -23,7 +23,11 @@ export async function api<T = unknown>(
   return response.json();
 }
 export const send = (body: unknown) => JSON.stringify(body);
-export type Account = { email: string; role: "admin" | "user" };
+export type Account = {
+  email: string;
+  role: "admin" | "user";
+  profile_complete: boolean;
+};
 export type Project = {
   workspace_type?: "project" | "booklet" | "banners" | "social";
   social_config?: import("./SocialTemplateFields").SocialConfig;
