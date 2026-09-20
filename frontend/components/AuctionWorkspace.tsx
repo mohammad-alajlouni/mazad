@@ -330,6 +330,7 @@ export function AuctionWorkspace({
       {section === "auction" && (
         <form
           data-stage-form
+          data-preview-form={section}
           className="panel form-panel"
           onChange={(event) => {
             const form = event.currentTarget;
@@ -447,6 +448,7 @@ export function AuctionWorkspace({
       {section === "agent" && (
         <form
           data-stage-form
+          data-preview-form={section}
           className="panel form-panel"
           onSubmit={(event) => {
             event.preventDefault();

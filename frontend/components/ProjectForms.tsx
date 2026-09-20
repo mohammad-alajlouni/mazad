@@ -136,6 +136,8 @@ export function ItemForm({
   return (
     <form
       data-stage-form
+      data-preview-form="item"
+      data-item-id={existing?.id}
       className="panel form-panel"
       onSubmit={(e) => {
         e.preventDefault();
@@ -275,6 +277,7 @@ export function ImageUpload({
         )}
       </p>
       <form
+        data-preview-form="images"
         onSubmit={(e) => {
           e.preventDefault();
           const data = new FormData(e.currentTarget);

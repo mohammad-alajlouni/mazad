@@ -59,6 +59,7 @@ def inspect_pdf(pdf, content):
         kind = "banner"
     elif content.get("booklet"):
         expected = (210 * 72 / 25.4, 297 * 72 / 25.4)
+        count = len(content["booklet"]["pages"])
     else:
         return None
     with pymupdf.open(stream=pdf, filetype="pdf") as doc:
@@ -77,6 +78,9 @@ def inspect_pdf(pdf, content):
                     or b[2] > page.rect.width + 1
                     or b[3] > page.rect.height + 1
                 ):
+                    logging.getLogger(__name__).warning(
+                        "PDF text outside page %s: %s", page.number + 1, b[:4]
+                    )
                     raise HTTPException(422, "Generated layout failed preflight")
         return {
             "passed": True,

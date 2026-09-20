@@ -387,6 +387,7 @@ def test_user_isolation(admin):
         and admin.get("/api/outputs").json() == []
     )
     assert admin.get("/api/dashboard").json()["total_projects"] == 0
+    assert admin.post(f"/api/projects/{p}/booklet-preview", json={}).status_code == 404
     for path in [
         f"/projects/{p}",
         f"/projects/{p}/review",
@@ -449,7 +450,7 @@ def test_summary_pagination_overflow_and_english(admin):
     )
     assert result.status_code == 200, result.text
     o = result.json()[0]
-    assert [x["kind"] for x in o["page_manifest"]].count("summary") == 3
+    assert [x["kind"] for x in o["page_manifest"]].count("summary") == 2
     with pymupdf.open(stream=pdf(admin, o), filetype="pdf") as doc:
         text = "".join(page.get_text() for page in doc)
         for marker in [

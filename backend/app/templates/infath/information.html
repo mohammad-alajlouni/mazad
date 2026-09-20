@@ -1,1 +1,1 @@
-<h2>{{ bt(page.heading) }}{% if page.item is defined %} · {{ page.item.number }}{% endif %}</h2><div class="text-box">{{ page.text }}</div>
+<div class="info-box" data-fit="information" data-max-height="870"><p>{{ page.text }}</p>{% if page.links is defined %}{{ qrs(page.links) }}{% endif %}</div><span class="tab-label">{{ bt(page.heading) }}{% if page.item is defined %} · {{ page.item.number }}{% endif %}</span>

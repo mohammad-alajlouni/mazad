@@ -1,1 +1,1 @@
-<h2>{{ bt('boundaries') }} · {{ page.item.number }}</h2>{% for row in page.rows %}<div class="boundary"><h3>{{ bt(row.side) }} · {{ row.length }}</h3><div class="text-box">{{ row.text }}</div></div>{% endfor %}
+{% for row in page.rows %}<div class="boundary-box" style="top:{{ 50+loop.index0*185 }}pt" data-fit="boundary"><span class="tab-label" data-fit="boundary-label" data-max-height="35">{{ bt(row.side) }}</span><p>{{ row.text }} · {{ row.length }}</p></div>{% endfor %}

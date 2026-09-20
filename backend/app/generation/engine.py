@@ -60,9 +60,10 @@ def snapshot(db, project):
 
     def image_data(image):
         return (
-            "data:image/jpeg;base64,"
-            + base64.b64encode(storage.read(image.key)).decode()
-        )
+            "data:image/png;base64,"
+            if image.key.endswith(".png")
+            else "data:image/jpeg;base64,"
+        ) + base64.b64encode(storage.read(image.key)).decode()
 
     project_data = record_dict(project)
     if project.auction:
@@ -177,9 +178,9 @@ def build_content(db, project, kind, output_language=None):
             if not config.property_ids or i["id"] in config.property_ids
         ]
     if kind == "social_content" and project.workspace_type in ("project", "social"):
-        from ..social_schemas import SocialConfig
+        from ..services.social import social_configuration
 
-        social_config = SocialConfig.model_validate(project.social_config or {})
+        social_config = social_configuration(project)
         items = [
             i
             for i in items
@@ -245,9 +246,10 @@ def build_content(db, project, kind, output_language=None):
     logo = content["branding"].get("logo_key")
     if logo:
         content["logo"] = (
-            "data:image/jpeg;base64,"
-            + base64.b64encode(LocalStorage().read(logo)).decode()
-        )
+            "data:image/png;base64,"
+            if logo.endswith(".png")
+            else "data:image/jpeg;base64,"
+        ) + base64.b64encode(LocalStorage().read(logo)).decode()
     if kind == "project_booklet" and project.auction:
         from .booklet.composer import compose
 
@@ -289,45 +291,15 @@ def render(db, output):
         template_file = "infath/social.html"
     if content.get("booklet"):
         template_file = "infath/booklet.html"
-    content.setdefault(
-        "output_language", content.get("branding", {}).get("default_language", "en")
-    )
-    labels = document_messages(content["output_language"])
-    from .booklet.assets import asset
-    from .booklet.codes import qr
-    from .booklet.composer import FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
-    from .booklet.labels import label
-
-    from .social_art import photo_frame
-
-    html = env.get_template(template_file).render(
-        **content,
-        t=lambda key, **values: labels.get(key, key).format(**values),
-        status=output.status,
-        font_data=font_data,
-        font_bold=font_bold,
-        asset=asset,
-        photo_frame=photo_frame,
-        qr=qr,
-        bt=lambda key: label(key, content["output_language"]),
-        display=lambda value: "-" if value in (None, "") else str(value),
-        property_fields=FIELDS,
-        summary_fields=SUMMARY_FIELDS,
-        rental_fields=RENTAL_FIELDS,
-    )
-
-    def safe_fetch(url, *args, **kwargs):
-        from weasyprint import default_url_fetcher
-
-        if not url.startswith("data:"):
-            raise ValueError("External resource loading is disabled")
-        return default_url_fetcher(url)
+    html = render_html(content, template_file, output.status, font_data, font_bold)
 
     from .preflight import check_layout, inspect_pdf
 
     document = HTML(string=html, url_fetcher=safe_fetch).render()
     check_layout(document, content)
-    pdf = document.write_pdf()
+    from .booklet.art import original_pdf_artwork
+
+    pdf = original_pdf_artwork(document.write_pdf(), content)
     preflight = inspect_pdf(pdf, content)
     if preflight:
         output.content = {**output.content, "preflight": preflight}
@@ -378,3 +350,48 @@ def render(db, output):
             )
         )
     db.flush()
+
+
+def safe_fetch(url, *args, **kwargs):
+    from weasyprint import default_url_fetcher
+
+    if not url.startswith("data:"):
+        raise ValueError("External resource loading is disabled")
+    return default_url_fetcher(url)
+
+
+def render_html(
+    content,
+    template_file="infath/booklet.html",
+    status="DRAFT",
+    font_data="",
+    font_bold="",
+):
+    content.setdefault(
+        "output_language", content.get("branding", {}).get("default_language", "en")
+    )
+    labels = document_messages(content["output_language"])
+    from .booklet.assets import asset
+    from .booklet.codes import qr
+    from .booklet.composer import FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
+    from .booklet.labels import label
+
+    from .social_art import photo_frame
+    from .booklet.art import booklet_photo
+
+    return env.get_template(template_file).render(
+        **content,
+        t=lambda key, **values: labels.get(key, key).format(**values),
+        status=status,
+        font_data=font_data,
+        font_bold=font_bold,
+        asset=asset,
+        photo_frame=photo_frame,
+        booklet_photo=booklet_photo,
+        qr=qr,
+        bt=lambda key: label(key, content["output_language"]),
+        display=lambda value: "-" if value in (None, "") else str(value),
+        property_fields=FIELDS,
+        summary_fields=SUMMARY_FIELDS,
+        rental_fields=RENTAL_FIELDS,
+    )

@@ -69,3 +69,14 @@ def reorder(id: str, body: OrderInput, db=Depends(get_db)):
 @router.get("/projects/{id}/review")
 def review(id: str, db=Depends(get_db)):
     return validate_project(db, get_project(db, id))
+
+
+from ..services.booklet_preview import PreviewInput, preview
+
+
+@router.post("/projects/{id}/booklet-preview")
+def booklet_preview(
+    id: str, body: PreviewInput, response: Response, db=Depends(get_db)
+):
+    response.headers["Cache-Control"] = "no-store, private"
+    return preview(db, get_project(db, id), body)

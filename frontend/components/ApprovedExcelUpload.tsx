@@ -29,7 +29,7 @@ export default function ApprovedExcelUpload({
 }: {
   projectId: string;
   run: Run;
-  onDone: () => void;
+  onDone: () => void | Promise<void>;
 }) {
   const t = useTranslations("excel");
   const tr = useTranslations();
@@ -251,7 +251,7 @@ export default function ApprovedExcelUpload({
                 );
                 setPreview(null);
                 await run(async () => {
-                  onDone();
+                  await onDone();
                 }, tr("ui.excel_records_imported"));
               } catch (err) {
                 setError(errorMessage(err));

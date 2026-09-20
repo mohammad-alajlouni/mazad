@@ -1,0 +1,303 @@
+{
+  "sources": {
+    "كتيب-حضوري-الكتروني-مفتوح.pdf": "da1d87d20bc3ab7ec2c05b64a17ce339d08b1f8f0566208a6547c3538fc23b82",
+    "دليل-التسويق-والهوية-البصرية-للمزادات-V2.pdf": "fd11e308185c2867a7a8e17d3c03d7bd49e674756b6f4e3ccd8b96f2c9563cbf"
+  },
+  "assets": {
+    "reference-footer.png": {
+      "page": 6,
+      "clips_pt": [
+        [
+          520,
+          770,
+          595.276,
+          826
+        ],
+        [
+          0,
+          826,
+          595.276,
+          841.89
+        ]
+      ],
+      "dpi": 288,
+      "sha256": "de91b78a72d3c8ad59eada2b711814c47c8af6c68971a7e5e58638678ffefc96"
+    },
+    "reference-agent.png": {
+      "page": 3,
+      "clips_pt": [
+        [
+          0,
+          670,
+          595.276,
+          841.89
+        ]
+      ],
+      "dpi": 288,
+      "sha256": "2241434060f2fa6583929cb75326e6cd29d3595189e397c2d201af893bf346f9"
+    },
+    "reference-time.png": {
+      "page": 4,
+      "clip_pt": [
+        461,
+        404,
+        493,
+        435
+      ],
+      "dpi": 288,
+      "sha256": "a910d5ce59d17f53e3d6a637a3b986dde83a873295cff7bdadc0339fabbbcde3"
+    },
+    "reference-calendar.png": {
+      "page": 4,
+      "clip_pt": [
+        461,
+        444,
+        493,
+        477
+      ],
+      "dpi": 288,
+      "sha256": "b3532a47b12678df9d6a7f27af91195425269bc9e049e2489782ae78467208de"
+    },
+    "reference-location.png": {
+      "page": 4,
+      "clip_pt": [
+        461,
+        485,
+        493,
+        516
+      ],
+      "dpi": 288,
+      "sha256": "e86856841d19f9617ad6a1a7b574781e681b83cad787764bd507484498f939f9"
+    },
+    "reference-platform.png": {
+      "page": 4,
+      "clip_pt": [
+        461,
+        527,
+        493,
+        560
+      ],
+      "dpi": 288,
+      "sha256": "7238af9155b687da4bb24023f4ce3a13b62dd5505a8c53c429f9a651913c6f78"
+    },
+    "reference-participation-title.png": {
+      "page": 20,
+      "clip_pt": [
+        125,
+        80,
+        492,
+        214
+      ],
+      "dpi": 288,
+      "sha256": "0ae43d0a8967951ee7dfa39b5d429c2ac5b2e00b879b7e68f0927910a09bf156"
+    },
+    "reference-step-1.png": {
+      "page": 20,
+      "clip_pt": [
+        430,
+        305,
+        495,
+        383
+      ],
+      "dpi": 288,
+      "sha256": "4aaa57695aa1cc01d899fb69ff72793305ae3da6373b85b4ed947c59e665fee5"
+    },
+    "reference-step-2.png": {
+      "page": 20,
+      "clip_pt": [
+        300,
+        305,
+        375,
+        383
+      ],
+      "dpi": 288,
+      "sha256": "5dc8bfad4c8199dccf9d62e159cc00090228764ac7993452d925230d58900448"
+    },
+    "reference-step-3.png": {
+      "page": 20,
+      "clip_pt": [
+        145,
+        303,
+        220,
+        383
+      ],
+      "dpi": 288,
+      "sha256": "2e1c9d9ce1c9724aaa89a4b67565fb0b36dea97dbb98f7f720020cf0f86f456f"
+    },
+    "reference-step-4.png": {
+      "page": 20,
+      "clip_pt": [
+        340,
+        475,
+        415,
+        550
+      ],
+      "dpi": 288,
+      "sha256": "0c59ac150f3f08a9cbf6e616b99ae6fd1f21179c6f7624fae2e113ef7ad55cc9"
+    },
+    "reference-step-5.png": {
+      "page": 20,
+      "clip_pt": [
+        202,
+        475,
+        272,
+        550
+      ],
+      "dpi": 288,
+      "sha256": "0e862de4e556c3c6b290560aea281eeb47878ea5e5cf4e61f0b9b3c43c443675"
+    },
+    "reference-cover-1.png": {
+      "source": "1.ai",
+      "source_sha256": "2c92419da115cd839877c5582a9fcf8e8229412ab67f70e8b93da7c6518dc355",
+      "erase_pt": [
+        [
+          360,
+          730,
+          570,
+          819
+        ],
+        [
+          18,
+          775,
+          577,
+          823
+        ]
+      ],
+      "sha256": "855b57d582543a36b73224b55d12c5ef20b2631cf850447032fc3175f0710c8e"
+    },
+    "reference-cover-2.png": {
+      "source": "2.ai",
+      "source_sha256": "2dcb79a99e9390553e54b4227c63b3823d313ac132f7a0e049d67086a3d82506",
+      "erase_pt": [
+        [
+          175,
+          350,
+          390,
+          453
+        ],
+        [
+          18,
+          775,
+          577,
+          823
+        ]
+      ],
+      "sha256": "a19757659c1e6c12f6814ed56dfdc6d1b2d973e0c425ee5c52093b13afdbe1bf"
+    },
+    "reference-cover-3.png": {
+      "source": "3.ai",
+      "source_sha256": "faa7fd0a1b87a49c4805055114cdc699f8667e3ac167affce8dfe4868579e314",
+      "erase_pt": [
+        [
+          175,
+          350,
+          390,
+          453
+        ],
+        [
+          18,
+          775,
+          577,
+          823
+        ]
+      ],
+      "sha256": "d159c0c77ffa5886a46a85fb7c34838ac5f0950bf55665136a8556b9328d6c02"
+    },
+    "reference-cover-4.png": {
+      "source": "4.ai",
+      "source_sha256": "7c7e4d5418b2d4e08bf31ebee9aa3713d6ff60352f42517d38a61541384b2bac",
+      "erase_pt": [
+        [
+          290,
+          350,
+          500,
+          453
+        ],
+        [
+          18,
+          775,
+          577,
+          823
+        ]
+      ],
+      "sha256": "da0a10f47d29a9a2a51639f50b59bb61770deab709a80df751f27469d9ef2750"
+    },
+    "reference-cover-5.png": {
+      "source": "5.ai",
+      "source_sha256": "18c764d1ddc1648177eaaa7ef27782facaf299264aed3452bbd14f18a065ec9c",
+      "erase_pt": [
+        [
+          290,
+          350,
+          500,
+          453
+        ],
+        [
+          18,
+          775,
+          577,
+          823
+        ]
+      ],
+      "sha256": "14c343d1a99de487f3588a96b9e557062a514d9a16dd3a91a1091939debebec2"
+    },
+    "reference-cover-6.png": {
+      "source": "6.ai",
+      "source_sha256": "87392879541199240ee077950f147eb3f218feafa52775c04d88cc143992b749",
+      "erase_pt": [
+        [
+          360,
+          730,
+          570,
+          819
+        ],
+        [
+          18,
+          775,
+          577,
+          823
+        ]
+      ],
+      "sha256": "5beff2681338f226c735611b77a3ee725615cb1192e2b6e0db331cad5853269e"
+    },
+    "reference-introduction.pdf": {
+      "page": 2,
+      "sha256": "b0657f99dfb209f57d9bff01ce6d40a0bf2ff858071065d5aec93cbf93b7d5ce"
+    },
+    "reference-terms-physical.pdf": {
+      "page": 24,
+      "clip_pt": [
+        111,
+        222,
+        251,
+        390
+      ],
+      "sha256": "ab4e499a04032ac169d3d9709c7c6bdf7917bd7bf7d2e8f926d79230f702dd08"
+    },
+    "reference-terms-hybrid.pdf": {
+      "page": 24,
+      "clip_pt": [
+        331,
+        214,
+        464,
+        411
+      ],
+      "sha256": "352428e13a416109d9c8d7d3e4021d06b386cb0666c8b82fb5e075eb361d8034"
+    },
+    "reference-terms-electronic.pdf": {
+      "page": 24,
+      "clip_pt": [
+        525,
+        234,
+        670,
+        400
+      ],
+      "sha256": "32757c868e9f532b89b12b6a0344ce61b1b96cf0f4edb2aac5c4157f58074b2f"
+    }
+  },
+  "page_pt": [
+    595.276,
+    841.89
+  ],
+  "version": 2
+}

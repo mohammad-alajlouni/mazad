@@ -10,6 +10,7 @@ import { Detail, Output, Run } from "./api";
 import { Config } from "./Settings";
 import { useConfirm } from "./Confirmation";
 import { OutputList } from "./shared";
+import GenerateProject from "./GenerateProject";
 import ProjectWorkspace from "./ProjectWorkspace";
 import BannerWorkspace from "./BannerWorkspace";
 
@@ -149,6 +150,24 @@ export default function SharedProjectWorkspace({
           run={run}
           reloadProject={reloadProject}
           setReview={setReview}
+        />
+      )}
+      {(section === "data" || section === "booklet") && (
+        <GenerateProject
+          detail={detail}
+          busy={busy}
+          dirty={dirty}
+          run={run}
+          onDone={async () => {
+            await reloadProject();
+            setSection("outputs");
+          }}
+          onFix={(target, step) => {
+            if (target === "data") {
+              setDataTab(step || "auction");
+              setSection("data");
+            } else void select(target);
+          }}
         />
       )}
       {section === "data" && (

@@ -43,11 +43,17 @@ class LocalStorage:
                     or im.width * im.height > 25000000
                 ):
                     raise ValueError()
-                im = ImageOps.exif_transpose(im).convert("RGB")
+                im = ImageOps.exif_transpose(im)
+                transparent = "A" in im.getbands() or "transparency" in im.info
+                im = im.convert("RGBA" if transparent else "RGB")
                 im.thumbnail((1600, 1600))
                 out = BytesIO()
-                im.save(out, "JPEG", quality=88)
-                return self.put(out.getvalue(), "jpg")
+                im.save(
+                    out,
+                    "PNG" if transparent else "JPEG",
+                    **({} if transparent else {"quality": 88}),
+                )
+                return self.put(out.getvalue(), "png" if transparent else "jpg")
         except (
             UnidentifiedImageError,
             OSError,

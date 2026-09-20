@@ -7,15 +7,14 @@ from .registry import COVERS
 
 FIELDS = (
     "property_type",
-    "city",
-    "district",
-    "usage",
     "area",
     "deed_number",
+    "usage",
     "plan_number",
+    "district",
     "plot_number",
-    "execution_request_number",
     "participation_amount",
+    "execution_request_number",
 )
 SUMMARY_FIELDS = (
     "property_type",
@@ -44,11 +43,14 @@ def chunks(rows, count):
     return [rows[i : i + count] for i in range(0, len(rows), count)]
 
 
-def text_chunks(value, size=1600):
+def text_chunks(value, size=1200, max_lines=26):
     # Preserve all characters, including whitespace/newlines and long unbroken tokens.
     result = []
     while value:
         end = min(size, len(value))
+        breaks = [i + 1 for i, char in enumerate(value[:end]) if char == "\n"]
+        if len(breaks) >= max_lines:
+            end = breaks[max_lines - 1]
         if end < len(value):
             boundary = value.rfind(" ", end // 2, end)
             if boundary > 0:
@@ -66,16 +68,20 @@ def compose(project, items):
         {"kind": "introduction"},
     ]
     agent = project.get("selling_agent", {})
-    for text in text_chunks(agent.get("description", "")) or [""]:
+    for text in text_chunks(agent.get("description", ""), 400, 8) or [""]:
         pages.append({"kind": "agent", "text": text})
+    for text in text_chunks(agent.get("contact_information", "")):
+        pages.append(
+            {"kind": "information", "heading": "contact_information", "text": text}
+        )
     auction_page = {"kind": "auction"}
     pages.append(auction_page)
     for field in ("legal_announcement_text", "court_decision_text"):
-        parts = text_chunks(auction.get(field, ""), 300)
+        parts = text_chunks(auction.get(field, ""), 125)
         auction_page[field] = parts[0] if parts else ""
         for text in text_chunks("".join(parts[1:])):
             pages.append({"kind": "information", "heading": field, "text": text})
-    for rows in chunks(items, 8):
+    for rows in chunks(items, 10):
         pages.append({"kind": "summary", "rows": rows})
     for index, item in enumerate(items, 1):
         item["number"] = index
@@ -85,14 +91,27 @@ def compose(project, items):
             for k, v in prop.items()
             if k.endswith("_link") and v
         ]
-        description = text_chunks(item.get("description", ""), 450)
+        description = text_chunks(item.get("description", ""), 260, 3)
         pages.append(
             {
                 "kind": "property",
                 "item": item,
                 "description": description[0] if description else "",
+                "additional_information": (
+                    text_chunks(prop.get("additional_information", ""), 350) or [""]
+                )[0],
             }
         )
+        for links in chunks(item["qr_links"][4:], 4):
+            pages.append(
+                {
+                    "kind": "information",
+                    "item": item,
+                    "heading": "property_links",
+                    "links": links,
+                    "text": "",
+                }
+            )
         for text in description[1:]:
             pages.append(
                 {
@@ -137,7 +156,7 @@ def compose(project, items):
             rows = []
             for side in ("north", "south", "east", "west"):
                 for text in text_chunks(
-                    boundaries.get(side + "_description", ""), 800
+                    boundaries.get(side + "_description", ""), 300, 5
                 ) or ["-"]:
                     rows.append(
                         {
@@ -155,6 +174,7 @@ def compose(project, items):
         pages.append({"kind": "participation"})
     pages.append({"kind": "contact"})
     return {
+        "layout_version": 2,
         "pages": pages,
         "cover_id": cover.id,
         "auction_qrs": [

@@ -10,8 +10,24 @@ FORMATS = {
 }
 
 
+def social_configuration(project):
+    data = dict(project.social_config or {})
+    if project.workspace_type == "project" and not data.get("headline"):
+        name = (project.auction or {}).get("auction_name", "")
+        data["headline"] = (
+            name
+            if len(name) <= 48
+            else (
+                "مزاد عقاري"
+                if (project.auction or {}).get("document_language", "ar") == "ar"
+                else "Property auction"
+            )
+        )
+    return SocialConfig.model_validate(data)
+
+
 def review_social(db, project):
-    config = SocialConfig.model_validate(project.social_config or {})
+    config = social_configuration(project)
     items = db.scalars(
         select(ProjectItem)
         .where(ProjectItem.project_id == project.id)

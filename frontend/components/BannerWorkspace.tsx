@@ -118,6 +118,7 @@ export default function BannerWorkspace({
   const [social, setSocial] = useState<SocialConfig>({
     ...socialDefaults,
     ...detail.project.social_config,
+    ...(shared && !detail.project.social_config?.headline ? {headline: String(detail.project.auction?.auction_name || "").length <= 48 ? String(detail.project.auction?.auction_name || "") : (detail.project.auction?.document_language === "en" ? "Property auction" : "مزاد عقاري")} : {}),
   });
   const confirm = useConfirm();
   const [step, setStep] = useState("template"),

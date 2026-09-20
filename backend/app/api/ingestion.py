@@ -80,7 +80,7 @@ def image(id: str, db=Depends(get_db)):
     get_project(db, img.project_id)
     return Response(
         LocalStorage().read(img.key),
-        media_type="image/jpeg",
+        media_type="image/png" if img.key.endswith(".png") else "image/jpeg",
         headers={"Cache-Control": "private, no-store"},
     )
 

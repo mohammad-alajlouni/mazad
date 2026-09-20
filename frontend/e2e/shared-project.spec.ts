@@ -187,9 +187,15 @@ test("one project reuses data for booklet, banners and social posts", async ({
     .getByRole("button", { name: "Project data", exact: true })
     .click();
   await page.locator('[name="auction_contact_number"]').fill("0555111111");
+  const savedAuction = page.waitForResponse(
+    (response) =>
+      response.url().endsWith(`/projects/${p.id}`) &&
+      response.request().method() === "PUT",
+  );
   await page
     .getByRole("button", { name: "Save auction and cover", exact: true })
     .click();
+  expect((await savedAuction).ok()).toBeTruthy();
   const changed = await page.request
     .get("/api/projects/" + p.id)
     .then((r) => r.json());
@@ -198,6 +204,28 @@ test("one project reuses data for booklet, banners and social posts", async ({
       (o: { status: string }) => o.status === "NEEDS_REGENERATION",
     ),
   ).toBeTruthy();
+  const batch = page.waitForResponse(
+    (r) =>
+      r.url().endsWith(`/projects/${p.id}/generate`) &&
+      r.request().postDataJSON()?.types?.length === 3,
+  );
+  await page
+    .getByRole("button", {
+      name: "Generate booklet, banners and social posts",
+      exact: true,
+    })
+    .click();
+  expect((await batch).ok()).toBeTruthy();
+  await expect(
+    sections.getByRole("button", { name: "All project outputs", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  const complete = await page.request
+    .get(`/api/projects/${p.id}`)
+    .then((r) => r.json());
+  expect(complete.outputs).toHaveLength(6);
+  expect(
+    complete.outputs.filter((o: { status: string }) => o.status === "DRAFT"),
+  ).toHaveLength(3);
   await page.locator(".language-switcher").selectOption("ar");
   await page.setViewportSize({ width: 390, height: 844 });
   expect(

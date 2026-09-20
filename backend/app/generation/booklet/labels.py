@@ -1,4 +1,6 @@
 LABELS = {
+    "contact_information": ("معلومات التواصل", "Contact information"),
+    "property_links": ("روابط العقار", "Property links"),
     "summary": ("بيان العقارات", "Property summary"),
     "property_type": ("نوع العقار", "Property type"),
     "city": ("المدينة", "City"),
