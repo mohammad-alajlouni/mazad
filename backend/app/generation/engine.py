@@ -4,6 +4,7 @@ import unicodedata
 from decimal import Decimal
 from pathlib import Path
 
+from fastapi import HTTPException
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy import select
 from weasyprint import HTML
@@ -371,6 +372,14 @@ def render_html(
         "output_language", content.get("branding", {}).get("default_language", "en")
     )
     labels = document_messages(content["output_language"])
+    from .identity import load_identity
+
+    try:
+        identity, identity_asset = load_identity()
+    except (OSError, ValueError, KeyError) as exc:
+        raise HTTPException(
+            503, "Official design assets are unavailable or invalid"
+        ) from exc
     from .booklet.assets import asset
     from .booklet.codes import qr
     from .booklet.composer import FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
@@ -386,6 +395,8 @@ def render_html(
         font_data=font_data,
         font_bold=font_bold,
         asset=asset,
+        identity=identity,
+        identity_asset=identity_asset,
         photo_frame=photo_frame,
         booklet_photo=booklet_photo,
         qr=qr,

@@ -1,18 +1,16 @@
 <!doctype html><html lang="{{ output_language }}" dir="rtl"><head><meta charset="utf-8">
 {% set s=social %}{% set a=project.auction %}{% set ar=output_language=='ar' %}{% set story=s.format=='story' %}{% set horizontal=s.format=='x' %}{% set dark=s.theme!='white' %}
-<style>
-@font-face{font-family:Ruaq;src:url('{{ asset('RuaqArabic-Medium.ttf') }}')}@font-face{font-family:Ruaq;src:url('{{ asset('RuaqArabic-Bold.ttf') }}');font-weight:700}
-@font-face{font-family:Lama;src:url('{{ asset('LamaSans-Regular.otf') }}')}
-@page{size:{{ s.width_px }}px {{ s.height_px }}px;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Ruaq,Lama,sans-serif;color:{{ '#fff' if dark else '#111948' }}}
-.post{position:relative;width:{{ s.width_px }}px;height:{{ s.height_px }}px;break-before:page;background:{{ '#003b5e' if s.theme=='navy' else 'linear-gradient(150deg,#00a8a5,#005677)' if dark else '#fff' }}}
+<style>{% include 'infath/identity.css' %}
+@page{size:{{ s.width_px }}px {{ s.height_px }}px;margin:0}*{box-sizing:border-box}body{margin:0;font-family:Ruaq,Lama,sans-serif;color:{{ '#fff' if dark else identity.palette.ink }}}
+.post{position:relative;width:{{ s.width_px }}px;height:{{ s.height_px }}px;break-before:page;background:{{ identity.palette.navy if s.theme=='navy' else 'linear-gradient(150deg,' ~ identity.palette.teal ~ ',' ~ identity.palette.navy ~ ')' if dark else '#fff' }}}
 .post:first-child{break-before:auto}.infath{position:absolute;object-fit:contain;right:60px;top:32px;width:140px;height:104px}.photo{position:absolute;left:60px;top:168px;width:960px;height:455px;object-fit:contain}
 .headline,.tagline,.auction-name,.count,.contact,.schedule,.facts,.brands{position:absolute;overflow-wrap:anywhere}
 .headline{right:60px;top:642px;width:670px;height:105px;margin:0;font-size:56px;line-height:1.3;font-weight:700}
-.tagline{right:60px;top:750px;width:670px;height:62px;font-size:28px;line-height:1.5;color:{{ '#fff' if dark else '#008992' }}}
+.tagline{right:60px;top:750px;width:670px;height:62px;font-size:28px;line-height:1.5;color:{{ '#fff' if dark else identity.palette.teal }}}
 .count{right:60px;top:816px;width:670px;height:66px;font-size:31px}.contact{left:60px;top:680px;width:265px;height:120px;font-size:29px;text-align:center;line-height:1.5}.contact small{display:block;font-size:22px}.contact b{font-family:Lama;white-space:nowrap;font-weight:400;font-size:{{ 27 if a.auction_contact_number|length<=13 else 22 }}px}
 .schedule .auction-mode{font-size:.85em;margin-bottom:2px}.schedule{right:60px;top:902px;width:650px;height:155px;font-size:20px;line-height:1.45}.schedule p{margin:0 0 7px}.schedule .date{font-family:Lama;font-size:.88em;direction:ltr;display:inline-block}
 .brands{left:60px;top:922px;width:310px;height:105px;direction:ltr}.brands>div{position:absolute;top:0;width:145px;text-align:center}.brands>div:first-child{left:0}.brands>div:last-child{right:0}.brands img{width:140px;height:52px;object-fit:contain}.brands small{height:70px;font-size:17px;display:block;line-height:1.4;margin-top:8px}
-.facts{right:60px;top:665px;width:680px;height:228px;font-size:24px}.facts dl{display:inline-block;vertical-align:top;width:49%;margin:0 0 12px;padding:0 9px}.facts dt{font-size:20px;color:{{ '#d0fffc' if dark else '#008992' }}}.facts dd{text-align:right;margin:3px 0 0;line-height:1.35;font-family:Lama;font-size:21px}.facts dl:last-child{width:100%}
+.facts{right:60px;top:665px;width:680px;height:228px;font-size:24px}.facts dl{display:inline-block;vertical-align:top;width:49%;margin:0 0 12px;padding:0 9px}.facts dt{font-size:20px;color:{{ identity.palette.pale if dark else identity.palette.teal }}}.facts dd{text-align:right;margin:3px 0 0;line-height:1.35;font-family:Lama;font-size:21px}.facts dl:last-child{width:100%}
 {% if horizontal %}
 .infath{top:40px;right:48px;width:125px;height:96px}.photo{left:48px;top:48px;width:565px;height:478px}
 .brands{top:158px;right:48px;left:auto;width:350px;height:75px}.brands img{height:48px}.brands small{height:36px;font-size:15px;line-height:1.2}.brands>div{width:165px}
@@ -26,23 +24,24 @@
 .schedule{top:1475px;right:75px;width:455px;height:265px;font-size:24px;line-height:1.5}.contact{top:1485px;left:75px;width:380px;height:150px;font-size:40px}.contact b{font-size:{{ 36 if a.auction_contact_number|length<=13 else 28 }}px}.contact small{font-size:31px}
 .brands{top:1760px;left:230px;width:620px;height:120px}.brands>div{width:270px}.brands img{width:240px;height:75px}.brands small{height:50px;font-size:21px}
 {% endif %}
+.identity-icon{display:inline-block;width:1em;height:1em;object-fit:contain;vertical-align:middle;background:white;margin-inline-end:.3em}
 </style></head><body>
 {% macro schedule() %}
 <p class="auction-mode">{{ bt(a.auction_type) }}</p>
 {% if a.auction_type in ['electronic','hybrid'] %}
-<p>{{ 'يبدأ' if ar else 'Starts' }} <span class="date">{{ a.auction_start_date }} {{ a.start_time[:5] }}</span></p>
-<p>{{ 'ينتهي' if ar else 'Ends' }} <span class="date">{{ a.auction_end_date }} {{ a.end_time[:5] }}</span> · {{ a.electronic_platform_name }}</p>
-{% else %}<p><span class="date">{{ a.auction_date }} · {{ a.start_time[:5] }}{% if a.end_time %} — {{ a.end_time[:5] }}{% endif %}</span></p>{% endif %}
-{% if a.auction_type in ['physical','hybrid'] %}<p>{{ a.physical_location }}</p>{% endif %}
+<p><img class="identity-icon" alt="" src="{{ identity_asset(identity.selected.calendar) }}">{{ 'يبدأ' if ar else 'Starts' }} <span class="date">{{ a.auction_start_date }} {{ a.start_time[:5] }}</span></p>
+<p><img class="identity-icon" alt="" src="{{ identity_asset(identity.selected.time) }}">{{ 'ينتهي' if ar else 'Ends' }} <span class="date">{{ a.auction_end_date }} {{ a.end_time[:5] }}</span> · {{ a.electronic_platform_name }}</p>
+{% else %}<p><img class="identity-icon" alt="" src="{{ identity_asset(identity.selected.calendar) }}"><span class="date">{{ a.auction_date }} · {{ a.start_time[:5] }}{% if a.end_time %} — {{ a.end_time[:5] }}{% endif %}</span></p>{% endif %}
+{% if a.auction_type in ['physical','hybrid'] %}<p><img class="identity-icon" alt="" src="{{ identity_asset(identity.selected.location) }}">{{ a.physical_location }}</p>{% endif %}
 {% endmacro %}
 {% for item in (items if s.post_kind=='property' else [none]) %}
 <section class="post">
-<img class="infath" src="{{ asset('infath-vector-white.svg' if dark else 'infath-vector.svg') }}">
+<img class="infath" src="{{ identity_asset(identity.logos['white' if dark else 'navy'].file) }}">
 <img class="photo" src="{{ photo_frame(item.image_assets[0].src if item else project.cover_image, 565 if horizontal else 930 if story else 960, 478 if horizontal else 650 if story else 455) }}">
 {% if item %}<div class="facts" data-fit="property-facts"><dl><dt>{{ bt('property_type') }}</dt><dd>{{ item.property_data.property_type }}</dd></dl><dl><dt>{{ bt('district') }}</dt><dd>{{ item.property_data.district }}</dd></dl><dl><dt>{{ bt('area') }}</dt><dd dir="ltr">{{ item.property_data.area }}</dd></dl><dl><dt>{{ bt('city') }}</dt><dd>{{ item.property_data.city }}</dd></dl><dl><dt>{{ bt('deed_number') }}</dt><dd dir="ltr">{{ item.property_data.deed_number }}</dd></dl></div>
 {% else %}<h1 class="headline" data-fit="headline">{{ s.headline }}</h1><div class="tagline" data-fit="tagline">{{ s.tagline }}</div><div class="count" data-fit="count">{{ 'عدد العقارات' if ar else 'Properties' }}: <b>{{ items|length }}</b></div>{% endif %}
 {% if story %}<div class="auction-name" data-fit="auction-name">{{ a.auction_name }}</div>{% endif %}
-<div class="contact" data-fit="contact"><small>{{ 'رقم التواصل' if ar else 'Contact' }}</small><b dir="ltr">{{ a.auction_contact_number }}</b></div>
+<div class="contact" data-fit="contact"><small><img class="identity-icon" alt="" src="{{ identity_asset(identity.selected.phone) }}">{{ 'رقم التواصل' if ar else 'Contact' }}</small><b dir="ltr">{{ a.auction_contact_number }}</b></div>
 <div class="schedule" data-fit="schedule">{{ schedule() }}</div>
 <div class="brands"><div><img src="{{ project.auction_logo }}"><small data-fit="auction-brand-name">{{ a.auction_name }}</small></div><div><img src="{{ project.agent_logo }}"><small data-fit="agent-brand-name">{{ project.selling_agent.name }}</small></div></div>
 </section>{% endfor %}

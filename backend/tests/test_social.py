@@ -63,11 +63,13 @@ def test_social_dimensions_and_content(admin, format, post_kind, theme, kind):
     if format == "x":
         # Inspect pixels, not PDF text extraction: a leaked SVG clip can hide
         # text that remains present in the PDF's searchable text layer.
-        foreground = (17, 25, 72) if theme == "white" else (255, 255, 255)
+        foreground = (0, 20, 71) if theme == "white" else (255, 255, 255)
         for region in [(907, 40, 1032, 136), (48, 556, 613, 638)]:
+            # The native navy logo uses its own source color.
+            expected = (0, 54, 93) if theme == "white" and region[0] == 907 else foreground
             pixels = im.convert("RGB").crop(region).getdata()
             assert (
-                sum(max(abs(c - e) for c, e in zip(p, foreground)) < 12 for p in pixels)
+                sum(max(abs(c - e) for c, e in zip(p, expected)) < 12 for p in pixels)
                 > 300
             )
     with pymupdf.open(stream=pdf(admin, o), filetype="pdf") as doc:

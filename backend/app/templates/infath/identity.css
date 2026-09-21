@@ -1,0 +1,11 @@
+@font-face{font-family:Ruaq;src:url('{{ identity_asset(identity.fonts['RuaqArabic-Light'].file) }}');font-weight:400}
+@font-face{font-family:Ruaq;src:url('{{ identity_asset(identity.fonts['RuaqArabic-Medium'].file) }}');font-weight:500}
+@font-face{font-family:Ruaq;src:url('{{ identity_asset(identity.fonts['RuaqArabic-Bold'].file) }}');font-weight:700}
+@font-face{font-family:Lama;src:url('{{ identity_asset(identity.fonts['LamaSans-Light'].file) }}');font-weight:400}
+@font-face{font-family:Lama;src:url('{{ identity_asset(identity.fonts['LamaSans-Medium'].file) }}');font-weight:500}
+@font-face{font-family:Lama;src:url('{{ identity_asset(identity.fonts['LamaSans-Black'].file) }}');font-weight:700}
+@font-face{font-family:Lama;src:url('{{ identity_asset(identity.fonts['LamaSans-Black'].file) }}');font-weight:900}
+/* Light is the guide's body face, Medium the subheading face; Black is the
+   original English title face. Existing format-specific dimensions are retained. */
+html[lang=en] body{font-family:Lama,Ruaq,sans-serif}
+h1,h2,.headline{font-weight:700}
