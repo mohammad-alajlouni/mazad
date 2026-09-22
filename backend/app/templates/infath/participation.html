@@ -1,5 +1,27 @@
-{% if output_language == 'ar' %}<img class="participation-heading-art" src="{{ asset('reference-participation-title.png') }}">{% else %}<h1 class="participation-title">{{ bt('participation') }}</h1>{% endif %}
-{% for key,left,top,width,caption_left,caption_top in [('step_login',430,305,65,390,384),('step_browse',300,305,75,260,384),('step_pay',145,303,75,102,384),('step_select',340,475,75,298,552),('step_win',202,475,70,160,552)] %}
-<img class="participation-icon" style="left:{{ left }}pt;top:{{ top }}pt;width:{{ width }}pt;height:{{ 80 if loop.index==3 else 78 if loop.index<4 else 75 }}pt" src="{{ asset('reference-step-' ~ loop.index ~ '.png') }}">
-<div class="participation-caption" style="left:{{ caption_left }}pt;top:{{ caption_top }}pt;width:{{ 132 if loop.index<4 else 120 }}pt" data-fit="participation-step-{{ loop.index }}" data-max-height="90"><p>{{ bt(key) }}</p>{% if loop.index == 1 %}{{ auction.electronic_platform_name }}{% elif loop.index == 4 %}{{ auction.auction_name }}{% endif %}</div>
-{% endfor %}{{ qrs(booklet.auction_qrs|selectattr('label','equalto','electronic_platform_url')) }}
+{#- Reference page 20. The fourth step names this auction. -#}
+{{ art('participation') }}{{ footer(true, false) }}
+<img class="icon" style="{{ box(400, 95, 74, 107) }}" src="{{ asset('booklet-art/participation-title.png') }}">
+{% set title = bt('participation').split(' ', 2) if ar else [bt('participation')] %}
+{% if ar %}
+<div class="t r w7" style="{{ T(454.5, 140.7, 35.38) }};color:#057c8e">خطوات المشاركة</div>
+<div class="t r w7" style="{{ T(454.5, 182.5, 35.38) }};color:#057c8e">في المزاد الإلكتروني</div>
+{% else %}<div class="t p r w7" style="{{ T(454.5, 140.7, 30, lh=42, width=330) }};color:#057c8e">{{ bt('participation') }}</div>{% endif %}
+{% for n, x, base, box_ in [(1, 480.9, 327.0, (472, 309, 18, 25)), (2, 362.5, 327.0, (354, 309, 18, 25)), (3, 208.6, 325.0, (200, 307, 18, 25)), (4, 395.0, 497.1, (388, 481, 16, 23)), (5, 252.3, 497.1, (244, 481, 17, 23))] %}
+<img class="icon" style="{{ box(*box_) }}" src="{{ asset('booklet-art/step-' ~ n ~ '.png') }}">
+<div class="t l w5 white" style="{{ T(x, base, 15.93 if n < 4 else 14.79, 'l', align='center', width=20) }}">{{ n }}</div>
+{% endfor %}
+{% set platform = auction.electronic_platform_name or bt('platform_fallback') %}
+{% set prefix = bt('auction') %}{% set short_name = auction.auction_name[prefix|length:]|trim if auction.auction_name.startswith(prefix) else auction.auction_name %}
+{% set steps = [
+  (453.4, 399.6, ['تسجيل الدخول في', platform] if ar else ['Sign in to', platform]),
+  (318.0, 399.6, ['إستعراض المزادات' if ar else bt('step_browse')]),
+  (168.5, 399.6, ['سداد قيمة المشاركة في', 'المزاد (قابلة للإسترداد)'] if ar else ['Pay the refundable', 'participation amount']),
+  (358.6, 568.0, ['إختيار مزاد ( ' ~ short_name ~ ' )', 'والدخول للمشاركة'] if ar else ['Select ' ~ auction.auction_name, 'and participate']),
+  (220.1, 568.0, [bt('step_win')]),
+] %}
+{% for x, base, lines in steps %}{% set step = loop.index %}{% for line in lines %}
+<div class="t r w3" style="{{ T(x, base + 14.8 * loop.index0, fit.box_size('participation_name', line) if step == 4 else 12.59, align='center', width=150 if step != 4 else 200) }};color:#15385f" data-fit="participation-step-{{ step }}-{{ loop.index }}" data-max-height="24pt">{{ line }}</div>
+{% endfor %}{% endfor %}
+{% set platform_qr = booklet.auction_qrs|selectattr('label', 'equalto', 'electronic_platform_url')|list %}
+{% if platform_qr %}<a class="hit" href="{{ platform_qr[0].url }}" style="{{ box(224.0, 631.3, 190, 51) }}"></a><img class="qr-code" style="{{ box(224.0, 631.3, 51, 51) }}" src="{{ qr(platform_qr[0].url, '#3cbebb', 0) }}">
+{% for line in bt('scan_to_enter').split('\n') %}<div class="t r w3" style="{{ T(411.3, 649.7 + 15.9 * loop.index0, 13.52, width=140) }};color:#15385f">{{ line }}</div>{% endfor %}{% endif %}

@@ -1,1 +1,20 @@
-<h2 class="page-title">{{ bt('summary') }}</h2><div class="table-wrap" data-fit="summary-table" data-max-height="680"><table class="table"><thead><tr><th class="row-number">#</th>{% for key in summary_fields %}<th>{{ bt(key) }}</th>{% endfor %}</tr></thead><tbody>{% for item in page.rows %}<tr><td class="row-number">{{ '%02d' % item.number }}</td>{% for key in summary_fields %}<td>{{ display(item.property_data.get(key)) }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+{#- Reference page 5: teal or navy to match the cover; the table closes at its last row. -#}
+{% set navy = booklet.theme == 'navy' %}{% set band = '#00365d' if navy else '#37bfbd' %}
+{% set bottoms = [327.7, 353.8, 379.8, 405.8, 434.4, 460.4, 486.4, 512.4, 541.0, 567.0][:page.rows|length] %}
+{% set last = bottoms[-1] %}
+{% set cols = [509.2, 455.1, 413.1, 350.6, 308.6, 265.9, 225.9, 152.6, 37.6] %}
+{{ art('summary') }}
+<img class="art" src="{{ page_shape(shapes().summary_band, band) }}">
+<img class="art" src="{{ page_shape(summary_column(last + 7.05), band) }}">
+<img class="art" src="{{ table_lines(cols[1:-1], 297.7, last, bottoms, 37.6, 509.2, '#01a3a1', 0.216, 0.246) }}">
+{{ footer() }}
+<div class="t r w7" style="{{ T(300.25, 149.0, 26.43, align='center', width=300) }};color:{{ '#00365d' if navy else '#00a4a2' }}">{{ bt('summary') }}</div>
+{% for key in summary_fields %}{% set centre = (cols[loop.index0] + cols[loop.index]) / 2 %}
+<div class="t r w5 white" style="{{ T(centre, 271.9, 6.48, align='center', width=cols[loop.index0] - cols[loop.index]) }}">{{ bt('area_short' if key == 'area' else key) }}</div>
+{% endfor %}
+{% for item in page.rows %}{% set top = 297.7 if loop.first else bottoms[loop.index0 - 1] %}{% set base = (top + bottoms[loop.index0]) / 2 + 3.2 %}
+<div class="t lr white" style="{{ T(540.3, base + 0.4, 12.99, 'l', align='center', width=38) }}">{{ '%02d' % item.number }}</div>
+{% for key in summary_fields %}{% set prop = item.property_data %}
+{% set value = fmt.number(prop.get(key), output_language, key == 'participation_amount') if key in ('area', 'participation_amount') else prop.get(key) %}
+{{ V(value or '-', (cols[loop.index0] + cols[loop.index]) / 2, base, 8.12 if not has_digits(value) else 8, 'center', cols[loop.index0] - cols[loop.index] - 4, 'w5 body') }}
+{% endfor %}{% endfor %}

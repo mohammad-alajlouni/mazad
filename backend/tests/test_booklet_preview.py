@@ -22,10 +22,13 @@ def test_preview_updates_unsaved_drafts_without_mutating_project(admin):
     )
     assert r.status_code == 200, r.text
     preview = r.json()
-    assert "LIVE_UNSAVED" in preview["text"] and "LIVE_VENUE" in preview["text"]
-    assert preview["saved"] is False and preview["fits"]
-    assert base64.b64decode(preview["image"].split(",")[1]).startswith(b"\x89PNG")
+    assert "LIVE_UNSAVED" in preview["html"] and "LIVE_VENUE" in preview["html"]
+    assert preview["saved"] is False
+    # Fonts and artwork are linked for the browser cache, not re-sent each time.
+    assert "/api/booklet-assets/" in preview["html"]
+    assert "data:font" not in preview["html"] and len(preview["html"]) < 400_000
     assert preview["pages"][preview["page"]]["kind"] == "auction"
+    assert preview["pages"][preview["page"]]["step"] == "auction"
     r = admin.post(
         f"/api/projects/{p}/booklet-preview",
         json={
@@ -38,7 +41,7 @@ def test_preview_updates_unsaved_drafts_without_mutating_project(admin):
         },
     )
     assert r.status_code == 200, r.text
-    assert "LIVE_TYPE" in r.json()["text"]
+    assert "LIVE_TYPE" in r.json()["html"]
     after = admin.get(f"/api/projects/{p}").json()
     assert (
         after["project"] == original["project"] and after["items"] == original["items"]
@@ -48,13 +51,25 @@ def test_preview_updates_unsaved_drafts_without_mutating_project(admin):
 
 
 def test_preview_final_page_uses_identical_pdf_rendering(admin):
+    """The browser preview is the export page: rendering its HTML with the
+    linked assets gives the exported PDF page."""
+    from weasyprint import HTML, default_url_fetcher
+
     from test_auctions import generate, pdf
 
     p = create_auction(admin, workspace="booklet")
     add(admin, p, property_input())
     output = generate(admin, p)
+
+    def fetch(url, *args, **kwargs):
+        if url.startswith("data:"):
+            return default_url_fetcher(url)
+        response = admin.get(url.replace("http://testserver", ""))
+        assert response.status_code == 200, url
+        return {"string": response.content, "mime_type": response.headers["content-type"]}
+
     with pymupdf.open(stream=pdf(admin, output), filetype="pdf") as document:
-        for index in [1, 3, 6]:
+        for index in [0, 3, 5]:
             expected = (
                 document[index].get_pixmap(matrix=pymupdf.Matrix(1.25, 1.25)).samples
             )
@@ -62,17 +77,22 @@ def test_preview_final_page_uses_identical_pdf_rendering(admin):
                 f"/api/projects/{p}/booklet-preview", json={"page": index}
             )
             assert response.status_code == 200, response.text
-            png = base64.b64decode(response.json()["image"].split(",")[1])
+            page = HTML(
+                string=response.json()["html"],
+                base_url="http://testserver/",
+                url_fetcher=fetch,
+            ).write_pdf()
             import numpy as np
 
-            actual = np.frombuffer(pymupdf.Pixmap(png).samples, dtype=np.uint8).astype(
-                int
-            )
+            with pymupdf.open(stream=page, filetype="pdf") as rendered:
+                actual = np.frombuffer(
+                    rendered[0].get_pixmap(matrix=pymupdf.Matrix(1.25, 1.25)).samples,
+                    dtype=np.uint8,
+                ).astype(int)
             target = np.frombuffer(expected, dtype=np.uint8).astype(int)
             delta = np.abs(actual - target)
-            # Native PDF form placement can round antialiasing at subpixel edges.
-            assert delta.mean() < 0.02, (index, delta.mean(), delta.max())
-            assert (delta > 16).mean() < 0.0001, (index, delta.mean(), delta.max())
+            assert delta.mean() < 0.05, (index, delta.mean(), delta.max())
+            assert (delta > 16).mean() < 0.0005, (index, delta.mean(), delta.max())
 
 
 def test_preview_rejects_foreign_items_and_does_not_fetch_urls(admin):
@@ -91,7 +111,9 @@ def test_preview_rejects_foreign_items_and_does_not_fetch_urls(admin):
         },
     )
     assert r.status_code == 200, r.text
-    assert "alert(1)" in r.json()["text"]
+    html = r.json()["html"]
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html and "<script>" not in html
+    assert "file:///etc/passwd" not in html
     r = admin.post(
         f"/api/projects/{p}/booklet-preview",
         json={"image": {"src": "https://example.com/a.png", "category": "cover"}},

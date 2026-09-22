@@ -93,6 +93,8 @@ export type Detail = {
       property_required: string[];
       agent_required: string[];
       agent_logo_required: boolean;
+      // Longest value every output of the project can set in its design.
+      limits?: Record<string, number>;
     };
     stages: Record<
       string,

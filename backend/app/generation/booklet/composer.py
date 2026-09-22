@@ -1,9 +1,11 @@
 """Pure page composition from the same normalized snapshot used by all outputs."""
 
+import re
 import unicodedata
-from uuid import UUID
+from functools import lru_cache
+from pathlib import Path
 
-from .codes import barcode, qr
+from .codes import qr
 from .registry import COVERS
 
 FIELDS = (
@@ -28,23 +30,43 @@ SUMMARY_FIELDS = (
     "participation_amount",
 )
 RENTAL_FIELDS = (
-    "unit_number",
     "property_type",
+    "unit_number",
     "contract_status",
     "contract_start_date",
     "contract_end_date",
+    "annual_rent_value",
     "contract_duration",
     "paid_period",
     "next_due_date",
-    "annual_rent_value",
 )
+# Rows that the reference tables hold before continuing on another page.
+SUMMARY_ROWS = 10
+RENTAL_ROWS = 19
+# Links shown on the property page; the rest continue on a links page.
+PAGE_LINKS = 4
+LINK_ORDER = (
+    "survey_link",
+    "rental_information_link",
+    "additional_images_link",
+    "other_document_link",
+    "location_link",
+)
+# Reference text regions: (font size, width in points, lines).
+DESCRIPTION = {"landscape": (10, 497.3, 3), "portrait": (12, 198, 5)}
+INFO_BOX = {"landscape": (10, 268, 11), "portrait": (10, 262, 8)}
+INFO_PAGE = (11, 500, 33)
+NUMBER_INDENT = 11
+# Width in points beside each direction label on the property page.
+BOUNDARY_WIDTH = {"landscape": 100, "portrait": 130}
+IDENTITY = Path(__file__).resolve().parents[2] / "templates/infath/assets/identity"
 
 
 def chunks(rows, count):
     return [rows[i : i + count] for i in range(0, len(rows), count)]
 
 
-def text_chunks(value, size=1200, max_lines=26):
+def text_chunks(value, size=900, max_lines=24):
     # Preserve all characters, including whitespace/newlines and long unbroken tokens.
     result = []
     while value:
@@ -85,19 +107,126 @@ def property_layout(item):
     )
 
 
-def boundaries_need_page(boundaries):
-    # The compact reference region permits two short lines per direction.
+@lru_cache(maxsize=4)
+def face(name):
+    from PIL import ImageFont
+
+    return ImageFont.truetype(str(IDENTITY / f"{name}.ttf"), 100)
+
+
+def text_width(text, size=9.6, name="LamaSans-Medium"):
+    """Shaped width in points, measured with the booklet's own font."""
+    try:
+        return face(name).getlength(text) / 100 * size
+    except OSError:  # font unavailable: assume wide Latin figures
+        return len(text) * size * 0.6
+
+
+TOKENS = re.compile(r"\n|[^\s]+[ \t]*|[ \t]+")
+
+
+def fit_length(text, size, width, max_lines, name="RuaqArabic-Light"):
+    """Characters of text that fit in max_lines of width, broken as the page breaks them.
+
+    Returns (length, lines used). Width keeps a 2% margin for justification.
+    """
+    width *= 0.98
+    lines, used, consumed = 1, 0.0, 0
+    for token in TOKENS.findall(text):
+        if token == "\n":
+            if lines == max_lines:
+                return consumed, lines
+            lines, used = lines + 1, 0.0
+            consumed += 1
+            continue
+        word = text_width(token.rstrip(), size, name)
+        if used and used + word > width:
+            if lines == max_lines:
+                return consumed, lines
+            lines, used = lines + 1, 0.0
+        used += text_width(token, size, name)
+        consumed += len(token)
+    return consumed, lines
+
+
+def split_text(text, size, width, max_lines):
+    """First part that fits the region, the remainder continuing elsewhere."""
+    length, _ = fit_length(text, size, width, max_lines)
+    return text[:length], text[length:]
+
+
+def lines_used(text, size, width):
+    return fit_length(text, size, width, 10**6)[1]
+
+
+def boundaries_need_page(boundaries, layout="landscape"):
+    # Each direction has one line beside its label on the property page.
     return any(
-        len(boundaries.get(side + "_description", "")) > 55
-        or "\n" in boundaries.get(side + "_description", "")
-        or len(boundaries.get(side + "_length", "")) > 20
+        "\n" in boundaries.get(side + key, "")
+        or text_width(boundaries.get(side + key, "")) > BOUNDARY_WIDTH[layout]
         for side in ("north", "south", "east", "west")
+        for key in ("_description", "_length")
     )
+
+
+def info_entries(item, include_lists):
+    """Box content in reference order: features, notes, then free text."""
+    prop = item["property_data"]
+    entries = []
+    if include_lists:
+        features = [f.strip() for f in prop.get("features", []) if f.strip()]
+        if features:
+            entries.append({"heading": "features"})
+            entries += [{"number": n, "text": f} for n, f in enumerate(features, 1)]
+        notes = [n.strip() for n in (item.get("notes") or "").split("\n") if n.strip()]
+        if notes:
+            entries.append({"heading": "notes"})
+            entries += [{"number": n, "text": t} for n, t in enumerate(notes, 1)]
+    if prop.get("additional_information", "").strip():
+        entries.append({"text": prop["additional_information"].strip()})
+    return entries
+
+
+def fill_box(entries, size, width, capacity):
+    """Entries that fit a text region, and the entries that continue after it."""
+    shown, used = [], 0
+    for index, entry in enumerate(entries):
+        text = entry.get("text", "")
+        indent = NUMBER_INDENT if "number" in entry else 0
+        need = 1 if "heading" in entry else lines_used(text, size, width - indent)
+        if used + need <= capacity:
+            shown.append(entry)
+            used += need
+            continue
+        free = capacity - used
+        rest = entries[index:]
+        if set(entry) == {"text"} and free > 0:
+            # Free text is split at a line break; nothing is repeated or lost.
+            first, remainder = split_text(text, size, width, free)
+            if first.strip():
+                shown.append({"text": first})
+                rest = [{"text": remainder}] + entries[index + 1 :]
+        elif shown and "heading" in shown[-1]:
+            rest = [shown.pop()] + rest  # never leave a heading without its items
+        if not shown:  # a single entry larger than the region still has to move on
+            shown, rest = [entry], entries[index + 1 :]
+        return shown, rest
+    return shown, []
+
+
+def paginate(entries, size, width, capacity):
+    pages = []
+    while entries:
+        page, entries = fill_box(entries, size, width, capacity)
+        pages.append(page)
+    return pages
 
 
 def compose(project, items):
     auction = project["auction"]
     cover = COVERS[auction["selected_cover_template_id"]]
+    electronic = auction["auction_type"] in ("electronic", "hybrid")
+    edition = auction.get("booklet_edition") or "print"
     pages = [
         {"kind": "cover", "cover_number": cover.display_order},
         {"kind": "introduction"},
@@ -111,34 +240,55 @@ def compose(project, items):
         )
     auction_page = {"kind": "auction"}
     pages.append(auction_page)
-    for field in ("legal_announcement_text", "court_decision_text"):
-        parts = text_chunks(auction.get(field, ""), 125)
-        auction_page[field] = parts[0] if parts else ""
-        for text in text_chunks("".join(parts[1:])):
-            pages.append({"kind": "information", "heading": field, "text": text})
-    for rows in chunks(items, 10):
+    announcement = "\n".join(
+        t.strip()
+        for t in (
+            auction.get("legal_announcement_text", ""),
+            auction.get("court_decision_text", ""),
+        )
+        if t and t.strip()
+    )
+    parts = text_chunks(announcement, 120, 3)
+    auction_page["announcement"] = parts[0] if parts else ""
+    for text in text_chunks("".join(parts[1:])):
+        pages.append(
+            {"kind": "information", "heading": "legal_announcement_text", "text": text}
+        )
+    for rows in chunks(items, SUMMARY_ROWS):
         pages.append({"kind": "summary", "rows": rows})
     for index, item in enumerate(items, 1):
         item["number"] = index
         prop = item["property_data"]
         layout = property_layout(item)
         boundaries = prop.get("boundaries", {})
-        separate_boundaries = boundaries_need_page(boundaries)
-        extra = text_chunks(prop.get("additional_information", ""), 350, 7)
+        separate_boundaries = boundaries_need_page(boundaries, layout)
+        include_info = prop.get("include_information_page", True)
+        links = [k for k in LINK_ORDER if prop.get(k)] + sorted(
+            k for k in prop if k.endswith("_link") and prop[k] and k not in LINK_ORDER
+        )
         item["qr_links"] = [
-            {"label": k, "url": v, "image": qr(v)}
-            for k, v in prop.items()
-            if k.endswith("_link") and v
+            {"label": k, "url": prop[k], "image": qr(prop[k], "#3cbebb", 0)}
+            for k in links
         ]
-        description = text_chunks(item.get("description", ""), 260, 3)
+        first, remainder = split_text(item.get("description", ""), *DESCRIPTION[layout])
+        description = [first] + text_chunks(remainder) if first or remainder else []
+        shown, rest = fill_box(info_entries(item, include_info), *INFO_BOX[layout])
+        close = electronic and bool(
+            prop.get("auction_close_date") or prop.get("auction_close_time")
+        )
         pages.append(
             {
                 "kind": "property",
                 "item": item,
                 "layout": layout,
+                "variant": layout + ("-close" if close else ""),
+                "edition": edition,
                 "separate_boundaries": separate_boundaries,
                 "description": description[0] if description else "",
-                "additional_information": (extra or [""])[0],
+                "info": shown,
+                "additional_information": "".join(
+                    e["text"] for e in shown if set(e) == {"text"}
+                ),
             }
         )
         if separate_boundaries:
@@ -156,13 +306,13 @@ def compose(project, items):
                     )
             for group in chunks(rows, 4):
                 pages.append({"kind": "boundaries", "item": item, "rows": group})
-        for links in chunks(item["qr_links"][4:], 4):
+        for group in chunks(item["qr_links"][PAGE_LINKS:], 4):
             pages.append(
                 {
                     "kind": "information",
                     "item": item,
                     "heading": "property_links",
-                    "links": links,
+                    "links": group,
                     "text": "",
                 }
             )
@@ -175,44 +325,25 @@ def compose(project, items):
                     "text": text,
                 }
             )
-        for field in ("notes", "specifications", "technical_information"):
-            for text in (
-                text_chunks(item.get(field, ""))
-                if prop.get("include_information_page", True)
-                else []
-            ):
-                pages.append(
-                    {
-                        "kind": "information",
-                        "item": item,
-                        "heading": field,
-                        "text": text,
-                    }
-                )
-        for text in (
-            text_chunks("".join(extra[1:]))
-            if prop.get("include_information_page", True)
-            else []
-        ):
+        if include_info:
+            for field in ("specifications", "technical_information"):
+                for text in text_chunks(item.get(field, "")):
+                    pages.append(
+                        {
+                            "kind": "information",
+                            "item": item,
+                            "heading": field,
+                            "text": text,
+                        }
+                    )
+        for group in paginate(rest, *INFO_PAGE):
             pages.append(
                 {
                     "kind": "information",
                     "item": item,
                     "heading": "additional_information",
-                    "text": text,
-                }
-            )
-        for text in (
-            text_chunks("\n".join("• " + f for f in prop.get("features", [])))
-            if prop.get("include_information_page", True)
-            else []
-        ):
-            pages.append(
-                {
-                    "kind": "information",
-                    "item": item,
-                    "heading": "features",
-                    "text": text,
+                    "entries": group,
+                    "text": "".join(e["text"] for e in group if set(e) == {"text"}),
                 }
             )
         for images in (
@@ -227,22 +358,23 @@ def compose(project, items):
             if any(v not in (None, "") for v in r.values())
         ]
         for rows in (
-            chunks(rentals, 10) if prop.get("include_rentals_page", True) else []
+            chunks(rentals, RENTAL_ROWS)
+            if prop.get("include_rentals_page", True)
+            else []
         ):
             pages.append({"kind": "rentals", "item": item, "rows": rows})
     pages.append({"kind": "terms", "auction_type": auction["auction_type"]})
-    if auction["auction_type"] in ("electronic", "hybrid"):
+    if electronic:
         pages.append({"kind": "participation"})
     pages.append({"kind": "contact"})
     return {
-        "layout_version": 3,
+        "layout_version": 4,
         "theme": "navy" if cover.display_order in (2, 4) else "teal",
         "pages": pages,
         "cover_id": cover.id,
         "auction_qrs": [
-            {"label": k, "url": v, "image": qr(v)}
+            {"label": k, "url": v, "image": qr(v, "#12375c", 0)}
             for k, v in auction.items()
             if k.endswith("_url") and v
         ],
-        "barcode": barcode("P-" + str(UUID(project["id"]).int)),
     }

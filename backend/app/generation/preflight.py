@@ -15,20 +15,28 @@ def check_layout(document, content):
                 and element.get("data-fit")
                 and box.__class__.__name__ in ("BlockBox", "AbsolutePlaceholder")
             ):
+                limit = element.get("data-max-height", "")
                 region = (
                     box.content_box_x(),
                     box.content_box_y(),
                     box.width,
-                    float(element.get("data-max-height", box.height)),
+                    # "pt" limits come from the booklet's point-based reference geometry.
+                    float(limit[:-2]) * 96 / 72
+                    if limit.endswith("pt")
+                    else float(limit or box.height),
                     element.get("data-fit"),
                 )
             if region and box.__class__.__name__ == "TextBox":
                 x, y, w, h, name = region
+                # Glyph boxes (ascent + descent) may overhang a tight line box.
+                slack = 1 + 0.9 * box.style["font_size"]
+                # Wrapped lines may end in a hanging space a few pixels wide.
+                edge = 1 + 0.3 * box.style["font_size"]
                 if (
-                    box.position_x < x - 1
-                    or box.position_x + box.width > x + w + 1
-                    or box.position_y < y - 1
-                    or box.position_y + box.height > y + h + 1
+                    box.position_x < x - edge
+                    or box.position_x + box.width > x + w + edge
+                    or box.position_y < y - slack
+                    or box.position_y + box.height > y + h + slack
                 ):
                     logging.getLogger(__name__).warning(
                         "Text overflow in %s: region=%s text_box=%s",

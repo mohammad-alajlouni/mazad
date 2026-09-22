@@ -102,6 +102,53 @@ def workflow(db, project):
     ):
         rules["property_required"] += ["district", "area", "deed_number"]
 
+    # Longest value every selected output can set in its fixed design, so the
+    # forms refuse longer input instead of the last step reporting it.
+    limits = {}
+
+    def limit(field, value):
+        limits[field] = min(value, limits.get(field, value))
+
+    if scope in ("project", "banners"):
+        for field, value in {
+            "auction_name": 60,
+            "license_number": 24,
+            "auction_contact_number": 18,
+            "legal_announcement_text": 220,
+            "court_decision_text": 120,
+            "physical_location": 70,
+            "electronic_platform_name": 40,
+        }.items():
+            limit(field, value)
+        for field in (
+            "property_type",
+            "district",
+            "usage",
+            "area",
+            "deed_number",
+            "plan_number",
+            "plot_number",
+            "execution_request_number",
+        ):
+            limit(field, 32)
+    if scope in ("project", "social"):
+        for field, value in {
+            "auction_name": 48,
+            "license_number": 24,
+            "auction_contact_number": 18,
+            "legal_announcement_text": 220,
+            "physical_location": 60,
+            "electronic_platform_name": 40,
+        }.items():
+            limit(field, value)
+        if (
+            scope == "project"
+            or (project.social_config or {}).get("post_kind") == "property"
+        ):
+            for field in ("property_type", "city", "district", "area", "deed_number"):
+                limit(field, 28)
+    rules["limits"] = limits
+
     def issue(section, field, item=None, limit=None):
         value = {"field": field, "item": item, "limit": limit}
         if value not in stages[section]["missing"]:
@@ -133,12 +180,48 @@ def workflow(db, project):
         for row in check["missing"]:
             section = row["section"]
             if section == "template":
-                continue
+                # In a complete project the design choices are fixed defaults;
+                # what can still fail (e.g. too many properties) belongs to data.
+                if scope != "project":
+                    continue
+                section = "items"
             if row["field"] in ("agent_name", "agent_logo"):
                 section = "agent"
             issue(section, row["field"], row.get("item"), row.get("limit"))
     booklet = validate_project(db, project)
     if scope in ("project", "booklet"):
+        # Values measured against their fixed booklet boxes, reported in their step.
+        from sqlalchemy import select as query
+
+        from ..generation.booklet.fit import booklet_issues
+        from ..models import ProjectImage, ProjectItem, SellingAgent
+
+        agent = db.scalar(
+            query(SellingAgent).where(SellingAgent.project_id == project.id)
+        )
+        pictures = db.scalars(
+            query(ProjectImage).where(ProjectImage.project_id == project.id)
+        ).all()
+        items = [
+            {
+                "title": item.title,
+                "property_data": item.property_data,
+                "image_assets": [
+                    {"orientation": image.orientation}
+                    for image in sorted(
+                        (i for i in pictures if i.item_id == item.id),
+                        key=lambda i: (i.category != "main", i.sequence_number),
+                    )
+                ],
+            }
+            for item in db.scalars(
+                query(ProjectItem).where(ProjectItem.project_id == project.id)
+            )
+        ]
+        for row in booklet_issues(
+            a, agent.data if agent else {}, items, a.get("document_language", "ar")
+        ):
+            issue(row["section"], row["field"], row["item"], row["limit"])
         for row in booklet["errors"]:
             path = row["field"].split(".")
             section = {"selling_agent": "agent", "properties": "items"}.get(

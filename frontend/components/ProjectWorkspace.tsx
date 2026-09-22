@@ -1,5 +1,6 @@
 import LiveBookletPreview from "./LiveBookletPreview";
 import {
+  AgentReadiness,
   missingStage,
   validateForms,
   WorkflowProblems,
@@ -105,6 +106,18 @@ export default function ProjectWorkspace({
     else setTab(next);
   };
   const [auctionValid, setAuctionValid] = useState(false);
+  // Refuse input longer than the booklet, banner and posts can set, so no
+  // length problem is left for the generation step.
+  const limits = detail.workflow?.rules.limits;
+  useEffect(() => {
+    if (!limits || !root.current) return;
+    for (const field of root.current.querySelectorAll<
+      HTMLInputElement | HTMLTextAreaElement
+    >("input[name], textarea[name]")) {
+      const limit = limits[field.name.replace(/^property\./, "")];
+      if (limit) field.maxLength = limit;
+    }
+  });
   const [useAI, setUseAI] = useState(false);
   return (
     <LiveBookletPreview detail={detail} stage={tab}>
@@ -116,6 +129,9 @@ export default function ProjectWorkspace({
         }}
       >
         <WorkflowProblems detail={detail} stage={blocked} />
+        {(tab === "auction" || blocked === "auction") && (
+          <AgentReadiness detail={detail} />
+        )}
         <div className="project-meta">
           <Badge status={detail.project.status} />
           <span>{detail.project.customer || tr("ui.no_client_assigned")}</span>

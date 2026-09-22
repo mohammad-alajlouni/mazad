@@ -1,1 +1,23 @@
-<h2 class="page-title">{{ bt('rental_contracts') }} · {{ page.item.number }}</h2><div class="table-wrap" data-fit="rental-table" data-max-height="780"><table class="table rentals"><thead><tr><th class="row-number">#</th>{% for key in rental_fields %}<th>{{ bt(key) }}</th>{% endfor %}</tr></thead><tbody>{% for row in page.rows %}<tr><td class="row-number">{{ loop.index }}</td>{% for key in rental_fields %}<td>{{ display(row.get(key)) }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+{#- Reference page 18: navy table closed at the last contract. -#}
+{% set item = page.item %}
+{% set bottoms = [180.3, 206.3, 232.7, 258.7, 284.7, 311.1, 337.6, 364.0, 390.3, 416.3, 442.3, 468.7, 495.2, 521.7, 548.0, 574.5, 600.8, 626.8, 652.8][:page.rows|length] %}
+{% set last = bottoms[-1] %}
+{% set cols = [516.5, 462.3, 430.4, 382.9, 327.4, 271.2, 215.0, 159.0, 95.5, 44.0] %}
+{{ art('rentals') }}
+<img class="art" src="{{ page_shape(rentals_column(last + 1.05), '#00365d') }}">
+<img class="art" src="{{ table_lines(cols[1:-1], 152.8, last, bottoms, 44, 516.5, '#00365d', 0.13, 0.094) }}">
+<img class="icon" style="{{ box(44, 696, 524, 43) }}" src="{{ asset('booklet-art/rentals-note.png') }}">
+{{ footer() }}
+<div class="t r w7" style="{{ T(297.2, 67.4, 23.1, align='center', width=300) }};color:#137788">{{ bt('rental_contracts') }}</div>
+{% for key, value, right in [('property_number_in_booklet', '%02d' % item.number, 529), ('deed_number_short', item.property_data.deed_number, 369), ('property_name', item.title, 194)] %}
+<div class="t r w7" style="{{ T(right, 106.2, 6.5, width=150) }};color:#00365d;overflow:hidden">{{ bt(key) }}/ {{ value|nums }}</div>
+{% endfor %}
+{% set heads = ['summary_type', 'unit_number', 'contract_status', 'contract_start_date', 'contract_end_date', 'rent_total', 'contract_duration', 'rent_paid', 'rent_next'] %}
+{% for key in heads %}{% set lines = bt(key).split('\n') %}{% set centre = (cols[loop.index0] + cols[loop.index]) / 2 %}
+{% for line in lines %}<div class="t r w5 white" style="{{ T(centre, 135.3 + (loop.index0 - (lines|length - 1) / 2) * 7.2, 5.6, align='center', width=cols[loop.index0] - cols[loop.index]) }}">{{ line }}</div>{% endfor %}
+{% endfor %}
+{% for row in page.rows %}{% set top = 152.8 if loop.first else bottoms[loop.index0 - 1] %}{% set base = (top + bottoms[loop.index0]) / 2 + 3.2 %}
+<div class="t lr white" style="{{ T(547.7, base + 1.5, 13.01, 'l', align='center', width=38) }}">{{ '%02d' % loop.index }}</div>
+{% for key in rental_fields %}{% set value = fmt.number(row.get(key), output_language, true) if key == 'annual_rent_value' else row.get(key) %}
+{{ V(value or '-', (cols[loop.index0] + cols[loop.index]) / 2, base, 8.13, 'center', cols[loop.index0] - cols[loop.index] - 4, 'w5 body') }}
+{% endfor %}{% endfor %}

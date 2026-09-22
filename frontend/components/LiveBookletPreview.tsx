@@ -5,12 +5,44 @@ import { api, Detail, send } from "./api";
 import { readProperty } from "./AuctionWorkspace";
 
 type Preview = {
-  image: string;
+  html: string;
   page: number;
-  pages: { kind: string; item: string }[];
-  fits: boolean;
-  text: string;
+  pages: { kind: string; item: string; step: string }[];
 };
+// Booklet pages follow the data-entry steps; later steps stay locked until the
+// earlier ones are complete, so the preview never runs ahead of the form.
+const STEPS = ["auction", "items", "images", "generate"];
+const PAGE_WIDTH = 794; // 595.276 pt in CSS pixels
+const PAGE_HEIGHT = 1123;
+function stepOf(stage: string) {
+  if (stage === "excel import") return "items";
+  if (stage === "outputs") return "generate";
+  return STEPS.includes(stage) ? stage : "auction";
+}
+function requiredComplete(root: HTMLElement | null) {
+  if (!root) return true;
+  return [
+    ...root.querySelectorAll<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >("form[data-stage-form] [required]"),
+  ].every((el) => el.value.trim() !== "");
+}
+// Text regions carry data-fit and a maximum height; the browser measures them
+// the way export preflight does, without a PDF round trip.
+function overflows(doc: Document) {
+  for (const el of doc.querySelectorAll<HTMLElement>("[data-fit]")) {
+    const limit = el.dataset.maxHeight || "";
+    const max = parseFloat(limit) * (limit.endsWith("pt") ? 96 / 72 : 1);
+    // Same tolerance as export preflight: glyphs may overhang a tight line box.
+    const slack = 1 + 0.9 * parseFloat(getComputedStyle(el).fontSize);
+    if (
+      (max && el.scrollHeight > max + slack) ||
+      el.scrollWidth > el.clientWidth + slack
+    )
+      return true;
+  }
+  return false;
+}
 type Draft = {
   auction?: Record<string, unknown>;
   agent?: Record<string, unknown>;
@@ -53,15 +85,66 @@ export default function LiveBookletPreview({
   const [updating, setUpdating] = useState(true);
   const [error, setError] = useState(false);
   const [retry, setRetry] = useState(0);
+  const [formComplete, setFormComplete] = useState(true);
+  const [fits, setFits] = useState(true);
+  // Two frames: the new page loads in the hidden one, then they swap.
+  const [frames, setFrames] = useState<[string, string]>(["", ""]);
+  const [front, setFront] = useState(0);
+  const [scale, setScale] = useState(0.4);
   const version = useRef(0);
   const imageVersion = useRef(0);
   const root = useRef<HTMLDivElement>(null);
+  const paper = useRef<HTMLDivElement>(null);
+  const frameRefs = [
+    useRef<HTMLIFrameElement>(null),
+    useRef<HTMLIFrameElement>(null),
+  ];
+  // Frame contents and the visible frame, read inside async request callbacks.
+  const shown = useRef<{ frames: [string, string]; front: number }>({
+    frames: ["", ""],
+    front: 0,
+  });
+  const pending = useRef<{
+    slot: number;
+    request: number;
+    result: Preview;
+  } | null>(null);
   useEffect(() => {
     setDraft({});
     setPage(null);
     setFocus(stage);
     imageVersion.current++;
+    // Forms mount with the step; read their required fields once they exist.
+    const timer = setTimeout(() =>
+      setFormComplete(requiredComplete(root.current)),
+    );
+    return () => clearTimeout(timer);
   }, [detail, stage]);
+  useEffect(() => {
+    const element = paper.current;
+    if (!element) return;
+    const observer = new ResizeObserver(() =>
+      setScale(element.clientWidth / PAGE_WIDTH),
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const current = stepOf(stage);
+  const stages = detail.workflow?.stages || {};
+  const unlocked = new Set<string>();
+  for (const [index, step] of STEPS.entries()) {
+    unlocked.add(step);
+    const saved =
+      step === "generate" ||
+      (stages[step]?.valid !== false &&
+        (step !== "auction" || stages.agent?.valid !== false));
+    const done = step === current ? saved && formComplete : saved;
+    if (!done && index >= STEPS.indexOf(current)) break;
+    if (!saved) break;
+  }
+  unlocked.add(current);
+  const locked = (index: number) =>
+    !!preview && !unlocked.has(preview.pages[index]?.step);
   useEffect(() => {
     const request = ++version.current;
     const controller = new AbortController();
@@ -90,24 +173,56 @@ export default function LiveBookletPreview({
             }),
           },
         );
-        // Decode first: replacing the old image cannot flash an empty page.
-        const img = new Image();
-        img.src = result.image;
-        await img.decode();
-        if (request === version.current) setPreview(result);
+        if (request !== version.current) return;
+        // A frame already holding this exact page fires no load event: show it.
+        const same = shown.current.frames.indexOf(result.html);
+        if (same >= 0) {
+          pending.current = null;
+          const doc = frameRefs[same].current?.contentDocument;
+          if (doc) setFits(!overflows(doc));
+          setPreview(result);
+          setFront(same);
+          shown.current.front = same;
+          setUpdating(false);
+          return;
+        }
+        // Load into the hidden frame; it becomes visible once rendered.
+        const slot = 1 - shown.current.front;
+        pending.current = { slot, request, result };
+        shown.current.frames[slot] = result.html;
+        setFrames([...shown.current.frames] as [string, string]);
       } catch (e) {
-        if (request === version.current && !controller.signal.aborted)
+        if (request === version.current && !controller.signal.aborted) {
           setError(true);
-      } finally {
-        if (request === version.current) setUpdating(false);
+          setUpdating(false);
+        }
       }
-    }, 550);
+    }, 250);
     return () => {
       clearTimeout(timer);
       controller.abort();
     };
   }, [detail, draft, page, focus, retry]);
+  async function loaded(slot: number) {
+    const job = pending.current;
+    const doc = frameRefs[slot].current?.contentDocument;
+    if (!job || job.slot !== slot || !doc) return;
+    await doc.fonts?.ready;
+    await Promise.all(
+      [...doc.images].map((img) =>
+        img.complete ? null : img.decode().catch(() => null),
+      ),
+    );
+    if (job.request !== version.current) return;
+    pending.current = null;
+    setFits(!overflows(doc));
+    setPreview(job.result);
+    setFront(slot);
+    shown.current.front = slot;
+    setUpdating(false);
+  }
   async function changed(target: HTMLInputElement) {
+    setFormComplete(requiredComplete(root.current));
     const form = target.closest<HTMLFormElement>("form[data-preview-form]");
     if (!form) return;
     const data = new FormData(form);
@@ -208,15 +323,19 @@ export default function LiveBookletPreview({
               onChange={(e) => setPage(Number(e.target.value))}
             >
               {preview.pages.map((p, i) => (
-                <option key={i} value={i}>
+                <option key={i} value={i} disabled={locked(i)}>
                   {i + 1}. {t.has(p.kind) ? t(p.kind) : p.kind}
                   {p.item ? ` · ${p.item}` : ""}
+                  {locked(i) ? ` · ${t("locked")}` : ""}
                 </option>
               ))}
             </select>
             <button
               type="button"
-              disabled={preview.page === preview.pages.length - 1}
+              disabled={
+                preview.page === preview.pages.length - 1 ||
+                locked(preview.page + 1)
+              }
               aria-label={t("next")}
               onClick={() => setPage(preview.page + 1)}
             >
@@ -224,17 +343,35 @@ export default function LiveBookletPreview({
             </button>
           </div>
         )}
+        {preview && preview.pages.some((_, i) => locked(i)) && (
+          <p className="muted live-preview-locked">{t("lockedHelp")}</p>
+        )}
         <div
           className="live-preview-paper"
+          ref={paper}
           aria-busy={updating}
           data-page-kind={preview?.pages[preview.page]?.kind}
         >
-          {preview ? (
-            <img
-              src={preview.image}
-              alt={t("imageAlt", { number: preview.page + 1 })}
+          {frames.map((html, slot) => (
+            <iframe
+              key={slot}
+              ref={frameRefs[slot]}
+              title={t("imageAlt", { number: (preview?.page ?? 0) + 1 })}
+              // Same origin for fonts and photographs; no scripts run inside.
+              sandbox="allow-same-origin"
+              srcDoc={html}
+              aria-hidden={slot !== front}
+              tabIndex={-1}
+              onLoad={() => void loaded(slot)}
+              style={{
+                width: PAGE_WIDTH,
+                height: PAGE_HEIGHT,
+                transform: `scale(${scale})`,
+                visibility: slot === front && preview ? "visible" : "hidden",
+              }}
             />
-          ) : (
+          ))}
+          {!preview && (
             <div className="live-preview-placeholder">{t("loading")}</div>
           )}
         </div>
@@ -246,7 +383,7 @@ export default function LiveBookletPreview({
             </button>
           </div>
         )}
-        {preview && !preview.fits && (
+        {preview && !fits && (
           <p className="notice error" role="alert">
             {t("overflow")}
           </p>

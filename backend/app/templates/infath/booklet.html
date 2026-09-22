@@ -1,14 +1,30 @@
 <!doctype html><html lang="{{ output_language }}" dir="{{ 'rtl' if output_language=='ar' else 'ltr' }}"><head><meta charset="utf-8"><style>
 {% include 'infath/booklet.css' %}
 </style></head><body class="theme-{{ booklet.theme }}">
-{% set auction = project.auction %}{% set agent = project.selling_agent %}
+{% set auction = project.auction %}{% set agent = project.selling_agent %}{% set ar = output_language == 'ar' %}
+{#- Style for one line (or paragraph) whose first baseline sits on `base`.
+    x is the right edge (align right), the centre (align center) or the left edge.
+    Ruaq's line box puts the baseline 0.366 em below the middle, Lama's 0.255 em. -#}
+{% macro T(x, base, size, fam='r', align='right', width=0, lh=0) -%}
+{%- set L = lh or size * (1.874 if fam == 'r' else 1.01) -%}
+top:{{ '%.2f' % (base - L / 2 - size * (0.366 if fam == 'r' else 0.255)) }}pt;font-size:{{ size }}pt;line-height:{{ '%.2f' % L }}pt;
+{%- if align == 'right' %}right:{{ '%.2f' % (595.276 - x) }}pt;{% if width %}width:{{ width }}pt;{% endif %}text-align:right;
+{%- elif align == 'center' %}left:{{ '%.2f' % (x - width / 2) }}pt;width:{{ width }}pt;text-align:center;
+{%- else %}left:{{ x }}pt;{% if width %}width:{{ width }}pt;{% endif %}text-align:left;{% endif %}
+{%- endmacro %}
+{#- A value in the reference's font choice: Lama for figures, Ruaq for words. -#}
+{% macro V(value, x, base, size=10.06, align='right', width=0, cls='value w5') -%}
+<div class="t {{ 'l' if has_digits(value) else 'r' }} {{ cls }}" style="{{ T(x, base, size, 'l' if has_digits(value) else 'r', align, width) }}">{{ value|nums }}</div>
+{%- endmacro %}
+{% macro box(x0, y0, w, h) -%}left:{{ x0 }}pt;top:{{ y0 }}pt;width:{{ w }}pt;height:{{ h }}pt{%- endmacro %}
+{% macro art(name) %}<img class="art" src="{{ asset('booklet-art/' ~ name ~ '.svg') }}">{% endmacro %}
+{% macro footer(reverse=false, agent_logo=true) %}<img class="bar" src="{{ asset('booklet-art/footer-bar' ~ ('-reverse' if reverse else '') ~ '.png') }}">{% if agent_logo and project.agent_logo %}{% set A = logo_fit(project.agent_logo, 80, 22.3) %}<img class="logo" style="{{ box(12.3, 803.05 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}{% endmacro %}
 {% macro qrs(links) %}<div class="qrs">{% for link in links %}<div class="qr"><a href="{{ link.url }}"><span>{{ bt(link.label) }}</span><img src="{{ link.image }}"></a></div>{% endfor %}</div>{% endmacro %}
 {% for page in booklet.pages %}
 {% if page.kind == 'cover' %}{% include 'infath/cover.html' %}
 {% else %}<section class="sheet {{ page.kind }}" data-kind="{{ page.kind }}">
-{% if page.kind == 'introduction' %}{# Original introduction PDF is placed here by the shared rendering pipeline. #}
-{% else %}<img class="page-art" src="{{ asset('reference-agent.png' if page.kind == 'agent' else 'reference-footer.png') }}">
-{% if page.kind != 'agent' and project.agent_logo %}<img class="footer-agent" src="{{ project.agent_logo }}">{% endif %}
-{% include 'infath/' + page.kind + '.html' %}
-{% endif %}</section>{% endif %}{% endfor %}
+{% if page.kind != 'introduction' %}{# The introduction is the original PDF page, placed after layout. #}{% include 'infath/' + page.kind + '.html' %}{% endif %}
+{% if preview and page.kind == 'introduction' %}<img class="art" src="{{ asset('page/introduction.png') }}">{% endif %}
+{% if preview and page.kind == 'terms' %}<img class="icon" style="{{ box(110, 110, 395, 582) }}" src="{{ asset('page/terms.png') }}">{% endif %}
+</section>{% endif %}{% endfor %}
 </body></html>

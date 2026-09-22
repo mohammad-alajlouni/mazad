@@ -1,1 +1,3 @@
-<div class="image-grid">{% for image in page.images %}<figure><img src="{{ booklet_photo(image.src, false) }}"><figcaption>{{ image.caption }}</figcaption></figure>{% endfor %}</div><span class="property-number">{{ '%02d' % page.item.number }}</span>
+{#- Reference page 17: three photograph windows. -#}
+{{ art('plain') }}{{ footer() }}
+{% for image in page.images %}{{ photo(image.src, shapes().images[loop.index0], page.item.property_data.get('booklet_image_fit', 'cover'), '#e4e4e4') }}{% endfor %}

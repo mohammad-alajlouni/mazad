@@ -1,1 +1,8 @@
-{% for row in page.rows %}<div class="boundary-box" style="top:{{ 50+loop.index0*185 }}pt" data-fit="boundary"><span class="tab-label" data-fit="boundary-label" data-max-height="35">{{ bt(row.side) }}</span><p>{{ row.text }} · {{ row.length }}</p></div>{% endfor %}
+{#- Reference page 16: one framed region per direction. -#}
+{{ art('boundaries') }}{{ footer() }}
+{% set boxes = [(36.0, 101.4), (210.9, 280.6), (396.4, 462.8), (578.7, 646.1)] %}
+{% for row in page.rows %}{% set tab, base = boxes[loop.index0] %}
+<div class="t r w5 white" style="{{ T(495.2, tab + 21.3, 15, align='center', width=100) }}">{{ bt(row.side) }}</div>
+<div class="t p r w3 body" style="{{ T(538.0, base, 15, lh=20, width=444) }}" data-fit="boundary" data-max-height="100pt">{{ row.text|trim|nums }}{% if row.length and row.length != '-' %}
+{{ bt('boundary_lengths') }}: {{ row.length|nums }}{% endif %}</div>
+{% endfor %}

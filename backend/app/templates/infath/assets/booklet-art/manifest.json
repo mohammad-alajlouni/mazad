@@ -1,0 +1,43 @@
+{
+ "source": {
+  "كتيب-حضوري-الكتروني-مفتوح.pdf": "da1d87d20bc3ab7ec2c05b64a17ce339d08b1f8f0566208a6547c3538fc23b82"
+ },
+ "files": {
+  "landscape.svg": "009e520f6b673aad280af54810440e11b5b026c3347caefc37cc15688615ebf7",
+  "landscape-close.svg": "40f4a075e58c5fd68323ea1b3f870ac781b7bb129327f4696a362dba01fceead",
+  "portrait-under.svg": "51e8da8ab03e82c25f5353e39135f807fe0daa9565a1f83462116cd6bfe7500e",
+  "portrait.svg": "7f82fecd6995385c9524725549c4a9a308c0f46779a5fe6660631ff4d6e3593d",
+  "portrait-close-under.svg": "0f09a3b67a831a51091cf128ae689bf115388aac864680382d65fdaa8c12c94a",
+  "portrait-close.svg": "58068fe6519cc31f2300bcd491fc6070c337043ba7b5a4233a27d52d734c8e4d",
+  "images-features.svg": "03578221dff1ff297ce26a1364365cfeda705a5de5cf846798fd9c071188bf1d",
+  "information.svg": "f1e040bd4e6ea846f66273e7fd1c7883c7afa2dd483e84f326b359c1d6c8b624",
+  "boundaries.svg": "40ea164508662dacbb08a1cf0e4b1c125100661921fb328841e9fb5c78c19bd9",
+  "plain.svg": "fe4ff5fbe6c18936a9b28e18242204739539388612036540fbf904e3b6ce6da7",
+  "summary.svg": "b2a171237c9328e6268f0f933e01efa84eb5f85599cb8167b0be27ddf3898c0c",
+  "rentals.svg": "b8783f91a7ce7791ada9d87dfd107aaed2f1d01f85717845d3f1a3a35da4c577",
+  "agent.svg": "22bf1661e1960554033a5b4e62af951d8055971947f0b852ab5dc5e6d9d946ef",
+  "participation.svg": "02d893de8eafdc3aa8df9f2678557aff2d179292961196d459ddc5833921757a",
+  "contact.svg": "2dc440dda8b45ecce43e057b6b719fda4ffc40f4d7f0718635579730e87b0495",
+  "footer-bar.png": "5aa89ceeb67b5143c2c24eed4b197b48897bc42e6444ac1f14785ae47aad196b",
+  "footer-bar-reverse.png": "97d5d08ae1acbd5e7f4efa93a55d76b1b1d8f818a9883278dd9578bf0c372cfe",
+  "link-label.png": "600e66cb2b9825159dc51da777ca4ca3d372aaadae6cebfc465fdf7fc566ddca",
+  "participation-title.png": "c3854d58ffdc5788559b5ca8d4763890ce3136d880310aab140bd35d81817765",
+  "rentals-note.png": "f20cfd2dd87ae97b1e69096e0def6fcb650d638ccdcc31cb302cc48031de16c7",
+  "agent-x.png": "1ab1cec3faa92e3008eaf18f741c7876d022caf487b01052efaa69027fe7b831",
+  "agent-phone.png": "7edc78ddf59b56a7b548c87c246424680d7ba4bfc0ce7661bc2387fed062b7ec",
+  "agent-web.png": "e686441509217ffea761ab7cff648da424d2863bc01e3930d4ed3d21c030d2ca",
+  "contact-platform.png": "72c714add4fac00c9a449c3d77ca6678fb7881de2f315e469f5eac95c0574c9c",
+  "contact-location.png": "b065412c043449fe0d4312200ef56d69ba56e9b3070623d49dbd674430b0d959",
+  "contact-calendar.png": "e4140cc6dc1431c0f07ea2f81d2d91fe416eeb6479cb0ff7977f78aee0b0f27e",
+  "contact-time.png": "53654ccf1e4e23066b011a385c876ca3ba562e06a70a3fc65a1fffbd459edee7",
+  "contact-phone.png": "43170232622cb5114dceba816fd41cef4f315519f18aa6e5840a5c9d7af63c23",
+  "contact-whatsapp.png": "afa4d0e045ed45163e19166f115809390b3fca83cddd5ee421b3dcb0bd2350bc",
+  "step-1.png": "420bba7016fe6cfa8f67d422adbdb9bf26ade7a39ca3a4f1f38b848c1466bf34",
+  "step-2.png": "5c79f99d5be8f2b9484be31e1326f7aaf7e6abcef421f3e34b7105ac606822f2",
+  "step-3.png": "6530e31037cdc785d849cad61c8c1c8fb16c536f7d24ef7dbbe67df9b1a95282",
+  "step-4.png": "e705f7636bfa98375cbdae917d1015adcd4aaf3d8cd6f0e1b9ef55eb8399c900",
+  "step-5.png": "68579e15ecd41c64a846cbc1de91dfb7697c11aadc619dba6a8e8737f5cd3ce9",
+  "terms.pdf": "453446ae009273f397c37af8b76e3f1afb5b09547a506df08167b7f862185b1a",
+  "shapes.json": "a11874dcbfd7ac28663805ee08ca0d10c243e1365517145984a80d35174fe35a"
+ }
+}

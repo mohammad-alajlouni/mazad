@@ -1,4 +1,21 @@
-<div class="auction-title" data-fit="auction-title">{% if project.auction_logo %}<img class="auction-logo" src="{{ project.auction_logo }}">{% endif %}<div><h1>{{ auction.auction_name }}</h1><span class="type-label">{{ bt(auction.auction_type) }}</span></div></div>
-<div class="auction-copy" data-fit="auction-copy" data-max-height="150">{{ page.legal_announcement_text }}{% if page.court_decision_text %}<p>{{ page.court_decision_text }}</p>{% endif %}</div>
-<div class="auction-schedule" data-fit="auction-schedule" data-max-height="265"><div class="schedule-row"><img src="{{ identity_asset(identity.selected.time) }}"><span class="numeric"><span class="numeric-range">{{ (auction.start_time or '—')[:5] }}{% if auction.end_time %} – {{ auction.end_time[:5] }}{% endif %}</span></span></div><div class="schedule-row"><img src="{{ identity_asset(identity.selected.calendar) }}"><span><span class="numeric-range">{{ (auction.auction_date if auction.auction_type == 'physical' else auction.auction_start_date) or '—' }}{% if auction.auction_type != 'physical' %} – {{ auction.auction_end_date or '—' }}{% endif %}</span></span></div>{% if auction.auction_type != 'electronic' %}<div class="schedule-row"><img src="{{ identity_asset(identity.selected.location) }}"><span>{{ auction.physical_location }}</span></div>{% endif %}{% if auction.auction_type != 'physical' %}<div class="schedule-row"><img src="{{ identity_asset(identity.selected.platform) }}"><span>{{ auction.electronic_platform_name }}</span></div>{% endif %}</div>
-<div class="auction-legal" data-fit="auction-legal" data-max-height="135">{% for key in ['supervising_authority','license_number'] %}{% if auction[key] %}<p>{{ bt(key) }}: {{ auction[key] }}</p>{% endif %}{% endfor %}</div>
+{#- Reference page 4. Schedule rows fill the reference slots in order. -#}
+{{ art('plain') }}{{ footer() }}
+{% if project.auction_logo %}{% set L = logo_fit(project.auction_logo, 64, 64) %}<img class="logo" style="{{ box(492 - L.width, 239 - L.height / 2, L.width, L.height) }}" src="{{ L.src }}">{% endif %}
+{% set name = auction.auction_name %}{% set prefix = bt('auction') %}
+{% set name = name[prefix|length:]|trim if name.startswith(prefix) else name %}
+{% set size = fit.box_size('auction_name', name) %}
+<div class="t r w7" style="{{ T(424.0, 229.6, 23.09) }};color:#11375c">{{ prefix }}</div>
+<div class="t r w7" style="{{ T(424.0, 261.5, size, width=315) }};color:#11375c;overflow:hidden" data-fit="auction-title" data-max-height="{{ size * 1.874 }}pt">{{ name }}</div>
+<div class="t p r w3" style="{{ T(495.4, 314.4, 19, lh=29, width=373) }};color:#000" data-fit="auction-copy" data-max-height="87pt">{{ page.announcement|trim }}</div>
+{% set rows = [] %}
+{% if auction.start_time or auction.end_time %}{% set _ = rows.append(('time', fmt.time_range(auction, output_language))) %}{% endif %}
+{% set _ = rows.append(('calendar', fmt.day_range(auction, output_language) or '—')) %}
+{% if auction.auction_type != 'electronic' %}{% set _ = rows.append(('location', auction.physical_location or bt('location'))) %}{% endif %}
+{% if auction.auction_type != 'physical' %}{% set _ = rows.append(('platform', auction.electronic_platform_name or bt('platform_name'))) %}{% endif %}
+{% set slots = [(424.6, 404), (465.8, 444), (505.7, 485), (551.3, 527)] %}
+{% for icon, text in rows %}{% set base, top = slots[loop.index0] %}
+<img class="icon" style="{{ box(461, top, 32, 32 if icon != 'calendar' else 33) }}" src="{{ asset('reference-' ~ icon ~ '.png') }}">
+{% set size = fit.box_size(icon == 'location' and 'physical_location' or 'electronic_platform_name', text) if icon in ('location', 'platform') else 13.48 %}
+<div class="t r w5" style="{{ T(437.9, base, size, width=330) }};color:#3abdba" data-fit="auction-schedule-{{ icon }}" data-max-height="26pt">{{ text|nums }}</div>
+{% endfor %}
+<div class="t r w3" style="{{ T(498.4, 584.3, 10, width=400) }};color:#000">{{ bt('recording_notice') }}</div>

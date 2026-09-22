@@ -1,11 +1,48 @@
 import { useTranslations } from "next-intl";
 import { Detail } from "./api";
 export const dataStages = ["auction", "items", "images"];
+// The seller's name and logo come from the account profile but every output
+// needs them, so they are part of completing the first (auction) step.
 export function missingStage(detail: Detail, before = "generate") {
   const index = dataStages.indexOf(before);
+  const stages = detail.workflow?.stages;
   return dataStages
     .slice(0, index < 0 ? dataStages.length : index)
-    .find((key) => detail.workflow?.stages[key]?.valid === false);
+    .find(
+      (key) =>
+        stages?.[key]?.valid === false ||
+        (key === "auction" && stages?.agent?.valid === false),
+    );
+}
+export function AgentReadiness({ detail }: { detail: Detail }) {
+  const t = useTranslations("validationFlow");
+  const at = useTranslations("auction");
+  const agent = detail.workflow?.stages.agent;
+  if (!agent || agent.valid !== false) return null;
+  return (
+    <div className="notice error workflow-problems" role="alert">
+      <strong>{t("agentFirst")}</strong>
+      <ul>
+        {agent.missing.map((issue, index) => (
+          <li key={index}>
+            {t.has(issue.field)
+              ? t(issue.field)
+              : at.has(issue.field)
+                ? at(issue.field)
+                : issue.field}
+            {issue.limit ? t("maxLength", { limit: issue.limit }) : ""}
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        className="text-button"
+        onClick={() => window.dispatchEvent(new Event("open-account-profile"))}
+      >
+        {t("agentFix")}
+      </button>
+    </div>
+  );
 }
 export function validateForms(root: HTMLElement | null) {
   if (!root) return true;

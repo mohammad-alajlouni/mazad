@@ -1,1 +1,11 @@
-<div class="agent-content">{% if project.agent_logo %}<img class="agent-logo" src="{{ project.agent_logo }}">{% else %}<div class="agent-logo"></div>{% endif %}<h2 data-fit="agent-name" data-max-height="70">{{ agent.name }}</h2><div class="agent-description" data-fit="agent-description" data-max-height="365">{{ page.text }}</div></div><div class="agent-contacts" data-fit="agent-contacts" data-max-height="70"><span>{{ agent.social_accounts }}</span><span>{{ agent.phone }}</span><span>{{ agent.website }}</span></div>
+{#- Reference page 3. -#}
+{{ art('agent') }}
+{% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, 180, 40) %}<img class="logo" style="{{ box(506.5 - A.width, 212.9 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
+<div class="t r w7" style="{{ T(505.1, 304.3, fit.box_size('agent_name', agent.name), width=390) }};color:#12395f" data-fit="agent-name" data-max-height="40pt">{{ agent.name }}</div>
+<div class="t p j r w3 body" style="{{ T(503.2, 340.0, 17.02, lh=27, width=387.6) }}" data-fit="agent-description" data-max-height="216pt">{{ page.text|trim }}</div>
+{#- Each value sits left of its icon; long values are set smaller, never clipped. -#}
+{% for key, icon_left, value, width in [('x', 471, agent.social_accounts, 74), ('phone', 369, agent.phone, 74), ('web', 266, agent.website, 170)] %}
+{% if value %}{% set size = [10.21, width / ((value|length) * 0.6)]|min %}
+<img class="icon" style="{{ box(icon_left, 581, 25, 25) }}" src="{{ asset('booklet-art/agent-' ~ key ~ '.png') }}">
+<div class="t l w5" style="{{ T(icon_left - 2.4, 601.5, size, 'l', width=width) }};color:#14385f" data-fit="agent-contact-{{ key }}" data-max-height="20pt" dir="ltr">{{ value }}</div>{% endif %}
+{% endfor %}

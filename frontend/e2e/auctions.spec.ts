@@ -76,21 +76,19 @@ for (const flow of ["manual", "excel"])
         await page.getByLabel("District", { exact: true }).fill("النرجس");
         await page.getByLabel("Area m²", { exact: true }).fill("1200");
         await page
-          .getByLabel("Property page layout", { exact: true })
+          .locator('[name="property.booklet_layout"]')
           .selectOption(n === 1 ? "landscape" : "portrait");
         await page
-          .getByLabel("Image fit in frame", { exact: true })
+          .locator('[name="property.booklet_image_fit"]')
           .selectOption("contain");
         await page
-          .getByLabel("Additional information and features pages", {
-            exact: true,
-          })
+          .locator('[name="booklet.include_information_page"]')
           .selectOption("false");
         await page
-          .getByLabel("Additional image pages", { exact: true })
+          .locator('[name="booklet.include_images_page"]')
           .selectOption("false");
         await page
-          .getByLabel("Rental contract pages", { exact: true })
+          .locator('[name="booklet.include_rentals_page"]')
           .selectOption("false");
         await page
           .locator("summary")

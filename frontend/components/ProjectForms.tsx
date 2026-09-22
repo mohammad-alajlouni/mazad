@@ -145,7 +145,9 @@ export function ItemForm({
         const form = new FormData(e.currentTarget);
         const property_data = readProperty(form);
         for (const key of Object.keys(data))
-          if (/^(property|boundary|rental)\./.test(key)) delete data[key];
+          // Structured fields travel inside property_data, never top level.
+          if (/^(property|boundary|rental|booklet)\./.test(key))
+            delete data[key];
         let attributes;
         try {
           attributes = JSON.parse(String(data.attributes) || "{}");

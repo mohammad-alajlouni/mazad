@@ -1,47 +1,32 @@
 {% include 'infath/identity.css' %}
-/* PDF coordinates in pt, measured from the supplied 595.276 x 841.890 booklet.
-   Static artwork is extracted from the original PDF, not approximated in CSS. */
+/* Every coordinate is in PDF points measured on the supplied open booklet
+   (595.276 x 841.890). Fixed artwork is copied from that file as vectors by
+   scripts/build_booklet_art.py; text is placed on the reference baselines. */
+@font-face{font-family:LamaBold;src:url('{{ asset('LamaSans-Bold.otf') }}')}
+@font-face{font-family:LamaRegular;src:url('{{ asset('LamaSans-Regular.otf') }}')}
 @page{size:595.276pt 841.890pt;margin:0}
-*{box-sizing:border-box}body{margin:0;font-family:Ruaq,Lama,sans-serif;font-size:10pt;font-weight:400;line-height:1.4;color:{{ identity.palette.navy }};overflow-wrap:anywhere}
-.sheet,.full{position:relative;width:595.276pt;height:841.890pt;break-after:page;overflow:hidden}.sheet:last-child,.full:last-child{break-after:auto}
-.page-art,.full-image{position:absolute;left:0;top:0;width:595.276pt;height:841.890pt;z-index:0}
-.footer-agent{position:absolute;left:13pt;top:785pt;width:76pt;height:30pt;object-fit:contain}
-p,h1,h2,h3,dl,dd,figure{margin:0}h1,h2,h3{font-weight:700}a{color:inherit;text-decoration:none}
-.center{text-align:center}.muted{font-size:9pt}.nowrap,.numeric{font-family:Lama;direction:ltr;unicode-bidi:isolate}p{white-space:pre-wrap}
-.agent-content{position:absolute;left:118pt;top:190pt;width:386pt}.agent-logo{width:140pt;height:48pt;object-fit:contain;display:block;margin:0 0 42pt auto}.agent-content h2{font-size:19.8pt;color:{{ identity.palette.navy }};margin-bottom:15pt}.agent-description{font-size:17pt;line-height:1.6;color:{{ identity.palette.ink }};white-space:pre-wrap;min-height:220pt}.agent-contacts span{min-width:0;overflow-wrap:anywhere;direction:ltr}.agent-contacts{position:absolute;left:118pt;top:582pt;width:386pt;display:flex;justify-content:space-between;gap:10pt;font-family:Lama;font-size:10.2pt;color:{{ identity.palette.navy }}}
-.auction-title{position:absolute;right:104pt;top:170pt;width:385pt;height:76pt;display:flex;align-items:center;gap:18pt;font-size:23.1pt;line-height:1.25;color:{{ identity.palette.navy }}}.auction-logo{width:65pt;height:65pt;object-fit:contain}.auction-title h1{font-size:23.1pt}.auction-title>div{flex:1;min-width:0}.auction-copy{position:absolute;right:104pt;top:295pt;width:385pt;font-size:19pt;line-height:1.5;color:#000}.auction-schedule{position:absolute;right:104pt;top:416pt;width:350pt;color:{{ identity.palette.mint }};font-size:13.5pt;font-weight:500}.schedule-row{display:flex;align-items:center;gap:18pt;min-height:41pt}.schedule-row img{width:29pt;height:29pt;object-fit:contain}.schedule-row span{flex:1}.auction-legal{position:absolute;right:104pt;top:626pt;width:385pt;font-size:10pt;color:{{ identity.palette.ink }}}.type-label{font-size:11pt;font-weight:500}
-.page-title{position:absolute;top:133pt;left:42pt;width:512pt;text-align:center;font-size:26.4pt;color:{{ identity.palette.teal }}}.page-title:before,.page-title:after{content:'—';font-size:17pt;margin:0 15pt;color:{{ identity.palette.mint }}}.table-wrap{position:absolute;left:32pt;top:251pt;width:520pt}.table{width:100%;border-collapse:collapse;table-layout:fixed;line-height:1.45;font-size:8.1pt;font-weight:500}.table th{background:{{ identity.palette.mint }};color:white;padding:6pt 3pt;font-size:7pt;font-weight:500;height:29pt}.table td{border-bottom:.35pt solid {{ identity.palette.pale }};border-left:.35pt solid {{ identity.palette.pale }};padding:6pt 3pt;height:28pt;text-align:center;vertical-align:middle}.table .row-number{background:{{ identity.palette.mint }};color:white;width:30pt;font:13pt Lama}.rentals .table-wrap{top:155pt}.rentals .page-title{top:90pt;font-size:22pt}.rentals th,.rentals .row-number{background:{{ identity.palette.navy }}}.rentals .table{font-size:7.3pt}.rentals th{font-size:6.5pt}
-.property-photo{position:absolute;left:49pt;top:49pt;width:500pt;height:293pt;object-fit:contain}.property-number{position:absolute;top:307pt;right:28pt;width:47pt;height:48pt;background:{{ identity.palette.navy }};color:white;font:700 29.9pt Lama;text-align:center;line-height:48pt;border-radius:12pt 0 12pt 0}.property-description{position:absolute;left:49pt;top:357pt;width:500pt;font-size:10pt;color:{{ identity.palette.ink }};line-height:1.4}.property-description h3{font-size:13.9pt;font-weight:500;color:{{ identity.palette.navy }};margin-bottom:3pt}.property-fields{position:absolute;right:45pt;top:443pt;width:305pt;display:flex;flex-wrap:wrap;gap:3pt 10pt;font-size:10.1pt;font-weight:500}.field{width:calc(50% - 5pt);display:flex;gap:6pt;align-items:flex-start}.field dt{color:{{ identity.palette.teal }};width:48%;flex-shrink:0}.field dd{flex:1;min-width:0;text-align:start}.field.wide{width:100%}.property-boundaries{position:absolute;left:48pt;top:443pt;width:170pt;font-size:9pt;line-height:1.6}.boundary-mini{display:flex;gap:7pt}.boundary-mini b{width:37pt;color:{{ identity.palette.teal }};font-weight:500}.boundary-mini span{flex:1}.property-extra{position:absolute;left:259pt;top:561pt;width:304pt;height:190pt;font-size:10pt;line-height:1.5;border:.4pt solid {{ identity.palette.mint }};padding:10pt}.tab-label{position:absolute;right:0;top:-25pt;padding:2pt 10pt;background:{{ identity.palette.navy }};color:white;font-size:10pt;font-weight:500;border-radius:6pt 0 6pt 0}.property-links{position:absolute;left:22pt;top:632pt;width:215pt}.qrs{display:flex;flex-wrap:wrap;gap:7pt 12pt;justify-content:center}.qr{width:88pt;font-size:6.7pt;text-align:center}.qr span{display:block;background:{{ identity.palette.navy }};color:white;margin-bottom:3pt;padding:2pt}.qr img{width:47pt;height:47pt;display:block;margin:auto}.close-time{position:absolute;top:318pt;left:50pt;background:{{ identity.palette.navy }};color:white;padding:3pt 8pt;font-size:9pt;max-width:360pt}
-.portrait .property-photo{left:24pt;top:32pt;width:320pt;height:548pt}.portrait .property-number{top:32pt;right:29pt}.portrait .property-description{left:365pt;top:81pt;width:202pt;font-size:10pt}.portrait .property-description h3{display:none}.portrait .property-fields{top:206pt;right:30pt;width:204pt;gap:3pt}.portrait .field{width:100%}.portrait .property-boundaries{left:365pt;top:440pt;width:202pt}.portrait .property-extra{left:242pt;top:628pt;width:325pt;height:128pt}.portrait .property-links{top:632pt;left:20pt;width:215pt}.portrait .close-time{top:545pt;left:30pt;max-width:290pt}
-.info-box{position:absolute;left:24pt;top:50pt;width:547pt;min-height:690pt;border:.4pt solid {{ identity.palette.mint }};padding:28pt 24pt;font-size:12pt;line-height:1.7}.information .tab-label{top:30pt;right:36pt;font-size:13pt}.boundary-box{position:absolute;left:24pt;width:547pt;height:173pt;border:.4pt solid {{ identity.palette.mint }};padding:28pt 20pt;font-size:12pt;line-height:1.6}.boundary-box .tab-label{top:-1pt;right:16pt}.image-grid{position:absolute;top:70pt;left:48pt;width:500pt}.image-grid figure{margin-bottom:16pt}.image-grid img{width:500pt;height:205pt;object-fit:contain}.image-grid figcaption{font-size:9pt}.images .property-number{top:70pt;right:29pt}
-.terms-art{position:absolute;left:114pt;top:115pt;width:385pt;height:574pt;object-fit:contain}
-.participation-title{position:absolute;right:120pt;top:108pt;width:345pt;font-size:35.4pt;line-height:1.2;color:{{ identity.palette.navy }}}.steps{position:absolute;top:310pt;left:120pt;width:390pt;display:flex;flex-wrap:wrap;justify-content:center;gap:45pt 18pt}.step{width:112pt;text-align:center;font-size:12.6pt;line-height:1.4}.step b{display:block;margin:0 auto 14pt;background:{{ identity.palette.mint }};color:white;width:24pt;font:500 16pt Lama}.participation .qrs{position:absolute;top:640pt;left:200pt;width:195pt}.participation .qr{width:120pt}.participation .qr img{width:52pt;height:52pt}
-.contact-logo{position:absolute;top:170pt;left:200pt;width:195pt;height:70pt;object-fit:contain}.contact-heading{position:absolute;top:287pt;left:80pt;width:435pt;text-align:center;font-size:20.4pt;color:{{ identity.palette.navy }}}.contact-schedule{position:absolute;top:335pt;left:65pt;width:465pt;display:flex;justify-content:center;gap:15pt;color:{{ identity.palette.teal }};font-size:10.4pt;text-align:center}.contact-schedule>div{flex:1}.contact-schedule img{width:24pt;height:24pt;display:block;margin:0 auto 6pt}.contact-details{position:absolute;top:440pt;left:75pt;width:445pt;text-align:center;color:{{ identity.palette.teal }};font-size:14.6pt}.contact-details h2{font-size:20.4pt;color:{{ identity.palette.navy }};margin-bottom:33pt}.contact .qrs{position:absolute;top:592pt;left:70pt;width:455pt}.code{position:absolute;top:755pt;left:140pt;width:315pt;height:24pt;object-fit:contain}.project-code{position:absolute;top:782pt;left:140pt;width:315pt;text-align:center;font:7pt Lama}
-.cover-photo{position:absolute;top:0;left:0;width:595.276pt;height:590pt;object-fit:cover}.cover-photo.full-photo{height:841.89pt}.cover-shade{position:absolute;inset:0;background:linear-gradient(transparent 45%,{{ identity.palette.teal }} 100%)}.cover-mark{position:absolute;top:22pt;right:20pt;width:85pt;height:63pt;object-fit:contain}.cover-title{position:absolute;top:350pt;left:175pt;width:215pt;color:white;font-size:25pt;line-height:1.3;text-align:right;font-weight:700}.cover-title.long{font-size:18pt}.cover-title.photo{top:730pt;left:360pt;width:210pt;font-size:23pt}.cover-title.gradient{left:290pt;width:210pt}.cover-title .auction-logo{width:48pt;height:48pt;float:right;margin-left:12pt}.cover-date{position:absolute;top:780pt;left:120pt;width:160pt;color:white;font-size:9pt;text-align:right}.cover-agent{position:absolute;top:780pt;left:22pt;width:88pt;height:34pt;object-fit:contain;color:white;font-size:10pt}
+*{box-sizing:border-box}
+body{margin:0;font-family:Ruaq,Lama,sans-serif;font-weight:400;color:#001447}
+p,h1,h2,h3,dl,dd,figure{margin:0}a{color:inherit;text-decoration:none}
+.sheet,.full{position:relative;width:595.276pt;height:841.890pt;break-after:page;overflow:hidden}
+.sheet:last-child,.full:last-child{break-after:auto}
+.art,.full-image{position:absolute;left:0;top:0;width:595.276pt;height:841.890pt}
+.bar{position:absolute;left:0;top:822pt;width:595.276pt;height:19.89pt}
+.footer-agent{position:absolute;left:12pt;top:790pt;width:80pt;height:25pt;object-fit:contain;object-position:left center}
 
-html[lang="en"] .property-fields{font-size:8pt}html[lang="en"] .property-fields .field dt{width:55%}html[lang="en"] .portrait .property-fields{font-size:9pt}
-/* Explicit placement avoids RTL flex sizing differences between PDF engines. */
-.auction-title{display:block}.auction-title>.auction-logo{position:absolute;right:0;top:0}.auction-title>div{position:absolute;left:0;right:83pt;top:0}.auction-title h1{width:100%;text-align:right}.agent-contacts{display:table;table-layout:fixed;direction:rtl}.agent-contacts span{display:table-cell;width:33.333%;text-align:center;padding:0 5pt}.schedule-row span{text-align:right}
-.property-fields{display:grid;grid-template-columns:1fr 1fr;gap:3pt 10pt}.field{display:block;width:auto;min-width:0}.field dt{float:right;width:48%}.field dd{margin-right:51%;width:49%;text-align:right}.field.wide{grid-column:span 2;width:auto}.portrait .property-fields{grid-template-columns:1fr}.portrait .field{width:auto}.portrait .field.wide{grid-column:span 1}.boundary-mini{display:block;min-height:16pt}.boundary-mini b{float:right}.boundary-mini span{display:block;margin-right:42pt}.qrs{display:block;text-align:center}.qr{display:inline-block;vertical-align:top;margin:0 4pt 7pt}.contact-schedule{display:table;table-layout:fixed}.contact-schedule>div{display:table-cell;padding:0 6pt}.steps{display:block;text-align:center}.step{display:inline-block;vertical-align:top;margin:0 7pt 45pt}html[lang="en"] .property-fields .field dt{width:48%}
-.property-fields{left:245.276pt;right:auto}.portrait .property-fields{left:361.276pt;right:auto}
+/* Text is placed by baseline; see the T() macro in booklet.html. */
+.t{position:absolute;white-space:nowrap;margin:0}
+.p{white-space:pre-wrap;overflow-wrap:anywhere}
+.j{text-align:justify;text-align-last:right}
+/* Ruaq has no Latin letters: Lama (same identity) sets them, never a system serif. */
+.r{font-family:Ruaq,Lama}.l{font-family:Lama,Ruaq}.lb{font-family:LamaBold}.lr{font-family:LamaRegular,Lama}
+.w3{font-weight:400}.w5{font-weight:500}.w7{font-weight:700}
+.num{font-family:Lama,Ruaq}
+.white{color:#fff}.value{color:#0d3759}.label{color:#1a9f9f}.body{color:#001447}
 
-.property-fields{display:block}.field{position:absolute;display:block}.portrait .property-fields{display:block}
-
-.code{left:85pt;width:425pt;height:38pt;top:736pt}.project-code{top:776pt}
-
-.cover-4 .cover-agent,.cover-5 .cover-agent{left:auto;right:22pt}.cover-4 .cover-date,.cover-5 .cover-date{left:22pt}.participation-heading-art{position:absolute;left:125pt;top:80pt;width:367pt;height:134pt}.participation-icon{position:absolute;object-fit:contain}.participation-caption{position:absolute;font-size:12.6pt;line-height:1.2;text-align:center;color:{{ identity.palette.navy }}}.participation .qrs{left:248pt;top:628pt;width:160pt}.property-number,.tab-label{border-radius:0}.property-number:before{content:'';position:absolute;left:0;top:0;border-top:10pt solid white;border-right:10pt solid transparent}.property-number:after{content:'';position:absolute;right:0;bottom:0;border-bottom:10pt solid white;border-left:10pt solid transparent}
-.info-box p,.boundary-box p{max-width:99%}
-
-.participation-caption p{width:94%;margin:0 auto}
-
-.cover-2 .cover-date,.cover-3 .cover-date{left:auto;right:22pt;width:120pt}
-
-/* Summary colors follow the chosen cover, including the final table rule. */
-.theme-navy .summary .page-title{color:{{ identity.palette.navy }}}
-.theme-navy .summary .table th,.theme-navy .summary .row-number{background:{{ identity.palette.navy }}}
-.summary .table tbody tr:last-child td,.rentals .table tbody tr:last-child td{border-bottom:1pt solid {{ identity.palette.mint }}}
-.theme-navy .summary .table tbody tr:last-child td,.rentals .table tbody tr:last-child td{border-bottom-color:{{ identity.palette.navy }}}
-.numeric-range{display:inline-block;direction:ltr;unicode-bidi:isolate;font-family:Lama}
-
-.boundary-heading{font-size:9pt;font-weight:500;color:{{ identity.palette.teal }};margin:0 0 3pt;border-bottom:.4pt solid {{ identity.palette.pale }}}
-.boundary-heading:not(:first-child){margin-top:7pt}.length-grid{width:100%;table-layout:fixed;border-collapse:collapse;font-size:8pt}.length-grid td{padding:1pt 0}.length-grid span{color:{{ identity.palette.teal }};margin-left:4pt}
+.logo{position:absolute;object-fit:contain}
+.qr-code{position:absolute}
+.rot{transform:rotate(-90deg);transform-origin:center center;text-align:center}
+.icon{position:absolute;object-fit:contain}
+.cover-shade{position:absolute;left:0;top:0;width:595.276pt;height:841.89pt;background:linear-gradient(to bottom,rgba(0,122,136,0) 45%,rgba(0,122,136,.92) 88%,#00788a 100%)}
+.hit{position:absolute;display:block}

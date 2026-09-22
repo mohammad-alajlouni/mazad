@@ -1,1 +1,14 @@
-<div class="info-box" data-fit="information" data-max-height="870"><p>{{ page.text }}</p>{% if page.links is defined %}{{ qrs(page.links) }}{% endif %}</div><span class="tab-label">{{ bt(page.heading) }}{% if page.item is defined %} · {{ page.item.number }}{% endif %}</span>
+{#- Reference page 15: one framed text region under a tab. -#}
+{{ art('information') }}{{ footer() }}
+<div class="t r w5 white" style="{{ T(479.7, 45.3, 15, align='center', width=160) }}">{{ bt(page.heading) }}{% if page.item is defined %} {{ '%02d' % page.item.number }}{% endif %}</div>
+<div class="t" style="right:50pt;top:80pt;width:500pt" data-fit="information" data-max-height="610pt">
+{% if page.entries is defined %}{% for entry in page.entries %}
+{% if entry.heading %}<p class="r w3 body" style="font-size:11pt;line-height:18pt;white-space:normal">{{ bt(entry.heading) }} :</p>
+{% elif entry.number %}<div style="position:relative"><div class="r w3" style="position:absolute;top:0;right:0;font-size:11pt;line-height:18pt;color:#000">-{{ entry.number }}</div><p class="r w3 body" style="font-size:11pt;line-height:18pt;white-space:normal;padding-right:14pt">{{ entry.text }}</p></div>
+{% else %}<p class="p r w3 body" style="font-size:11pt;line-height:18pt">{{ entry.text|trim }}</p>{% endif %}
+{% endfor %}{% else %}<p class="p r w3 body" style="font-size:11pt;line-height:18pt">{{ page.text|trim }}</p>{% endif %}
+</div>
+{% if page.links is defined %}{% for link in page.links %}{% set x = 430 - 125 * (loop.index0 % 4) %}
+<a class="hit" href="{{ link.url }}" style="{{ box(x - 40.5, 120, 81, 72) }}"></a><img class="icon" style="{{ box(x - 40.5, 120, 81, 15) }}" src="{{ asset('booklet-art/link-label.png') }}">
+<div class="t r w5 white" style="{{ T(x, 129.0, 6.71, align='center', width=81) }}">{{ bt(link.label) }}</div>
+<img class="qr-code" style="{{ box(x - 25, 142, 50, 50) }}" src="{{ link.image }}">{% endfor %}{% endif %}

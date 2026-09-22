@@ -41,6 +41,25 @@ def direction(value):
 env.filters["direction"] = direction
 
 
+def nums(value):
+    """Figures as isolated left-to-right runs in Lama, as the reference sets them."""
+    import re
+
+    from markupsafe import Markup, escape
+
+    text = "" if value in (None, "") else str(value)
+    parts = re.split(r"(\d+(?:\s?[:/٫,.]\s?\d+)*)", text)
+    return Markup(
+        "".join(
+            f'<span class="num">{escape(part)}</span>' if index % 2 else escape(part)
+            for index, part in enumerate(parts)
+        )
+    )
+
+
+env.filters["nums"] = nums
+
+
 def record_dict(record):
     return {
         c.name: str(getattr(record, c.name))
@@ -51,7 +70,10 @@ def record_dict(record):
     }
 
 
-def snapshot(db, project):
+def snapshot(db, project, linked_photos=False):
+    """Project data for rendering. With linked_photos, photographs are URLs the
+    browser loads once and caches (live preview); logos stay embedded because
+    they are measured and trimmed before placement."""
     storage = LocalStorage()
     images = db.scalars(
         select(ProjectImage)
@@ -60,6 +82,8 @@ def snapshot(db, project):
     ).all()
 
     def image_data(image):
+        if linked_photos and image.category not in ("agent_logo", "auction_logo"):
+            return f"/api/images/{image.id}?size=preview"
         return (
             "data:image/png;base64,"
             if image.key.endswith(".png")
@@ -367,6 +391,7 @@ def render_html(
     status="DRAFT",
     font_data="",
     font_bold="",
+    preview=False,
 ):
     content.setdefault(
         "output_language", content.get("branding", {}).get("default_language", "en")
@@ -382,23 +407,54 @@ def render_html(
         ) from exc
     from .booklet.assets import asset
     from .booklet.codes import qr
+
+    if preview:
+        # The browser fetches fonts and artwork once from cacheable URLs.
+        def asset(name):
+            return "/api/booklet-assets/" + name
+
+        def identity_asset(name):
+            return "/api/booklet-assets/identity/" + name
     from .booklet.composer import FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
     from .booklet.labels import label
 
     from .social_art import photo_frame
-    from .booklet.art import booklet_photo
+    from .booklet import fit, formatting
+    from .booklet.art import (
+        page_shape,
+        photo,
+        shape_in,
+        table_lines,
+        rentals_column,
+        shapes,
+        summary_column,
+        logo_fit,
+        white_logo,
+    )
 
     return env.get_template(template_file).render(
         **content,
         t=lambda key, **values: labels.get(key, key).format(**values),
         status=status,
+        preview=preview,
         font_data=font_data,
         font_bold=font_bold,
         asset=asset,
         identity=identity,
         identity_asset=identity_asset,
         photo_frame=photo_frame,
-        booklet_photo=booklet_photo,
+        photo=photo,
+        page_shape=page_shape,
+        shape_in=shape_in,
+        table_lines=table_lines,
+        summary_column=summary_column,
+        rentals_column=rentals_column,
+        white_logo=white_logo,
+        logo_fit=logo_fit,
+        shapes=shapes,
+        fmt=formatting,
+        fit=fit,
+        has_digits=formatting.uses_digits,
         qr=qr,
         bt=lambda key: label(key, content["output_language"]),
         display=lambda value: "-" if value in (None, "") else str(value),

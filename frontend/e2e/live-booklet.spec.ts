@@ -49,10 +49,33 @@ for (const mobile of [false, true])
         r.request().postDataJSON()?.auction?.auction_name === "LIVE_CHANGED",
     );
     await page.getByLabel("Auction name", { exact: true }).fill("LIVE_CHANGED");
+    const typed = Date.now();
     const preview = await (await response).json();
-    expect(preview.text).toContain("LIVE_CHANGED");
+    expect(preview.html).toContain("LIVE_CHANGED");
     expect(preview.saved).toBe(false);
-    await expect(page.locator(".live-preview-paper img")).toBeVisible();
+    // The page renders in the browser: the new text appears within a second.
+    const frame = page.locator(
+      '.live-preview-paper iframe[aria-hidden="false"]',
+    );
+    await expect(frame).toBeVisible();
+    await expect(
+      page
+        .frameLocator('.live-preview-paper iframe[aria-hidden="false"]')
+        .getByText("LIVE_CHANGED"),
+    ).toBeVisible();
+    expect(Date.now() - typed).toBeLessThan(1500);
+    // Required fields of this step are still empty: later steps stay locked.
+    const options = page
+      .getByLabel("Preview page", { exact: true })
+      .locator("option");
+    const steps = await options.evaluateAll((list) =>
+      list.map((o) => ({
+        text: o.textContent || "",
+        disabled: (o as HTMLOptionElement).disabled,
+      })),
+    );
+    for (const option of steps.filter((o) => /Terms|Contact/.test(o.text)))
+      expect(option.disabled).toBe(true);
     await expect(page.locator(".live-preview-paper")).toHaveAttribute(
       "data-page-kind",
       "auction",

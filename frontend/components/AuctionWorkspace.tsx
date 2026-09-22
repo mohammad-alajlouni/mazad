@@ -464,6 +464,18 @@ export function AuctionWorkspace({
             </select>
           </label>
           {!bannerMode && (
+            <label>
+              {t("booklet_edition")}
+              <select
+                name="booklet_edition"
+                defaultValue={String(auction.booklet_edition || "print")}
+              >
+                <option value="print">{t("booklet_edition_print")}</option>
+                <option value="digital">{t("booklet_edition_digital")}</option>
+              </select>
+            </label>
+          )}
+          {!bannerMode && (
             <>
               <h3>{t("select_cover")}</h3>
               <div className="cover-options">

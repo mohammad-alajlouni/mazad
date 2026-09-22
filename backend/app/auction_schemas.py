@@ -65,6 +65,8 @@ class AuctionData(Structured):
         "infath-1", "infath-2", "infath-3", "infath-4", "infath-5", "infath-6"
     ] = "infath-2"
     document_language: Literal["ar", "en"] = "ar"
+    # Print editions carry QR codes; digital editions carry tappable link buttons.
+    booklet_edition: Literal["print", "digital"] = "print"
 
     @model_validator(mode="after")
     def schedule(self):

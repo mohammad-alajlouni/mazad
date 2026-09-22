@@ -11,7 +11,7 @@ def png_data(data):
     return "data:image/png;base64," + base64.b64encode(data).decode()
 
 
-def qr(url):
+def qr(url, color="black", border=4):
     if not url:
         return ""
     parts = urlsplit(url)
@@ -23,12 +23,12 @@ def qr(url):
     ):
         raise ValueError("Invalid QR destination")
     code = qrcode.QRCode(
-        error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=8, border=4
+        error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=8, border=border
     )
     code.add_data(url)
     code.make(fit=True)
     stream = BytesIO()
-    code.make_image(fill_color="black", back_color="white").save(stream, format="PNG")
+    code.make_image(fill_color=color, back_color="white").save(stream, format="PNG")
     return png_data(stream.getvalue())
 
 

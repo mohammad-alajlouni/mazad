@@ -173,7 +173,7 @@ def test_manual_auction_end_to_end(admin):
     kinds = [page["kind"] for page in o["page_manifest"]]
     assert (
         kinds.count("property") == 2
-        and kinds.count("rentals") == 3
+        and kinds.count("rentals") == 2  # 21 contracts, 19 rows per reference page
         and kinds.count("images") == 2
         and kinds.count("boundaries") == 0
         and "participation" in kinds
@@ -195,10 +195,9 @@ def test_manual_auction_end_to_end(admin):
             "https://example.com/property/1" in decoded
             and "https://example.com/property/2" in decoded
         )
-        assert (
-            "https://example.com/auction/a" in decoded
-            and ("P-" + str(UUID(p).int)) in decoded
-        )
+        # The reference contact page carries the auction QR and no project barcode.
+        assert "https://example.com/auction/a" in decoded
+        assert ("P-" + str(UUID(p).int)) not in decoded
     approved = admin.post("/api/outputs/" + o["id"] + "/approve").json()
     assert approved["status"] == "APPROVED"
     assert (

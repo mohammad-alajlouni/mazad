@@ -1573,3 +1573,4 @@ form[data-stage-form] select:user-invalid { border-color: #a12626; }
 .publication-summary{display:flex;gap:10px;flex-wrap:wrap}.publication-summary span{padding:8px 12px;border:1px solid #d9e4df;border-radius:8px;background:#f6faf8}
 
 .profile-onboarding{max-width:850px;margin:40px auto;padding:20px}.profile-onboarding>.language-switcher{margin-bottom:20px}.account-profile form{display:grid;gap:20px}.account-profile-logo{display:block;width:140px;height:90px;object-fit:contain;margin:12px 0}.account-profile details summary{cursor:pointer;margin-bottom:16px}.account-profile .form-grid{min-width:0}
+.live-preview-paper iframe{position:absolute;top:0;left:0;border:0;transform-origin:0 0;background:white;pointer-events:none}.live-preview-locked{color:#8a5a00}

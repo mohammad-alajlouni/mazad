@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -29,10 +31,77 @@ def thumbnail(id: str):
     )
 
 
+PREVIEW_ASSET_TYPES = {
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".ttf": "font/ttf",
+    ".otf": "font/otf",
+}
+
+
+@lru_cache(maxsize=2)
+def fixed_page_image(kind):
+    """The original introduction and terms pages as images for the live preview."""
+    import pymupdf
+
+    if kind == "introduction":
+        name, clip = "reference-introduction.pdf", None
+    else:
+        name, clip = "booklet-art/terms.pdf", pymupdf.Rect(110, 110, 505, 692)
+    with pymupdf.open(ASSETS / name) as document:
+        return (
+            document[0]
+            .get_pixmap(matrix=pymupdf.Matrix(2, 2), clip=clip)
+            .tobytes("png")
+        )
+
+
+@lru_cache(maxsize=16)
+def reduced_artwork(path):
+    """Large artwork (cover photographs) at screen resolution for the preview."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    with Image.open(path) as image:
+        image.thumbnail((1240, 1754))
+        out = BytesIO()
+        if image.mode in ("RGBA", "LA", "P"):
+            image.save(out, format="PNG", optimize=True)
+            return out.getvalue(), "image/png"
+        image.convert("RGB").save(out, format="JPEG", quality=86)
+        return out.getvalue(), "image/jpeg"
+
+
+@router.get("/booklet-assets/{path:path}")
+def booklet_asset(path: str):
+    """Fonts and fixed artwork for the live preview, cached by the browser."""
+    headers = {"Cache-Control": "private, max-age=86400"}
+    if path in ("page/introduction.png", "page/terms.png"):
+        kind = path.split("/")[1].removesuffix(".png")
+        return Response(fixed_page_image(kind), media_type="image/png", headers=headers)
+    target = (ASSETS / path).resolve()
+    if (
+        not target.is_relative_to(ASSETS.resolve())
+        or target.suffix not in PREVIEW_ASSET_TYPES
+        or not target.is_file()
+    ):
+        raise HTTPException(404, "Asset not found")
+    if target.suffix == ".png" and target.stat().st_size > 400_000:
+        data, media = reduced_artwork(target)
+        return Response(data, media_type=media, headers=headers)
+    return Response(
+        target.read_bytes(),
+        media_type=PREVIEW_ASSET_TYPES[target.suffix],
+        headers=headers,
+    )
+
+
 @router.put("/projects/{id}/selling-agent")
 def save_agent(id: str, body: SellingAgentInput, db=Depends(get_db)):
     p = get_project(db, id, True)
     from ..services.agent_profile import complete
+
     if complete(db.get(User, p.owner_id)):
         raise HTTPException(409, "Update selling agent information in account settings")
     if body.logo_image_id:

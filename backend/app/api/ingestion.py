@@ -36,8 +36,11 @@ async def upload_image(
     if category == "agent_logo":
         from ..models import User
         from ..services.agent_profile import complete
+
         if complete(db.get(User, p.owner_id)):
-            raise HTTPException(409, "Update selling agent information in account settings")
+            raise HTTPException(
+                409, "Update selling agent information in account settings"
+            )
     if item_id:
         item = db.get(ProjectItem, item_id)
         if not item or item.project_id != id:
@@ -78,15 +81,34 @@ async def upload_image(
 
 
 @router.get("/images/{id}")
-def image(id: str, db=Depends(get_db)):
+def image(id: str, size: str = "", db=Depends(get_db)):
     img = db.get(ProjectImage, id)
     if not img:
         raise HTTPException(404, "Image not found")
     get_project(db, img.project_id)
+    data = LocalStorage().read(img.key)
+    media = "image/png" if img.key.endswith(".png") else "image/jpeg"
+    if size == "preview":
+        # Stored images never change under an id, so the reduced copy the live
+        # preview uses can be cached by the (authenticated) browser.
+        from io import BytesIO
+
+        from PIL import Image
+
+        with Image.open(BytesIO(data)) as picture:
+            picture.thumbnail((1400, 1400))
+            out = BytesIO()
+            if media == "image/png":
+                picture.save(out, format="PNG", optimize=True)
+            else:
+                picture.convert("RGB").save(out, format="JPEG", quality=82)
+        return Response(
+            out.getvalue(),
+            media_type=media,
+            headers={"Cache-Control": "private, max-age=86400"},
+        )
     return Response(
-        LocalStorage().read(img.key),
-        media_type="image/png" if img.key.endswith(".png") else "image/jpeg",
-        headers={"Cache-Control": "private, no-store"},
+        data, media_type=media, headers={"Cache-Control": "private, no-store"}
     )
 
 

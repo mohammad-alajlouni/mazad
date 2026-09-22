@@ -476,6 +476,9 @@
     "location_links": "Location, platform and links",
     "legal_information": "Legal information",
     "document_language": "Document language",
+    "booklet_edition": "Booklet edition",
+    "booklet_edition_print": "Print (QR codes)",
+    "booklet_edition_digital": "Digital (link buttons)",
     "select_cover": "Select official cover",
     "cover": "Cover {number}",
     "save_auction": "Save auction and cover",
@@ -812,11 +815,14 @@
     "campaign_image": "Auction cover image",
     "main_image": "Main property image",
     "property_selection": "Property selection",
-    "property_limit": "Property count limit"
+    "property_limit": "Property count limit",
+    "agentFirst": "Your selling-agent details are incomplete; booklets, banners and posts all need them:",
+    "agentFix": "Complete selling-agent details",
+    "agent_logo": "Selling-agent logo"
   },
   "liveBooklet": {
     "title": "Live booklet preview",
-    "help": "Updates as you type using the same PDF template as export.",
+    "help": "Updates instantly as you type and shows the pages of the step you are working on.",
     "updating": "Updating…",
     "current": "Preview up to date",
     "failed": "Update failed",
@@ -841,7 +847,9 @@
     "rentals": "Rental contracts",
     "terms": "Terms",
     "participation": "Participation",
-    "contact": "Contact"
+    "contact": "Contact",
+    "locked": "locked until this step is complete",
+    "lockedHelp": "Pages for later steps open once the required fields are filled and this step is saved."
   },
   "projectGeneration": {
     "title": "Generate the complete project",

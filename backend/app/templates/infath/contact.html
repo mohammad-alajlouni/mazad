@@ -1,3 +1,30 @@
-{% if project.agent_logo %}<img class="contact-logo" src="{{ project.agent_logo }}">{% endif %}<h2 class="contact-heading">{{ auction.auction_name }}</h2>
-<div class="contact-schedule" data-fit="contact-schedule" data-max-height="125"><div><img src="{{ identity_asset(identity.selected.time) }}"><span class="numeric-range">{{ (auction.start_time or '—')[:5] }}{% if auction.end_time %} – {{ auction.end_time[:5] }}{% endif %}</span></div><div><img src="{{ identity_asset(identity.selected.calendar) }}"><span class="numeric-range">{{ (auction.auction_date if auction.auction_type == 'physical' else auction.auction_start_date) or '—' }}{% if auction.auction_type != 'physical' %} – {{ auction.auction_end_date }}{% endif %}</span></div>{% if auction.auction_type != 'electronic' %}<div><img src="{{ identity_asset(identity.selected.location) }}">{{ auction.physical_location }}</div>{% endif %}{% if auction.auction_type != 'physical' %}<div><img src="{{ identity_asset(identity.selected.platform) }}">{{ auction.electronic_platform_name }}</div>{% endif %}</div>
-<div class="contact-details" data-fit="contact-details" data-max-height="190"><h2>{{ bt('contact') }}</h2><p>{{ auction.auction_contact_number or agent.phone or '—' }}{% if agent.whatsapp %} · {{ agent.whatsapp }}{% endif %}</p><p class="muted">{{ agent.website }}</p></div>{{ qrs(booklet.auction_qrs) }}<img class="code" src="{{ booklet.barcode }}"><p class="project-code">{{ project.code }}</p>
+{#- Reference page 21. -#}
+{{ art('contact') }}{{ footer(true, false) }}
+{% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, 220, 51.7) %}<img class="logo" style="{{ box(300 - A.width / 2, 197.15 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
+<div class="t r w5" style="{{ T(299.75, 302.2, 20.37, align='center', width=300) }};color:#243c52">{{ bt('held_at') }}</div>
+{% set items = [] %}
+{% if auction.auction_type != 'physical' %}{% set _ = items.append(('platform', auction.electronic_platform_name or bt('platform_name'))) %}{% endif %}
+{% if auction.auction_type != 'electronic' %}{% set _ = items.append(('location', auction.physical_location or bt('location'))) %}{% endif %}
+{% set _ = items.append(('calendar', fmt.day_range(auction, output_language) or '—')) %}
+{% if auction.start_time or auction.end_time %}{% set _ = items.append(('time', fmt.time_range(auction, output_language))) %}{% endif %}
+{#- Four reference slots; fewer items share the same row, evenly spaced. -#}
+{% set slots = {4: [511.5, 400.0, 267.5, 133.0], 3: [470.0, 300.0, 133.0], 2: [400.0, 200.0], 1: [300.0]}[items|length] %}
+{% for icon, text in items %}{% set x = slots[loop.index0] %}
+<img class="icon" style="{{ box(x - 13.5, 348, 27, 27) }}" src="{{ asset('booklet-art/contact-' ~ icon ~ '.png') }}">
+{#- Names (location, platform) wrap on two lines; date and time stay on one, as in the reference. -#}
+{% if icon in ('location', 'platform') %}{% set size = fit.box_size('contact_item', text) %}
+<div class="t p r w5" style="{{ T(x, 392.8, size, lh=size * 1.3, align='center', width=118) }};color:#159d9d;white-space:normal" data-fit="contact-{{ icon }}" data-max-height="{{ size * 2.6 + 4 }}pt">{{ text|nums }}</div>
+{% else %}<div class="t r w5" style="{{ T(x, 392.8, 10.4, align='center', width=165) }};color:#159d9d" data-fit="contact-{{ icon }}" data-max-height="22pt">{{ text|nums }}</div>{% endif %}
+{% endfor %}
+<div class="t r w5" style="{{ T(300.3, 469.5, 20.37, align='center', width=300) }};color:#11375c">{{ bt('contact') }}</div>
+{% set phone = auction.auction_contact_number or agent.phone %}
+{% if agent.whatsapp %}<img class="icon" style="{{ box(420, 514, 18, 19) }}" src="{{ asset('booklet-art/contact-whatsapp.png') }}">
+<div class="t l w5" style="{{ T(398.9, 530.0, 14.61, 'l', width=130) }};color:#159d9d" dir="ltr">{{ agent.whatsapp }}</div>{% endif %}
+{% if phone %}{% set right = 253.8 if agent.whatsapp else 326.3 %}<img class="icon" style="{{ box(right + 11.2, 516, 18, 19) }}" src="{{ asset('booklet-art/contact-phone.png') }}">
+<div class="t l w5" style="{{ T(right, 530.0, 14.61, 'l', width=130) }};color:#159d9d" dir="ltr">{{ phone }}</div>{% endif %}
+{% set target = (booklet.auction_qrs|selectattr('label', 'equalto', 'electronic_platform_url' if auction.auction_type == 'electronic' else 'auction_location_url')|list) or booklet.auction_qrs %}
+{% if target %}{% set link = target[0] %}
+<a class="hit" href="{{ link.url }}" style="{{ box(231.4, 595.8, 137, 45.5) }}"></a><img class="qr-code" style="{{ box(231.4, 595.8, 45.5, 45.5) }}" src="{{ link.image }}">
+<div class="t r w7" style="{{ T(368.1, 606.7, 13.3, width=150) }};color:#001647">{{ bt('auction_platform' if link.label == 'electronic_platform_url' else 'auction_hall') }}</div>
+{% for line in bt('scan_to_reach').split('\n') %}<div class="t r w5" style="{{ T(368.1, 626.9 + 12.4 * loop.index0, 8.4, width=150) }};color:#001647">{{ line }}</div>{% endfor %}
+{% endif %}

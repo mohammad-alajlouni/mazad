@@ -1,5 +1,40 @@
-<section class="full cover-{{ page.cover_number }}"><img class="full-image" src="{{ asset('reference-cover-' ~ page.cover_number ~ '.png') }}">
-{% if project.cover_image and page.cover_number in [1,6] %}<img class="cover-photo {{ 'full-photo' if page.cover_number == 1 else '' }}" src="{{ project.cover_image }}">{% if page.cover_number == 1 %}<div class="cover-shade"></div>{% endif %}<img class="cover-mark" src="{{ identity_asset(identity.logos.white.file) }}">{% endif %}
-<div data-fit="cover-title" data-max-height="250" class="cover-title {{ 'photo' if page.cover_number in [1,6] else 'gradient' if page.cover_number in [4,5] else '' }} {{ 'long' if auction.auction_name|length > 70 else '' }}">{% if project.auction_logo %}<img class="auction-logo" src="{{ project.auction_logo }}"><br>{% endif %}{{ auction.auction_name }}</div>
-{% if project.agent_logo %}<img class="cover-agent" src="{{ project.agent_logo }}">{% else %}<div class="cover-agent">{{ agent.name }}</div>{% endif %}
-<div class="cover-date">{{ bt('auction_date') }}<br><span class="nowrap">{{ (auction.auction_date if auction.auction_type == 'physical' else auction.auction_start_date) or '—' }}{% if auction.auction_type != 'physical' and auction.auction_end_date %} / {{ auction.auction_end_date }}{% endif %}</span></div></section>
+{% set n = page.cover_number %}{% set photo_cover = n in [1, 6] %}{% set wide = n in [4, 5] %}
+{#- Geometry: covers 1 and 6 from reference page 1, covers 2-5 from the guide's
+    cover thumbnails scaled to A4. logo_right/logo_bottom place the auction logo
+    (50.6 x 63.5 pt), title_right the name, whose last baseline is title_base. -#}
+{% if photo_cover %}{% set g = {'logo_right': 566.3, 'logo_top': 743.9, 'title_right': 497.9, 'first_base': 766.0} %}
+{% elif wide %}{% set g = {'logo_right': 501.3, 'logo_top': 372.6, 'title_right': 432.3, 'first_base': 394.7} %}
+{% else %}{% set g = {'logo_right': 377.8, 'logo_top': 372.6, 'title_right': 308.8, 'first_base': 394.7} %}{% endif %}
+{% set name = auction.auction_name %}{% set prefix = bt('auction') %}
+{% set name = name[prefix|length:]|trim if name.startswith(prefix) else name %}
+{% set lines = 1 + (1 if name|length > 16 else 0) %}
+<section class="full cover-{{ n }}">
+<img class="full-image" src="{{ asset('reference-cover-' ~ n ~ '.png') }}">
+{% if project.cover_image and photo_cover %}
+{{ photo(project.cover_image, 'M0 0H595.28V841.89H0Z' if n == 1 else 'M0 0H595.28V589.6H70L0 519.6Z') }}
+{% if n == 1 %}<div class="cover-shade"></div>{% endif %}
+<img class="logo" style="{{ box(506.9, 29.8, 63.2, 47.7) }}" src="{{ identity_asset(identity.logos.white.file) }}">
+{% endif %}
+{#- Auction logo: reference box 50.6 x 63.5 pt; wider logos extend towards the
+    name (up to 110 pt) and the name keeps the reference 18.4 pt gap. -#}
+{% if project.auction_logo %}{% set L = logo_fit(project.auction_logo, 110, 63.5) %}
+<img class="logo" style="{{ box(g.logo_right - L.width, g.logo_top + (63.5 - L.height) / 2, L.width, L.height) }}" src="{{ L.src }}">
+{% set g = dict(g, title_right=[g.title_right, g.logo_right - L.width - 18.4]|min) %}{% endif %}
+{#- Covers with the title at the foot grow upwards; the others grow downwards. -#}
+{% set first = g.first_base - (30 * (lines - 1) if photo_cover else 0) %}
+<div class="t r w7 white" style="{{ T(g.title_right, first, 25, lh=30) }}">{{ prefix }}</div>
+<div class="t p r w7 white" data-fit="cover-title" data-max-height="{{ 30 * lines }}pt" style="{{ T(g.title_right, first + 30, 25, lh=30, width=250) }};white-space:normal">{{ name }}</div>
+{% set date = fmt.day_range(auction, output_language, weekday=false, suffix='م' if ar else '', dash='-') %}
+{% if wide %}
+<div class="t r w5 white" style="{{ T(37.2, 800.0, 10, align='left', width=200) }}">{{ date|nums }}</div>
+{% else %}
+{% set centre = 197.0 if photo_cover else 521.8 %}
+<div class="t r w5 white" style="{{ T(centre, 792.7, 10, align='center', width=170) }}">{{ bt('auction_date') }}</div>
+<div class="t r w5 white" style="{{ T(centre, 807.5, 10, align='center', width=170) }}">{{ date|nums }}</div>
+{% endif %}
+{#- Agent logo: white on every cover, fitted to its reference box and anchored
+    to the box's outer edge (left on covers 1-3 and 6, right on 4 and 5). -#}
+{% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, 106.7 if wide else 101.6, 28.6 if wide else 30.1, true) %}
+<img class="logo" style="{{ box(550.5 - A.width if wide else 35.9, (785.2 if wide else 792.75) - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">
+{% else %}<div class="t r w7 white" style="{{ T(550.5 if wide else 35.9, 790, 10, align='right' if wide else 'left', width=150) }}">{{ agent.name }}</div>{% endif %}
+</section>

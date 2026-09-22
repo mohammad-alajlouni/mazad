@@ -7,16 +7,13 @@ from typing import Any, Literal
 from urllib.parse import urlsplit
 from uuid import uuid4
 
-import pymupdf
 from fastapi import HTTPException
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
-from weasyprint import HTML
 
 from ..auction_schemas import AuctionData, PropertyData, SellingAgentInput
 from ..generation.booklet.composer import compose
-from ..generation.engine import render_html, safe_fetch, snapshot
-from ..generation.preflight import check_layout, inspect_pdf
+from ..generation.engine import render_html, snapshot
 
 
 class PreviewImage(BaseModel):
@@ -104,7 +101,7 @@ def transient_image(value):
 
 
 def preview(db, project, body):
-    p, items = snapshot(db, project)
+    p, items = snapshot(db, project, linked_photos=True)
     p["auction"] = draft_values(AuctionData, {**p.get("auction", {}), **body.auction})
     a = p["auction"]
     if a["auction_type"] == "physical":
@@ -229,32 +226,35 @@ def preview(db, project, body):
         "booklet": {**booklet, "pages": [pages[selected]]},
         "output_language": a["document_language"],
     }
-    document = HTML(string=render_html(content), url_fetcher=safe_fetch).render()
-    fits = True
-    try:
-        check_layout(document, content)
-    except HTTPException:
-        fits = False
-    from ..generation.booklet.art import original_pdf_artwork
-
-    pdf = original_pdf_artwork(document.write_pdf(), content)
-    try:
-        inspect_pdf(pdf, content)
-    except HTTPException:
-        fits = False
-    with pymupdf.open(stream=pdf, filetype="pdf") as rendered:
-        png = rendered[0].get_pixmap(matrix=pymupdf.Matrix(1.25, 1.25)).tobytes("png")
-        text = rendered[0].get_text()
+    # The browser renders this page directly: no PDF round trip while typing.
+    # Export renders the same template through WeasyPrint and runs preflight.
+    html = render_html(content, preview=True)
     return {
-        "image": "data:image/png;base64," + base64.b64encode(png).decode(),
+        "html": html,
         "page": selected,
         "pages": [
-            {"kind": page["kind"], "item": page.get("item", {}).get("title", "")}
+            {
+                "kind": page["kind"],
+                "item": page.get("item", {}).get("title", ""),
+                "step": page_step(page),
+            }
             for page in pages
         ],
         "width_pt": 595.276,
         "height_pt": 841.89,
-        "fits": fits,
-        "text": text,
         "saved": False,
     }
+
+
+def page_step(page):
+    """The workflow step whose fields fill a booklet page."""
+    kind = page["kind"]
+    if kind in ("summary", "property", "boundaries", "rentals") or (
+        kind == "information" and page.get("item")
+    ):
+        return "items"
+    if kind == "images":
+        return "images"
+    if kind in ("terms", "participation", "contact"):
+        return "generate"
+    return "auction"
