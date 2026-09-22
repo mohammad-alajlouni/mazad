@@ -1,5 +1,6 @@
 """Pure page composition from the same normalized snapshot used by all outputs."""
 
+import unicodedata
 from uuid import UUID
 
 from .codes import barcode, qr
@@ -60,6 +61,40 @@ def text_chunks(value, size=1200, max_lines=26):
     return result
 
 
+def property_layout(item):
+    prop = item["property_data"]
+    selected = prop.get("booklet_layout", "auto")
+    if selected != "auto":
+        return selected
+    kind = unicodedata.normalize("NFKC", prop.get("property_type", "")).lower()
+    if any(
+        word in kind
+        for word in ("برج", "أبراج", "ابراج", "عمارة", "عمائر", "tower", "building")
+    ):
+        return "portrait"
+    if any(
+        word in kind
+        for word in ("فيلا", "فيللا", "مزرعة", "أرض", "ارض", "villa", "farm", "land")
+    ):
+        return "landscape"
+    assets = item.get("image_assets", [])
+    return (
+        "portrait"
+        if assets and assets[0].get("orientation") == "portrait"
+        else "landscape"
+    )
+
+
+def boundaries_need_page(boundaries):
+    # The compact reference region permits two short lines per direction.
+    return any(
+        len(boundaries.get(side + "_description", "")) > 55
+        or "\n" in boundaries.get(side + "_description", "")
+        or len(boundaries.get(side + "_length", "")) > 20
+        for side in ("north", "south", "east", "west")
+    )
+
+
 def compose(project, items):
     auction = project["auction"]
     cover = COVERS[auction["selected_cover_template_id"]]
@@ -86,6 +121,10 @@ def compose(project, items):
     for index, item in enumerate(items, 1):
         item["number"] = index
         prop = item["property_data"]
+        layout = property_layout(item)
+        boundaries = prop.get("boundaries", {})
+        separate_boundaries = boundaries_need_page(boundaries)
+        extra = text_chunks(prop.get("additional_information", ""), 350, 7)
         item["qr_links"] = [
             {"label": k, "url": v, "image": qr(v)}
             for k, v in prop.items()
@@ -96,12 +135,27 @@ def compose(project, items):
             {
                 "kind": "property",
                 "item": item,
+                "layout": layout,
+                "separate_boundaries": separate_boundaries,
                 "description": description[0] if description else "",
-                "additional_information": (
-                    text_chunks(prop.get("additional_information", ""), 350) or [""]
-                )[0],
+                "additional_information": (extra or [""])[0],
             }
         )
+        if separate_boundaries:
+            rows = []
+            for side in ("north", "south", "east", "west"):
+                for text in text_chunks(
+                    boundaries.get(side + "_description", ""), 300, 5
+                ) or ["-"]:
+                    rows.append(
+                        {
+                            "side": side,
+                            "text": text,
+                            "length": boundaries.get(side + "_length", "") or "-",
+                        }
+                    )
+            for group in chunks(rows, 4):
+                pages.append({"kind": "boundaries", "item": item, "rows": group})
         for links in chunks(item["qr_links"][4:], 4):
             pages.append(
                 {
@@ -122,7 +176,11 @@ def compose(project, items):
                 }
             )
         for field in ("notes", "specifications", "technical_information"):
-            for text in text_chunks(item.get(field, "")):
+            for text in (
+                text_chunks(item.get(field, ""))
+                if prop.get("include_information_page", True)
+                else []
+            ):
                 pages.append(
                     {
                         "kind": "information",
@@ -131,7 +189,11 @@ def compose(project, items):
                         "text": text,
                     }
                 )
-        for text in text_chunks(prop.get("additional_information", "")):
+        for text in (
+            text_chunks("".join(extra[1:]))
+            if prop.get("include_information_page", True)
+            else []
+        ):
             pages.append(
                 {
                     "kind": "information",
@@ -140,7 +202,11 @@ def compose(project, items):
                     "text": text,
                 }
             )
-        for text in text_chunks("\n".join("• " + f for f in prop.get("features", []))):
+        for text in (
+            text_chunks("\n".join("• " + f for f in prop.get("features", [])))
+            if prop.get("include_information_page", True)
+            else []
+        ):
             pages.append(
                 {
                     "kind": "information",
@@ -149,32 +215,28 @@ def compose(project, items):
                     "text": text,
                 }
             )
-        for images in chunks(item.get("image_assets", [])[1:], 3):
+        for images in (
+            chunks(item.get("image_assets", [])[1:], 3)
+            if prop.get("include_images_page", True)
+            else []
+        ):
             pages.append({"kind": "images", "item": item, "images": images})
-        boundaries = prop.get("boundaries", {})
-        if any(boundaries.values()):
-            rows = []
-            for side in ("north", "south", "east", "west"):
-                for text in text_chunks(
-                    boundaries.get(side + "_description", ""), 300, 5
-                ) or ["-"]:
-                    rows.append(
-                        {
-                            "side": side,
-                            "text": text,
-                            "length": boundaries.get(side + "_length", "") or "-",
-                        }
-                    )
-            for group in chunks(rows, 4):
-                pages.append({"kind": "boundaries", "item": item, "rows": group})
-        for rows in chunks(prop.get("rental_contracts", []), 10):
+        rentals = [
+            r
+            for r in prop.get("rental_contracts", [])
+            if any(v not in (None, "") for v in r.values())
+        ]
+        for rows in (
+            chunks(rentals, 10) if prop.get("include_rentals_page", True) else []
+        ):
             pages.append({"kind": "rentals", "item": item, "rows": rows})
     pages.append({"kind": "terms", "auction_type": auction["auction_type"]})
     if auction["auction_type"] in ("electronic", "hybrid"):
         pages.append({"kind": "participation"})
     pages.append({"kind": "contact"})
     return {
-        "layout_version": 2,
+        "layout_version": 3,
+        "theme": "navy" if cover.display_order in (2, 4) else "teal",
         "pages": pages,
         "cover_id": cover.id,
         "auction_qrs": [

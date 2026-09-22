@@ -175,7 +175,7 @@ def test_manual_auction_end_to_end(admin):
         kinds.count("property") == 2
         and kinds.count("rentals") == 3
         and kinds.count("images") == 2
-        and kinds.count("boundaries") == 1
+        and kinds.count("boundaries") == 0
         and "participation" in kinds
     )
     data = pdf(admin, o)

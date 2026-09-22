@@ -76,6 +76,23 @@ for (const flow of ["manual", "excel"])
         await page.getByLabel("District", { exact: true }).fill("النرجس");
         await page.getByLabel("Area m²", { exact: true }).fill("1200");
         await page
+          .getByLabel("Property page layout", { exact: true })
+          .selectOption(n === 1 ? "landscape" : "portrait");
+        await page
+          .getByLabel("Image fit in frame", { exact: true })
+          .selectOption("contain");
+        await page
+          .getByLabel("Additional information and features pages", {
+            exact: true,
+          })
+          .selectOption("false");
+        await page
+          .getByLabel("Additional image pages", { exact: true })
+          .selectOption("false");
+        await page
+          .getByLabel("Rental contract pages", { exact: true })
+          .selectOption("false");
+        await page
           .locator("summary")
           .filter({ hasText: "Property boundaries" })
           .click();
@@ -98,9 +115,23 @@ for (const flow of ["manual", "excel"])
         await page.getByRole("button", { name: "Add rental contract" }).click();
         await page.getByLabel("Unit number").fill("1");
         await page.getByLabel("Annual rent").fill("12000");
+        const savedRequest = page.waitForResponse(
+          (response) =>
+            response.url().endsWith("/items") &&
+            response.request().method() === "POST",
+        );
         await page
           .getByRole("button", { name: "Save item", exact: true })
           .click();
+        const savedItem = await (await savedRequest).json();
+        expect(savedItem.property_data.booklet_layout).toBe(
+          n === 1 ? "landscape" : "portrait",
+        );
+        expect(savedItem.property_data.booklet_image_fit).toBe("contain");
+        expect(savedItem.property_data.include_information_page).toBe(false);
+        expect(savedItem.property_data.include_images_page).toBe(false);
+        expect(savedItem.property_data.include_rentals_page).toBe(false);
+        expect(savedItem.property_data.rental_contracts).toHaveLength(1);
         await expect(
           page.getByText(`عقار المتصفح ${n}`, { exact: true }),
         ).toBeVisible();

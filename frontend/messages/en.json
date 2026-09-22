@@ -525,7 +525,21 @@
     "west_description": "West boundary description",
     "west_length": "West length",
     "cover_image": "Cover image",
-    "source_preview": "Original spreadsheet preview"
+    "source_preview": "Original spreadsheet preview",
+    "booklet_pages": "Property booklet layout and pages",
+    "booklet_layout": "Property page layout",
+    "layout_auto": "Automatic by property type",
+    "layout_landscape": "Landscape image",
+    "layout_portrait": "Portrait image",
+    "include_information_page": "Additional information and features pages",
+    "include_images_page": "Additional image pages",
+    "include_rentals_page": "Rental contract pages",
+    "page_enabled": "Show when data exists",
+    "page_disabled": "Hide from booklet",
+    "booklet_pages_hint": "Hiding a page preserves its data. Short boundaries remain on the property page; long boundaries continue on a separate page. Hiding information pages also hides long text continuations, notes and features.",
+    "booklet_image_fit": "Image fit in frame",
+    "image_cover": "Fill frame and crop edges, preserving proportions",
+    "image_contain": "Show entire image, preserving proportions"
   },
   "flow": {
     "home": "Auction projects",

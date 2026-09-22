@@ -1,11 +1,17 @@
-{% set item=page.item %}{% set prop=item.property_data %}{% set main=item.image_assets[0] if item.image_assets else none %}{% set portrait=main and main.orientation == 'portrait' %}
+{% set item=page.item %}{% set prop=item.property_data %}{% set main=item.image_assets[0] if item.image_assets else none %}{% set portrait=page.layout == 'portrait' %}
 <div class="property-layout {{ 'portrait' if portrait else '' }}">
-{% if main %}<img class="property-photo" src="{{ booklet_photo(main.src, portrait) }}">{% endif %}
+{% if main %}<img class="property-photo" src="{{ booklet_photo(main.src, portrait, prop.get('booklet_image_fit', 'cover')) }}">{% endif %}
 <span class="property-number">{{ '%02d' % item.number }}</span>
 <div class="property-description" data-fit="property-description" data-max-height="{{ 158 if portrait else 106 }}"><h3>{{ bt('description') }}</h3><p>{{ page.description or item.title }}</p></div>
-<dl class="property-fields" data-fit="property-fields" data-max-height="{{ 300 if portrait else 156 }}">{% for key in property_fields %}<div class="field {{ 'wide' if key == 'execution_request_number' else '' }}" style="top:{{ loop.index0 * 21 if portrait else (loop.index0 // 2) * 20 }}pt;right:{{ 0 if portrait or key == 'execution_request_number' else (loop.index0 % 2) * 156 }}pt;width:{{ 204 if portrait else 305 if key == 'execution_request_number' else 149 }}pt"><dt>{{ bt(key) }}</dt><dd>{{ display(prop.get(key)) }}</dd></div>{% endfor %}</dl>
-{% if prop.boundaries %}<div class="property-boundaries" data-fit="property-boundaries" data-max-height="{{ 170 if portrait else 158 }}">{% for side in ['north','south','east','west'] %}<div class="boundary-mini"><b>{{ bt(side) }}</b><span>{{ (prop.boundaries.get(side ~ '_description') or '—')[:55] }}{% if (prop.boundaries.get(side ~ '_description') or '')|length > 55 %}…{% endif %} {{ prop.boundaries.get(side ~ '_length') or '' }}</span></div>{% endfor %}</div>{% endif %}
-{% if prop.additional_information %}<div class="property-extra" data-fit="property-extra"><span class="tab-label" data-fit="additional-information-label" data-max-height="35">{{ bt('additional_information') }}</span><p>{{ page.additional_information }}</p></div>{% endif %}
+<dl class="property-fields" data-fit="property-fields" data-max-height="{{ 300 if portrait else 156 }}">{% for key in property_fields %}<div data-fit="property-field-{{ key }}" data-max-height="{{ 28 if portrait else 26.667 }}" class="field {{ 'wide' if key == 'execution_request_number' else '' }}" style="top:{{ loop.index0 * 21 if portrait else (loop.index0 // 2) * 20 }}pt;right:{{ 0 if portrait or key == 'execution_request_number' else (loop.index0 % 2) * 156 }}pt;width:{{ 204 if portrait else 305 if key == 'execution_request_number' else 149 }}pt"><dt>{{ bt(key) }}</dt><dd dir="{{ display(prop.get(key))|direction }}">{{ display(prop.get(key)) }}</dd></div>{% endfor %}</dl>
+{% if prop.boundaries and not page.separate_boundaries %}<div class="property-boundaries" data-fit="property-boundaries" data-max-height="230">
+<h3 class="boundary-heading">{{ bt('boundary_descriptions') }}</h3>
+{% for side in ['north','south','east','west'] %}<div class="boundary-mini"><b>{{ bt(side) }}</b><span>{{ prop.boundaries.get(side ~ '_description') or '—' }}</span></div>{% endfor %}
+<h3 class="boundary-heading">{{ bt('boundary_lengths') }}</h3>
+<table class="length-grid">{% for sides in [['north','south'],['east','west']] %}<tr>{% for side in sides %}<td><span>{{ bt(side) }}</span> <bdi>{{ prop.boundaries.get(side ~ '_length') or '—' }}</bdi></td>{% endfor %}</tr>{% endfor %}</table>
+</div>{% endif %}
+{% if page.separate_boundaries %}<div class="property-boundaries"><p>{{ bt('boundaries_continued') }}</p></div>{% endif %}
+{% if page.additional_information %}<div class="property-extra" data-fit="property-extra"><span class="tab-label" data-fit="additional-information-label" data-max-height="35">{{ bt('additional_information') }}</span><p>{{ page.additional_information }}</p></div>{% endif %}
 <div class="property-links">{{ qrs(item.qr_links[:4]) }}</div>
-{% if auction.auction_type != 'physical' and (prop.auction_close_date or prop.auction_close_time) %}<div class="close-time">{{ bt('auction_close_date') }}: {{ prop.auction_close_date or '—' }} · {{ prop.auction_close_time or '—' }}</div>{% endif %}
+{% if auction.auction_type != 'physical' and (prop.auction_close_date or prop.auction_close_time) %}<div class="close-time">{{ bt('auction_close_date') }}: <span class="numeric">{{ prop.auction_close_date or '—' }} · {{ (prop.auction_close_time or '—')[:5] }}</span></div>{% endif %}
 </div>

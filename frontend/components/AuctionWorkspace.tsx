@@ -188,7 +188,17 @@ export function readProperty(form: FormData) {
     .split("\n")
     .filter((v) => v.trim());
   values.boundaries = boundaries;
-  values.rental_contracts = Object.values(rentals);
+  values.rental_contracts = Object.values(rentals).filter((row) =>
+    Object.values(row).some((value) => String(value).trim()),
+  );
+  for (const field of [
+    "include_information_page",
+    "include_images_page",
+    "include_rentals_page",
+  ]) {
+    if (form.has(`booklet.${field}`))
+      values[field] = form.get(`booklet.${field}`) === "true";
+  }
   return values;
 }
 export function PropertyFields({
@@ -211,6 +221,49 @@ export function PropertyFields({
   const [nextKey, setNextKey] = useState(rentals.length);
   return (
     <>
+      <details open>
+        <summary>{t("booklet_pages")}</summary>
+        <label>
+          {t("booklet_layout")}
+          <select
+            name="property.booklet_layout"
+            defaultValue={String(prop.booklet_layout || "auto")}
+          >
+            {["auto", "landscape", "portrait"].map((value) => (
+              <option key={value} value={value}>
+                {t(`layout_${value}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          {t("booklet_image_fit")}
+          <select
+            name="property.booklet_image_fit"
+            defaultValue={String(prop.booklet_image_fit || "cover")}
+          >
+            <option value="cover">{t("image_cover")}</option>
+            <option value="contain">{t("image_contain")}</option>
+          </select>
+        </label>
+        {[
+          "include_information_page",
+          "include_images_page",
+          "include_rentals_page",
+        ].map((field) => (
+          <label key={field}>
+            {t(field)}
+            <select
+              name={`booklet.${field}`}
+              defaultValue={String(prop[field] ?? true)}
+            >
+              <option value="true">{t("page_enabled")}</option>
+              <option value="false">{t("page_disabled")}</option>
+            </select>
+          </label>
+        ))}
+        <p className="muted">{t("booklet_pages_hint")}</p>
+      </details>
       {propertyGroups.map((fields, index) => (
         <details key={index} open={index === 0}>
           <summary>

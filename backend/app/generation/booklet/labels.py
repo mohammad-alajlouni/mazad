@@ -1,4 +1,10 @@
 LABELS = {
+    "boundary_descriptions": ("الحدود", "Boundaries"),
+    "boundary_lengths": ("الأطوال", "Lengths"),
+    "boundaries_continued": (
+        "تفاصيل الحدود والأطوال في الصفحة التابعة للعقار",
+        "Full boundaries and lengths follow this property",
+    ),
     "contact_information": ("معلومات التواصل", "Contact information"),
     "property_links": ("روابط العقار", "Property links"),
     "summary": ("بيان العقارات", "Property summary"),

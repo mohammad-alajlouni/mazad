@@ -139,6 +139,11 @@ class RentalInput(Structured):
 
 
 class PropertyData(Structured):
+    booklet_layout: Literal["auto", "landscape", "portrait"] = "auto"
+    booklet_image_fit: Literal["cover", "contain"] = "cover"
+    include_information_page: bool = True
+    include_images_page: bool = True
+    include_rentals_page: bool = True
     property_type: str = Field(default="", max_length=100)
     city: str = Field(default="", max_length=100)
     district: str = Field(default="", max_length=100)
@@ -162,6 +167,16 @@ class PropertyData(Structured):
     other_document_link: str = ""
     boundaries: Boundaries = Field(default_factory=Boundaries)
     rental_contracts: list[RentalInput] = Field(default_factory=list, max_length=1000)
+
+    @field_validator("rental_contracts")
+    @classmethod
+    def populated_rentals(cls, value):
+        # A newly added, untouched form row is not a rental contract. Keep zero rents.
+        return [
+            row
+            for row in value
+            if any(v not in (None, "") for v in row.model_dump().values())
+        ]
 
     @field_validator("features")
     @classmethod

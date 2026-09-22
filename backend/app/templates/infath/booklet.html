@@ -1,6 +1,6 @@
 <!doctype html><html lang="{{ output_language }}" dir="{{ 'rtl' if output_language=='ar' else 'ltr' }}"><head><meta charset="utf-8"><style>
 {% include 'infath/booklet.css' %}
-</style></head><body>
+</style></head><body class="theme-{{ booklet.theme }}">
 {% set auction = project.auction %}{% set agent = project.selling_agent %}
 {% macro qrs(links) %}<div class="qrs">{% for link in links %}<div class="qr"><a href="{{ link.url }}"><span>{{ bt(link.label) }}</span><img src="{{ link.image }}"></a></div>{% endfor %}</div>{% endmacro %}
 {% for page in booklet.pages %}
