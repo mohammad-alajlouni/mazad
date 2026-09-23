@@ -307,7 +307,12 @@ def render(db, output):
     template_file = template.config.get("file", f"{output.output_type}.html")
     if (TEMPLATE_ROOT / template_file).resolve().parent != TEMPLATE_ROOT.resolve():
         raise ValueError("Invalid template path")
-    content = dict(output.content)
+    from .booklet.composer import current_booklet
+
+    content, upgraded = current_booklet(dict(output.content))
+    if upgraded:
+        # Keep the stored plan (and the page list shown to users) consistent.
+        output.content = {**output.content, "booklet": content["booklet"]}
     if output.output_type == "banners" and content["project"].get("auction"):
         template_file = "infath/banners.html"
     if content.get("banner"):
@@ -415,6 +420,7 @@ def render_html(
 
         def identity_asset(name):
             return "/api/booklet-assets/identity/" + name
+
     from .booklet.composer import FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
     from .booklet.labels import label
 

@@ -1,5 +1,6 @@
 """Pure page composition from the same normalized snapshot used by all outputs."""
 
+import copy
 import re
 import unicodedata
 from functools import lru_cache
@@ -40,6 +41,8 @@ RENTAL_FIELDS = (
     "paid_period",
     "next_due_date",
 )
+# Version of the stored page plan; raise it whenever compose() output changes shape.
+LAYOUT_VERSION = 4
 # Rows that the reference tables hold before continuing on another page.
 SUMMARY_ROWS = 10
 RENTAL_ROWS = 19
@@ -57,6 +60,10 @@ DESCRIPTION = {"landscape": (10, 497.3, 3), "portrait": (12, 198, 5)}
 INFO_BOX = {"landscape": (10, 268, 11), "portrait": (10, 262, 8)}
 INFO_PAGE = (11, 500, 33)
 NUMBER_INDENT = 11
+# Other text regions: (font size, width, lines), measured on the reference.
+AGENT_TEXT = (17.02, 387.6, 8)
+ANNOUNCEMENT = (19, 373, 3)
+BOUNDARY_PAGE = (15, 444, 4)  # the fifth line carries the length
 # Width in points beside each direction label on the property page.
 BOUNDARY_WIDTH = {"landscape": 100, "portrait": 130}
 IDENTITY = Path(__file__).resolve().parents[2] / "templates/infath/assets/identity"
@@ -155,6 +162,17 @@ def split_text(text, size, width, max_lines):
     return text[:length], text[length:]
 
 
+def measured_chunks(text, size, width, max_lines):
+    """Text split into region-sized parts by measured line breaks, losing nothing."""
+    parts = []
+    while text:
+        first, text = split_text(text, size, width, max_lines)
+        if not first:  # a leading line break alone: move it on with the next part
+            first, text = text[:1], text[1:]
+        parts.append(first)
+    return parts
+
+
 def lines_used(text, size, width):
     return fit_length(text, size, width, 10**6)[1]
 
@@ -232,9 +250,9 @@ def compose(project, items):
         {"kind": "introduction"},
     ]
     agent = project.get("selling_agent", {})
-    for text in text_chunks(agent.get("description", ""), 400, 8) or [""]:
+    for text in measured_chunks(agent.get("description", ""), *AGENT_TEXT) or [""]:
         pages.append({"kind": "agent", "text": text})
-    for text in text_chunks(agent.get("contact_information", "")):
+    for text in measured_chunks(agent.get("contact_information", ""), *INFO_PAGE):
         pages.append(
             {"kind": "information", "heading": "contact_information", "text": text}
         )
@@ -248,9 +266,9 @@ def compose(project, items):
         )
         if t and t.strip()
     )
-    parts = text_chunks(announcement, 120, 3)
-    auction_page["announcement"] = parts[0] if parts else ""
-    for text in text_chunks("".join(parts[1:])):
+    first, rest = split_text(announcement, *ANNOUNCEMENT)
+    auction_page["announcement"] = first
+    for text in measured_chunks(rest, *INFO_PAGE):
         pages.append(
             {"kind": "information", "heading": "legal_announcement_text", "text": text}
         )
@@ -271,7 +289,11 @@ def compose(project, items):
             for k in links
         ]
         first, remainder = split_text(item.get("description", ""), *DESCRIPTION[layout])
-        description = [first] + text_chunks(remainder) if first or remainder else []
+        description = (
+            [first] + measured_chunks(remainder, *INFO_PAGE)
+            if first or remainder
+            else []
+        )
         shown, rest = fill_box(info_entries(item, include_info), *INFO_BOX[layout])
         close = electronic and bool(
             prop.get("auction_close_date") or prop.get("auction_close_time")
@@ -294,8 +316,8 @@ def compose(project, items):
         if separate_boundaries:
             rows = []
             for side in ("north", "south", "east", "west"):
-                for text in text_chunks(
-                    boundaries.get(side + "_description", ""), 300, 5
+                for text in measured_chunks(
+                    boundaries.get(side + "_description", ""), *BOUNDARY_PAGE
                 ) or ["-"]:
                     rows.append(
                         {
@@ -327,7 +349,7 @@ def compose(project, items):
             )
         if include_info:
             for field in ("specifications", "technical_information"):
-                for text in text_chunks(item.get(field, "")):
+                for text in measured_chunks(item.get(field, ""), *INFO_PAGE):
                     pages.append(
                         {
                             "kind": "information",
@@ -368,7 +390,7 @@ def compose(project, items):
         pages.append({"kind": "participation"})
     pages.append({"kind": "contact"})
     return {
-        "layout_version": 4,
+        "layout_version": LAYOUT_VERSION,
         "theme": "navy" if cover.display_order in (2, 4) else "teal",
         "pages": pages,
         "cover_id": cover.id,
@@ -378,3 +400,21 @@ def compose(project, items):
             if k.endswith("_url") and v
         ],
     }
+
+
+def current_booklet(content):
+    """Stored output content with its booklet page plan in the current layout.
+
+    Outputs keep the data snapshot they were generated from. A plan written by
+    an older composer is rebuilt from that same snapshot, so re-rendering an
+    old draft (approve, edit) uses today's templates with the original data.
+    Returns (content, upgraded).
+    """
+    booklet = content.get("booklet")
+    if not booklet or booklet.get("layout_version") == LAYOUT_VERSION:
+        return content, False
+    project = copy.deepcopy(content.get("project") or {})
+    if not project.get("auction"):
+        return content, False
+    items = copy.deepcopy(content.get("items") or [])
+    return {**content, "booklet": compose(project, items)}, True
