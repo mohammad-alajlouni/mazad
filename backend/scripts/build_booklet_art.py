@@ -156,6 +156,48 @@ def crop(name, page, box, zoom=4, redact_text=True):
     write(name + ".png", pix.tobytes("png"))
 
 
+def trimmed(pix):
+    """PNG of a transparent render, cropped to its visible pixels."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    image = Image.frombytes("RGBA", (pix.width, pix.height), pix.samples)
+    image = image.crop(
+        image.getchannel("A").point(lambda a: 255 if a > 5 else 0).getbbox()
+    )
+    out = BytesIO()
+    image.save(out, format="PNG", optimize=True)
+    return out.getvalue()
+
+
+def cut_from_flat(pix):
+    """An opaque shape rendered on a flat colour, as a transparent PNG.
+
+    Distance from the background colour gives coverage at the anti-aliased
+    edge; the edge colour is un-mixed from the background.
+    """
+    from io import BytesIO
+
+    import numpy as np
+    from PIL import Image
+
+    rgb = np.frombuffer(pix.samples, np.uint8).reshape(pix.height, pix.width, 3)
+    rgb = rgb.astype(float)
+    background = rgb[2, 2].copy()
+    alpha = np.clip((np.abs(rgb - background).max(axis=2) - 6) / 48, 0, 1)[..., None]
+    colour = np.where(
+        alpha > 0, (rgb - (1 - alpha) * background) / np.maximum(alpha, 1e-3), 0
+    ).clip(0, 255)
+    image = Image.fromarray(np.dstack([colour, alpha * 255]).astype(np.uint8), "RGBA")
+    image = image.crop(
+        image.getchannel("A").point(lambda a: 255 if a > 5 else 0).getbbox()
+    )
+    out = BytesIO()
+    image.save(out, format="PNG", optimize=True)
+    return out.getvalue()
+
+
 FOOTER_LOGO = (525, 775, 582, 818)  # Infath mark in the page footer
 Q = {"regions": [FOOTER_LOGO]}
 
@@ -239,6 +281,19 @@ for n, box in enumerate(
 terms = pymupdf.open()
 terms.insert_pdf(book, from_page=18, to_page=18)
 write("terms.pdf", terms.tobytes(garbage=3, deflate=True))
+
+# The auction icon is fixed (guide V2, pages 3-6): gradient on white backgrounds,
+# silver on dark, coloured and photographic ones. Only the auction name changes.
+leaf = book[3].get_pixmap(
+    matrix=pymupdf.Matrix(12, 12), clip=pymupdf.Rect(438, 204, 495, 274), alpha=True
+)
+write("auction-icon-gradient.png", trimmed(leaf))
+guide = pymupdf.open(args.source / "دليل-التسويق-والهوية-البصرية-للمزادات-V2.pdf")
+# The silver icon is opaque: cut it from a flat square by its outline (page 5).
+navy = guide[4].get_pixmap(
+    matrix=pymupdf.Matrix(24, 24), clip=pymupdf.Rect(478.3, 184.9, 509.3, 222.9)
+)
+write("auction-icon-silver.png", cut_from_flat(navy))
 
 # Clip windows and variable-length shapes, in points.
 shapes = {

@@ -62,6 +62,7 @@ INFO_PAGE = (11, 500, 33)
 NUMBER_INDENT = 11
 # Other text regions: (font size, width, lines), measured on the reference.
 AGENT_TEXT = (17.02, 387.6, 8)
+# Right-aligned (not justified): lines use the full measured width.
 ANNOUNCEMENT = (19, 373, 3)
 BOUNDARY_PAGE = (15, 444, 4)  # the fifth line carries the length
 # Width in points beside each direction label on the property page.
@@ -132,12 +133,12 @@ def text_width(text, size=9.6, name="LamaSans-Medium"):
 TOKENS = re.compile(r"\n|[^\s]+[ \t]*|[ \t]+")
 
 
-def fit_length(text, size, width, max_lines, name="RuaqArabic-Light"):
+def fit_length(text, size, width, max_lines, name="RuaqArabic-Light", margin=0.98):
     """Characters of text that fit in max_lines of width, broken as the page breaks them.
 
-    Returns (length, lines used). Width keeps a 2% margin for justification.
+    Returns (length, lines used). Justified regions keep a 2% width margin.
     """
-    width *= 0.98
+    width *= margin
     lines, used, consumed = 1, 0.0, 0
     for token in TOKENS.findall(text):
         if token == "\n":
@@ -156,9 +157,9 @@ def fit_length(text, size, width, max_lines, name="RuaqArabic-Light"):
     return consumed, lines
 
 
-def split_text(text, size, width, max_lines):
+def split_text(text, size, width, max_lines, margin=0.98):
     """First part that fits the region, the remainder continuing elsewhere."""
-    length, _ = fit_length(text, size, width, max_lines)
+    length, _ = fit_length(text, size, width, max_lines, margin=margin)
     return text[:length], text[length:]
 
 
@@ -266,7 +267,7 @@ def compose(project, items):
         )
         if t and t.strip()
     )
-    first, rest = split_text(announcement, *ANNOUNCEMENT)
+    first, rest = split_text(announcement, *ANNOUNCEMENT, margin=1.0)
     auction_page["announcement"] = first
     for text in measured_chunks(rest, *INFO_PAGE):
         pages.append(

@@ -271,7 +271,9 @@ export function ImageUpload({
   const at = useTranslations("auction");
   const im = useTranslations("imagesStep");
   const project = detail.project;
-  const coverRequired = project.workspace_type === "project";
+  // The auction icon and the cover are fixed design assets (the cover is chosen
+  // in the first step); only property photographs are uploaded here.
+  const mainRequired = project.workspace_type === "project";
   const find = (category: string, itemId: string | null = null) =>
     detail.images.find(
       (i) => i.category === category && (i.item_id || null) === itemId,
@@ -340,8 +342,6 @@ export function ImageUpload({
   };
   const role = (i: { category?: string; item_id: string | null }) => {
     const item = detail.items.find((x) => x.id === i.item_id);
-    if (i.category === "auction_logo") return at("auction_logo");
-    if (i.category === "cover") return im("cover");
     if (i.category === "agent_logo") return im("agentLogo");
     if (i.category === "main" && item)
       return im("mainOf", { item: item.title });
@@ -352,15 +352,13 @@ export function ImageUpload({
       <h2>{tr("ui.project_images")}</h2>
       <p className="muted">{im("help")}</p>
       <div className="image-slots">
-        {slot("auction_logo", at("auction_logo"), "auction_logo", null, true)}
-        {slot("cover", im("cover"), "cover", null, coverRequired)}
         {detail.items.map((item) =>
           slot(
             "main:" + item.id,
             im("mainOf", { item: item.title }),
             "main",
             item.id,
-            coverRequired,
+            mainRequired,
           ),
         )}
         {detail.items.map((item) =>
@@ -394,7 +392,11 @@ export function ImageUpload({
                   <label>
                     {im("useAs")}
                     <select
-                      value={`${i.category || "additional"}|${i.item_id || ""}`}
+                      value={
+                        i.category === "main" || i.category === "additional"
+                          ? `${i.category}|${i.item_id || ""}`
+                          : "additional|"
+                      }
                       onChange={(e) => {
                         const [category, item] = e.target.value.split("|");
                         void run(async () => {
@@ -406,10 +408,6 @@ export function ImageUpload({
                         }, im("updated"));
                       }}
                     >
-                      <option value="auction_logo|">
-                        {at("auction_logo")}
-                      </option>
-                      <option value="cover|">{im("cover")}</option>
                       <option value="additional|">{im("projectImage")}</option>
                       {detail.items.map((item) => [
                         <option key={"m" + item.id} value={`main|${item.id}`}>

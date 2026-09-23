@@ -88,17 +88,7 @@ def review_social(db, project):
         "agent_logo",
         "images",
     )
-    check(
-        any(i.category == "auction_logo" and not i.item_id for i in images),
-        "auction_logo",
-        "images",
-    )
-    if config.post_kind == "announcement":
-        check(
-            any(i.category == "cover" and not i.item_id for i in images),
-            "campaign_image",
-            "images",
-        )
+    # The auction icon and the announcement photograph are fixed design assets.
     for item in selected:
         if config.post_kind == "property":
             for key in ("property_type", "city", "district", "area", "deed_number"):

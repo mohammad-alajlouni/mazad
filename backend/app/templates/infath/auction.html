@@ -1,6 +1,7 @@
 {#- Reference page 4. Schedule rows fill the reference slots in order. -#}
 {{ art('plain') }}{{ footer() }}
-{% if project.auction_logo %}{% set L = logo_fit(project.auction_logo, 64, 64) %}<img class="logo" style="{{ box(492 - L.width, 239 - L.height / 2, L.width, L.height) }}" src="{{ L.src }}">{% endif %}
+{#- Fixed auction icon on white: the gradient version, as on reference page 4. -#}
+<img class="logo" style="{{ box(441, 207, 51, 64) }}" src="{{ asset('booklet-art/auction-icon-gradient.png') }}">
 {% set name = auction.auction_name %}{% set prefix = bt('auction') %}
 {% set name = name[prefix|length:]|trim if name.startswith(prefix) else name %}
 {% set size = fit.box_size('auction_name', name) %}

@@ -10,16 +10,10 @@
 {% set lines = 1 + (1 if name|length > 16 else 0) %}
 <section class="full cover-{{ n }}">
 <img class="full-image" src="{{ asset('reference-cover-' ~ n ~ '.png') }}">
-{% if project.cover_image and photo_cover %}
-{{ photo(project.cover_image, 'M0 0H595.28V841.89H0Z' if n == 1 else 'M0 0H595.28V589.6H70L0 519.6Z') }}
-{% if n == 1 %}<div class="cover-shade"></div>{% endif %}
-<img class="logo" style="{{ box(506.9, 29.8, 63.2, 47.7) }}" src="{{ identity_asset(identity.logos.white.file) }}">
-{% endif %}
-{#- Auction logo: reference box 50.6 x 63.5 pt; wider logos extend towards the
-    name (up to 110 pt) and the name keeps the reference 18.4 pt gap. -#}
-{% if project.auction_logo %}{% set L = logo_fit(project.auction_logo, 110, 63.5) %}
-<img class="logo" style="{{ box(g.logo_right - L.width, g.logo_top + (63.5 - L.height) / 2, L.width, L.height) }}" src="{{ L.src }}">
-{% set g = dict(g, title_right=[g.title_right, g.logo_right - L.width - 18.4]|min) %}{% endif %}
+{#- Covers 1 and 6 carry their own photograph: the cover is chosen, not uploaded. -#}
+{#- The auction icon is fixed (guide V2 p.3-6): silver on every cover, 50.6 x 63.5 pt.
+    Only the auction name beside it changes. -#}
+<img class="logo" style="{{ box(g.logo_right - 50.6, g.logo_top, 50.6, 63.5) }}" src="{{ asset('booklet-art/auction-icon-silver.png') }}">
 {#- Covers with the title at the foot grow upwards; the others grow downwards. -#}
 {% set first = g.first_base - (30 * (lines - 1) if photo_cover else 0) %}
 <div class="t r w7 white" style="{{ T(g.title_right, first, 25, lh=30) }}">{{ prefix }}</div>

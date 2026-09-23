@@ -93,7 +93,7 @@ def review_banners(db, project):
         )
     ).all()
     need(any(i.id == data.get("logo_image_id") for i in images), "agent_logo", "images")
-    need(any(i.category == "auction_logo" for i in images), "auction_logo", "images")
+    # The auction icon is a fixed identity asset; only the name varies.
     for item in selected:
         for field in (
             "property_type",

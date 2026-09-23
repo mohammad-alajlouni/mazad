@@ -889,12 +889,12 @@
     "loading": "Loading your details…"
   },
   "imagesStep": {
-    "help": "Every required image has its own box: upload it there and it appears in the live preview at once.",
+    "help": "Upload each property's photographs in its box: the main image, then additional ones; they appear in the live preview at once. The auction icon and the cover are fixed by the identity and the chosen cover.",
     "cover": "Cover image (general auction image)",
     "agentLogo": "Selling-agent logo (from your account)",
     "mainOf": "Main image: {item}",
     "additionalOf": "Additional images: {item}",
-    "projectImage": "General project image (not used)",
+    "projectImage": "Unused image",
     "required": "Required",
     "optional": "Optional",
     "added": "✓ Added",

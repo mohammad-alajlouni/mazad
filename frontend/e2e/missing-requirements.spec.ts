@@ -96,25 +96,25 @@ test("missing requirements are listed per step and lead to their fields", async 
   await page.getByRole("button", { name: "Save item", exact: true }).click();
   await expect(page.getByRole("status")).toBeVisible();
 
-  // The images step lists each missing image; the link reaches its box.
+  // The images step asks only for property photographs; the link reaches its box.
   await steps.nth(2).click();
-  await expect(checklist).toContainText("Auction logo");
+  await expect(checklist).toContainText("عقار الاختبار");
+  await expect(checklist).not.toContainText("Auction logo");
   await expect(steps.nth(2).locator(".step-missing")).toBeVisible();
-  await checklist.getByRole("button", { name: /Auction logo/ }).click();
-  const logoBox = page.locator('[data-slot="auction_logo"]');
-  await expect(logoBox).toBeFocused();
+  await checklist.getByRole("button", { name: /عقار الاختبار/ }).click();
+  const mainBox = page.locator(`[data-slot="main:${item.id}"]`);
+  await expect(mainBox).toBeFocused();
+  // The fixed auction icon is already on the cover in the live preview.
   const frame = page.frameLocator(
     '.live-preview-paper iframe[aria-hidden="false"]',
   );
-  await expect(frame.locator("img.logo")).toHaveCount(1); // the agent logo
-  await logoBox
+  await expect(frame.locator('img[src*="auction-icon-silver"]')).toHaveCount(1);
+  await mainBox
     .locator('input[type="file"]')
     .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-  await logoBox.getByRole("button", { name: "Upload" }).click();
-  await expect(logoBox).toContainText("Added");
-  // The auction logo now appears on the cover in the live preview.
-  await expect(frame.locator("img.logo")).toHaveCount(2);
-  // The main-image link names the property and reaches its box.
-  await checklist.getByRole("button", { name: /عقار الاختبار/ }).click();
-  await expect(page.locator(`[data-slot="main:${item.id}"]`)).toBeFocused();
+  await mainBox.getByRole("button", { name: "Upload" }).click();
+  await expect(mainBox).toContainText("Added");
+  await expect(page.locator(".step-checklist")).toContainText(
+    "This step is complete",
+  );
 });

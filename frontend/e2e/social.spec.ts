@@ -14,17 +14,6 @@ const env = Object.fromEntries(
     }),
 );
 
-// Uploads go into the box for their role (auction logo, cover, main image...).
-async function uploadTo(
-  page: import("@playwright/test").Page,
-  box: string,
-  file: string | string[],
-) {
-  const slot = page.locator(".image-slot").filter({ hasText: box });
-  await slot.locator('input[type="file"]').setInputFiles(file);
-  await slot.getByRole("button", { name: /^(Upload|Replace)$/ }).click();
-}
-
 test("social campaign validates media, exports exact pixels and remains separate", async ({
   page,
 }) => {
@@ -88,16 +77,8 @@ test("social campaign validates media, exports exact pixels and remains separate
     .getByRole("button", { name: /Review and generate/ })
     .click();
   await expect(page.locator('.auction-workspace [name="name"]')).toHaveCount(0);
-  for (const category of ["auction_logo", "cover"]) {
-    await uploadTo(
-      page,
-      category === "cover" ? "Cover image" : "Auction logo",
-      path.join(root, "samples/demo-generator.jpg"),
-    );
-    await expect(page.getByAltText("Uploaded project asset")).toHaveCount(
-      category === "cover" ? 3 : 2,
-    );
-  }
+  // The auction icon and the announcement photograph are fixed assets:
+  // nothing has to be uploaded for an announcement post.
   await page
     .locator(".workflow-steps")
     .getByRole("button", { name: /Review and generate/ })

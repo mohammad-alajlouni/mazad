@@ -37,12 +37,12 @@
 {% for item in (items if s.post_kind=='property' else [none]) %}
 <section class="post">
 <img class="infath" src="{{ identity_asset(identity.logos['white' if dark else 'navy'].file) }}">
-<img class="photo" src="{{ photo_frame(item.image_assets[0].src if item else project.cover_image, 565 if horizontal else 930 if story else 960, 478 if horizontal else 650 if story else 455) }}">
+<img class="photo" src="{{ photo_frame(item.image_assets[0].src if item else asset('reference-cover-1.png'), 565 if horizontal else 930 if story else 960, 478 if horizontal else 650 if story else 455) }}">
 {% if item %}<div class="facts" data-fit="property-facts"><dl><dt>{{ bt('property_type') }}</dt><dd>{{ item.property_data.property_type }}</dd></dl><dl><dt>{{ bt('district') }}</dt><dd>{{ item.property_data.district }}</dd></dl><dl><dt>{{ bt('area') }}</dt><dd dir="ltr">{{ item.property_data.area }}</dd></dl><dl><dt>{{ bt('city') }}</dt><dd>{{ item.property_data.city }}</dd></dl><dl><dt>{{ bt('deed_number') }}</dt><dd dir="ltr">{{ item.property_data.deed_number }}</dd></dl></div>
 {% else %}<h1 class="headline" data-fit="headline">{{ s.headline }}</h1><div class="tagline" data-fit="tagline">{{ s.tagline }}</div><div class="count" data-fit="count">{{ 'عدد العقارات' if ar else 'Properties' }}: <b>{{ items|length }}</b></div>{% endif %}
 {% if story %}<div class="auction-name" data-fit="auction-name">{{ a.auction_name }}</div>{% endif %}
 <div class="contact" data-fit="contact"><small><img class="identity-icon" alt="" src="{{ identity_asset(identity.selected.phone) }}">{{ 'رقم التواصل' if ar else 'Contact' }}</small><b dir="ltr">{{ a.auction_contact_number }}</b></div>
 <div class="schedule" data-fit="schedule">{{ schedule() }}</div>
-<div class="brands"><div><img src="{{ project.auction_logo }}"><small data-fit="auction-brand-name">{{ a.auction_name }}</small></div><div><img src="{{ project.agent_logo }}"><small data-fit="agent-brand-name">{{ project.selling_agent.name }}</small></div></div>
+<div class="brands"><div><img src="{{ asset('booklet-art/auction-icon-' ~ ('silver' if dark else 'gradient') ~ '.png') }}"><small data-fit="auction-brand-name">{{ a.auction_name }}</small></div><div><img src="{{ project.agent_logo }}"><small data-fit="agent-brand-name">{{ project.selling_agent.name }}</small></div></div>
 </section>{% endfor %}
 </body></html>

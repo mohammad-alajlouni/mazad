@@ -46,7 +46,7 @@
 {% endmacro %}
 {% for item in items %}<section class="board">
 <div class="hero">
-<div class="rail"><img class="infath" src="{{ identity_asset(identity.logos.white.file) }}">{% if not wide %}<div class="schedule">{{ schedule() }}</div>{% endif %}{% if square %}<img class="auction-logo" src="{{ project.auction_logo }}"><div class="agent-name">{{ project.selling_agent.name }}</div><img class="agent-logo" src="{{ project.agent_logo }}">{% endif %}</div>
+<div class="rail"><img class="infath" src="{{ identity_asset(identity.logos.white.file) }}">{% if not wide %}<div class="schedule">{{ schedule() }}</div>{% endif %}{% if square %}<img class="auction-logo" src="{{ asset('booklet-art/auction-icon-silver.png') }}"><div class="agent-name">{{ project.selling_agent.name }}</div><img class="agent-logo" src="{{ project.agent_logo }}">{% endif %}</div>
 <h1 class="headline" data-fit="headline">{% if ar %}{% if wide %}للبيع بالمزاد العلني{% elif square %}للبيع<br>بالمزاد<br>العلني{% else %}للبيع<br>بالمزاد العلني{% endif %}{% else %}For sale<br>by public auction{% endif %}</h1>
 <div class="legal" data-fit="legal">{{ a.legal_announcement_text }} {{ a.court_decision_text }}</div>
 <div class="qr-block"><a href="{{ a.booklet_url }}"><img src="{{ qr(a.booklet_url) }}"></a><span>{{ 'كتيب' if ar else 'Auction' }}<br>{{ 'المزاد' if ar else 'booklet' }}</span></div>
@@ -54,7 +54,7 @@
 </div>
 <div class="lower" {% if wide %}style="direction:rtl"{% endif %}>
 <div class="phone" dir="ltr">{{ a.auction_contact_number }}</div>
-{% if not square %}<div class="brand-logos"><div><img src="{{ project.auction_logo }}"><div class="name">{{ a.auction_name }}</div></div><div><img src="{{ project.agent_logo }}"><div class="name">{{ project.selling_agent.name }}</div></div></div>{% endif %}
+{% if not square %}<div class="brand-logos"><div><img src="{{ asset('booklet-art/auction-icon-gradient.png') }}"><div class="name">{{ a.auction_name }}</div></div><div><img src="{{ project.agent_logo }}"><div class="name">{{ project.selling_agent.name }}</div></div></div>{% endif %}
 <div class="licence"><small>{{ bt('license_number') }}</small><span dir="ltr">{{ a.license_number }}</span></div>
 </div>
 {% if wide %}<div class="wide-schedule">{{ schedule() }}</div>{% endif %}

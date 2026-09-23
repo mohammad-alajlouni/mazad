@@ -257,6 +257,4 @@ def workflow(db, project):
         ):
             if not any(i.item_id == item.id and i.category == "main" for i in images):
                 issue("images", "main_image", item.title)
-        if not any(i.category == "cover" and not i.item_id for i in images):
-            issue("images", "campaign_image")
     return {"rules": rules, "stages": stages}
