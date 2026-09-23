@@ -13,6 +13,18 @@ const env = Object.fromEntries(
       return [l.slice(0, i), l.slice(i + 1)];
     }),
 );
+
+// Uploads go into the box for their role (auction logo, cover, main image...).
+async function uploadTo(
+  page: import("@playwright/test").Page,
+  box: string,
+  file: string | string[],
+) {
+  const slot = page.locator(".image-slot").filter({ hasText: box });
+  await slot.locator('input[type="file"]').setInputFiles(file);
+  await slot.getByRole("button", { name: /^(Upload|Replace)$/ }).click();
+}
+
 test("independent banner workspace validates, generates and exports", async ({
   page,
 }) => {
@@ -87,11 +99,11 @@ test("independent banner workspace validates, generates and exports", async ({
     .locator(".workflow-steps")
     .getByRole("button", { name: /Photos and logos/ })
     .click();
-  await page.getByLabel("Image category").selectOption("auction_logo");
-  await page
-    .getByLabel("Image", { exact: true })
-    .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-  await page.getByRole("button", { name: "Upload image", exact: true }).click();
+  await uploadTo(
+    page,
+    "Auction logo",
+    path.join(root, "samples/demo-generator.jpg"),
+  );
   await expect(page.getByAltText("Uploaded project asset")).toHaveCount(2);
   await page
     .locator(".workflow-steps")

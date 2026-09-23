@@ -120,15 +120,14 @@ test("Arabic default, administrator provisioning, private author booklet and app
     ),
   ).toBeTruthy();
   await step("images").click();
-  await page
-    .getByLabel(t("ui.attach_to"))
-    .selectOption({ label: "أرض سكنية — اختبار" });
-  await page
-    .getByLabel(t("ui.image"), { exact: true })
+  // The main image goes into that property's own box.
+  const mainBox = page
+    .locator(".image-slot")
+    .filter({ hasText: "الصورة الرئيسية: أرض سكنية — اختبار" });
+  await mainBox
+    .locator('input[type="file"]')
     .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-  await page
-    .getByRole("button", { name: t("ui.upload_image"), exact: true })
-    .click();
+  await mainBox.getByRole("button", { name: "رفع", exact: true }).click();
   await expect(page.getByAltText(t("ui.uploaded_project_asset"))).toHaveCount(
     2,
   );

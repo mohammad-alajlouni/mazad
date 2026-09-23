@@ -206,11 +206,13 @@ for (const locale of ["en", "ar"] as const)
       await page
         .getByRole("button", { name: new RegExp(t("flow.images")) })
         .click();
-      await page
-        .getByLabel(t("ui.image"), { exact: true })
+      // Each property has a main-image box; upload into the first one.
+      const mainBox = page.locator('[data-slot^="main:"]').first();
+      await mainBox
+        .locator('input[type="file"]')
         .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-      await page
-        .getByRole("button", { name: t("ui.upload_image"), exact: true })
+      await mainBox
+        .getByRole("button", { name: t("imagesStep.upload"), exact: true })
         .click();
       await expect(
         page.getByAltText(t("ui.uploaded_project_asset")),

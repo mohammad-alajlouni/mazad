@@ -269,87 +269,175 @@ export function ImageUpload({
 }) {
   const tr = useTranslations();
   const at = useTranslations("auction");
-
+  const im = useTranslations("imagesStep");
+  const project = detail.project;
+  const coverRequired = project.workspace_type === "project";
+  const find = (category: string, itemId: string | null = null) =>
+    detail.images.find(
+      (i) => i.category === category && (i.item_id || null) === itemId,
+    );
+  const upload = (form: HTMLFormElement) => {
+    const data = new FormData(form);
+    if (!data.get("item_id")) data.delete("item_id");
+    void run(async () => {
+      for (const file of data.getAll("file")) {
+        const body = new FormData();
+        for (const [k, v] of data) if (k !== "file") body.set(k, v);
+        body.set("file", file);
+        await api(`/projects/${project.id}/images`, { method: "POST", body });
+      }
+      form.reset();
+      onDone();
+    }, tr("ui.image_uploaded"));
+  };
+  // Each required image has its own box: it states the role, shows the
+  // current image and uploads straight into that role (with live preview).
+  const slot = (
+    key: string,
+    title: string,
+    category: string,
+    itemId: string | null,
+    required: boolean,
+    multiple = false,
+  ) => {
+    const current = multiple ? undefined : find(category, itemId);
+    return (
+      <form
+        key={key}
+        data-slot={key}
+        data-preview-form="images"
+        className={`image-slot ${current || !required ? "done" : "missing"}`}
+        tabIndex={-1}
+        onSubmit={(e) => {
+          e.preventDefault();
+          upload(e.currentTarget);
+        }}
+      >
+        <input type="hidden" name="category" value={category} />
+        <input type="hidden" name="item_id" value={itemId || ""} />
+        <div className="image-slot-heading">
+          <strong>{title}</strong>
+          <span>
+            {current ? im("added") : required ? im("required") : im("optional")}
+          </span>
+        </div>
+        {current && (
+          <img src={`/api/images/${current.id}?size=preview`} alt={title} />
+        )}
+        <FileInput
+          aria-label={title}
+          name="file"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple={multiple}
+          required
+        />
+        <button className={current ? "secondary" : "primary"}>
+          {current ? im("replace") : im("upload")}
+        </button>
+      </form>
+    );
+  };
+  const role = (i: { category?: string; item_id: string | null }) => {
+    const item = detail.items.find((x) => x.id === i.item_id);
+    if (i.category === "auction_logo") return at("auction_logo");
+    if (i.category === "cover") return im("cover");
+    if (i.category === "agent_logo") return im("agentLogo");
+    if (i.category === "main" && item)
+      return im("mainOf", { item: item.title });
+    return item ? im("additionalOf", { item: item.title }) : im("projectImage");
+  };
   return (
     <div className="panel form-panel">
       <h2>{tr("ui.project_images")}</h2>
+      <p className="muted">{im("help")}</p>
+      <div className="image-slots">
+        {slot("auction_logo", at("auction_logo"), "auction_logo", null, true)}
+        {slot("cover", im("cover"), "cover", null, coverRequired)}
+        {detail.items.map((item) =>
+          slot(
+            "main:" + item.id,
+            im("mainOf", { item: item.title }),
+            "main",
+            item.id,
+            coverRequired,
+          ),
+        )}
+        {detail.items.map((item) =>
+          slot(
+            "additional:" + item.id,
+            im("additionalOf", { item: item.title }),
+            "additional",
+            item.id,
+            false,
+            true,
+          ),
+        )}
+      </div>
       <p className="muted">
         {tr(
           "ui.jpeg_png_or_webp_up_to_10_mb_images_are_validated_resized_and_sto",
         )}
       </p>
-      <form
-        data-preview-form="images"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const data = new FormData(e.currentTarget);
-          if (!data.get("item_id")) data.delete("item_id");
-          void run(async () => {
-            for (const file of data.getAll("file")) {
-              const upload = new FormData();
-              for (const [k, v] of data) if (k !== "file") upload.set(k, v);
-              upload.set("file", file);
-              await api(`/projects/${detail.project.id}/images`, {
-                method: "POST",
-                body: upload,
-              });
-            }
-            onDone();
-          }, tr("ui.image_uploaded"));
-        }}
-      >
-        <label>
-          {tr("ui.attach_to")}
-          <select name="item_id">
-            <option value="">{tr("ui.project_cover_shared_image")}</option>
-            {detail.items.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {at("image_category")}
-          <select name="category">
-            {["additional", "main", "cover", "auction_logo"].map((k) => (
-              <option key={k} value={k}>
-                {at(k === "cover" ? "cover_image" : k)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {at("caption")}
-          <input name="caption" maxLength={300} />
-        </label>
-        <label>
-          {tr("ui.image")}
-          <FileInput
-            aria-label={tr("ui.image")}
-            name="file"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            required
-          />
-        </label>
-        <button className="primary">{tr("ui.upload_image")}</button>
-      </form>
+      {detail.images.length > 0 && <h3>{im("uploaded")}</h3>}
       <div className="image-grid">
         {detail.images.map((i) => (
           <figure key={i.id}>
             <img
-              src={"/api/images/" + i.id}
+              src={`/api/images/${i.id}?size=preview`}
               alt={tr("ui.uploaded_project_asset")}
             />
             <figcaption>
-              {detail.items.find((item) => item.id === i.item_id)?.title ||
-                tr("ui.project_image")}
-              <small>
-                {tr("ui.import_reference")}
-                <bdi dir="ltr">{i.id}</bdi>
-              </small>
+              <strong>{role(i)}</strong>
+              {i.category !== "agent_logo" && (
+                <>
+                  <label>
+                    {im("useAs")}
+                    <select
+                      value={`${i.category || "additional"}|${i.item_id || ""}`}
+                      onChange={(e) => {
+                        const [category, item] = e.target.value.split("|");
+                        void run(async () => {
+                          await api(`/images/${i.id}`, {
+                            method: "PUT",
+                            body: send({ category, item_id: item || null }),
+                          });
+                          onDone();
+                        }, im("updated"));
+                      }}
+                    >
+                      <option value="auction_logo|">
+                        {at("auction_logo")}
+                      </option>
+                      <option value="cover|">{im("cover")}</option>
+                      <option value="additional|">{im("projectImage")}</option>
+                      {detail.items.map((item) => [
+                        <option key={"m" + item.id} value={`main|${item.id}`}>
+                          {im("mainOf", { item: item.title })}
+                        </option>,
+                        <option
+                          key={"a" + item.id}
+                          value={`additional|${item.id}`}
+                        >
+                          {im("additionalOf", { item: item.title })}
+                        </option>,
+                      ])}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    className="text-button danger"
+                    onClick={() =>
+                      void run(async () => {
+                        await api(`/images/${i.id}`, { method: "DELETE" });
+                        onDone();
+                      }, im("deleted"))
+                    }
+                  >
+                    {im("delete")}
+                  </button>
+                </>
+              )}
             </figcaption>
           </figure>
         ))}

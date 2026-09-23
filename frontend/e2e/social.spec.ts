@@ -13,6 +13,18 @@ const env = Object.fromEntries(
       return [l.slice(0, i), l.slice(i + 1)];
     }),
 );
+
+// Uploads go into the box for their role (auction logo, cover, main image...).
+async function uploadTo(
+  page: import("@playwright/test").Page,
+  box: string,
+  file: string | string[],
+) {
+  const slot = page.locator(".image-slot").filter({ hasText: box });
+  await slot.locator('input[type="file"]').setInputFiles(file);
+  await slot.getByRole("button", { name: /^(Upload|Replace)$/ }).click();
+}
+
 test("social campaign validates media, exports exact pixels and remains separate", async ({
   page,
 }) => {
@@ -77,13 +89,11 @@ test("social campaign validates media, exports exact pixels and remains separate
     .click();
   await expect(page.locator('.auction-workspace [name="name"]')).toHaveCount(0);
   for (const category of ["auction_logo", "cover"]) {
-    await page.getByLabel("Image category").selectOption(category);
-    await page
-      .getByLabel("Image", { exact: true })
-      .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-    await page
-      .getByRole("button", { name: "Upload image", exact: true })
-      .click();
+    await uploadTo(
+      page,
+      category === "cover" ? "Cover image" : "Auction logo",
+      path.join(root, "samples/demo-generator.jpg"),
+    );
     await expect(page.getByAltText("Uploaded project asset")).toHaveCount(
       category === "cover" ? 3 : 2,
     );

@@ -7,6 +7,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from PIL import Image
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func, select
 
 from ..auth import current_user
@@ -33,6 +34,8 @@ async def upload_image(
     db=Depends(get_db),
 ):
     p = get_project(db, id, True)
+    if category in ("auction_logo", "cover"):
+        item_id = None  # project-level roles, whatever property was selected
     if category == "agent_logo":
         from ..models import User
         from ..services.agent_profile import complete
@@ -48,12 +51,15 @@ async def upload_image(
     key = LocalStorage().image(await upload_bytes(file))
     with Image.open(BytesIO(LocalStorage().read(key))) as im:
         orientation = "portrait" if im.height > im.width else "landscape"
-    if category == "main":
+    if category in ("main", "auction_logo", "cover"):
+        # The newest upload replaces the previous one of the same role.
         for old in db.scalars(
             select(ProjectImage).where(
                 ProjectImage.project_id == id,
-                ProjectImage.item_id == item_id,
-                ProjectImage.category == "main",
+                ProjectImage.item_id.is_(None)
+                if category != "main"
+                else ProjectImage.item_id == item_id,
+                ProjectImage.category == category,
             )
         ):
             old.category = "additional"
@@ -78,6 +84,71 @@ async def upload_image(
     invalidate(db, p)
     db.commit()
     return image
+
+
+class ImageUpdate(BaseModel):
+    """Correct what an uploaded image is for, without uploading it again."""
+
+    model_config = ConfigDict(extra="forbid")
+    category: Literal["main", "additional", "cover", "auction_logo"]
+    item_id: str | None = None
+
+
+# One auction logo and one cover per project, one main image per property.
+SINGLE = {"auction_logo", "cover", "main"}
+
+
+def _owned_image(db, id):
+    img = db.get(ProjectImage, id)
+    if not img:
+        raise HTTPException(404, "Image not found")
+    return img, get_project(db, img.project_id, True)
+
+
+@router.put("/images/{id}")
+def update_image(id: str, body: ImageUpdate, db=Depends(get_db)):
+    img, p = _owned_image(db, id)
+    if img.category == "agent_logo":
+        raise HTTPException(409, "Update selling agent information in account settings")
+    item_id = body.item_id if body.category in ("main", "additional") else None
+    if body.category == "main" and not item_id:
+        raise HTTPException(422, "A main image belongs to a property")
+    if item_id:
+        item = db.get(ProjectItem, item_id)
+        if not item or item.project_id != p.id:
+            raise HTTPException(400, "Item does not belong to this project")
+    if body.category in SINGLE:
+        for other in db.scalars(
+            select(ProjectImage).where(
+                ProjectImage.project_id == p.id,
+                ProjectImage.category == body.category,
+                ProjectImage.item_id.is_(None)
+                if item_id is None
+                else ProjectImage.item_id == item_id,
+                ProjectImage.id != img.id,
+            )
+        ):
+            other.category = "additional"
+    img.category, img.item_id = body.category, item_id
+    invalidate(db, p)
+    db.commit()
+    return {"id": img.id, "category": img.category, "item_id": img.item_id}
+
+
+@router.delete("/images/{id}")
+def delete_image(id: str, db=Depends(get_db)):
+    img, p = _owned_image(db, id)
+    from ..models import SellingAgent
+
+    agent = db.scalar(select(SellingAgent).where(SellingAgent.project_id == p.id))
+    if img.category == "agent_logo" or (
+        agent and agent.data.get("logo_image_id") == img.id
+    ):
+        raise HTTPException(409, "Update selling agent information in account settings")
+    db.delete(img)
+    invalidate(db, p)
+    db.commit()
+    return {"deleted": id}
 
 
 @router.get("/images/{id}")

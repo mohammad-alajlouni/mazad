@@ -13,6 +13,18 @@ const env = Object.fromEntries(
       return [l.slice(0, i), l.slice(i + 1)];
     }),
 );
+
+// Uploads go into the box for their role (auction logo, cover, main image...).
+async function uploadTo(
+  page: import("@playwright/test").Page,
+  box: string,
+  file: string | string[],
+) {
+  const slot = page.locator(".image-slot").filter({ hasText: box });
+  await slot.locator('input[type="file"]').setInputFiles(file);
+  await slot.getByRole("button", { name: /^(Upload|Replace)$/ }).click();
+}
+
 for (const flow of ["manual", "excel"])
   test(`official auction ${flow} browser flow`, async ({ page }) => {
     const errors: string[] = [];
@@ -137,24 +149,15 @@ for (const flow of ["manual", "excel"])
       await page
         .getByRole("button", { name: /Images and attachments/ })
         .click();
-      await page
-        .getByLabel("Attach to")
-        .selectOption({ label: "عقار المتصفح 1" });
-      await page.getByLabel("Image category").selectOption("main");
-      await page
-        .getByLabel("Image", { exact: true })
-        .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-      await page
-        .getByRole("button", { name: "Upload image", exact: true })
-        .click();
+      await uploadTo(
+        page,
+        "Main image: عقار المتصفح 1",
+        path.join(root, "samples/demo-generator.jpg"),
+      );
       await expect(page.getByAltText("Uploaded project asset")).toBeVisible();
-      await page.getByLabel("Image category").selectOption("additional");
-      await page
-        .getByLabel("Image", { exact: true })
-        .setInputFiles([path.join(root, "samples/demo-generator.jpg")]);
-      await page
-        .getByRole("button", { name: "Upload image", exact: true })
-        .click();
+      await uploadTo(page, "Additional images: عقار المتصفح 1", [
+        path.join(root, "samples/demo-generator.jpg"),
+      ]);
       await expect(page.getByAltText("Uploaded project asset")).toHaveCount(3);
     } else {
       await page

@@ -94,3 +94,64 @@ def test_opaque_logo_is_not_turned_into_a_white_block():
     )
     result = Image.open(BytesIO(base64.b64decode(uri.split(",", 1)[1])))
     assert result.convert("RGB").getextrema() != ((255, 255), (255, 255), (255, 255))
+
+
+def upload(admin, p, category, item=None):
+    stream = BytesIO()
+    Image.new("RGB", (400, 300), (20, 120, 140)).save(stream, format="PNG")
+    data = {"category": category}
+    if item:
+        data["item_id"] = item
+    response = admin.post(
+        f"/api/projects/{p}/images",
+        data=data,
+        files={"file": ("image.png", stream.getvalue(), "image/png")},
+    )
+    assert response.status_code in (200, 201), response.text
+    return response.json()["id"]
+
+
+def roles(admin, p):
+    return {
+        i["id"]: (i["category"], i["item_id"])
+        for i in admin.get(f"/api/projects/{p}").json()["images"]
+    }
+
+
+def test_image_roles_can_be_corrected_and_stay_single(admin):
+    p = create_auction(admin)
+    item = add(admin, p, property_input())
+    first = upload(admin, p, "additional")
+    second = upload(admin, p, "additional")
+    # A wrongly typed upload becomes the auction logo without re-uploading.
+    assert (
+        admin.put(f"/api/images/{first}", json={"category": "auction_logo"}).status_code
+        == 200
+    )
+    assert roles(admin, p)[first] == ("auction_logo", None)
+    # A newer logo replaces it; the old one is kept as an ordinary image.
+    admin.put(f"/api/images/{second}", json={"category": "auction_logo"})
+    assert roles(admin, p)[first] == ("additional", None)
+    newest = upload(admin, p, "auction_logo", item)  # role is project-level
+    assert roles(admin, p)[newest] == ("auction_logo", None)
+    assert roles(admin, p)[second] == ("additional", None)
+    # A main image needs a property.
+    assert (
+        admin.put(f"/api/images/{second}", json={"category": "main"}).status_code == 422
+    )
+    assert (
+        admin.put(
+            f"/api/images/{second}", json={"category": "main", "item_id": item}
+        ).status_code
+        == 200
+    )
+    assert admin.delete(f"/api/images/{first}").status_code == 200
+    assert first not in roles(admin, p)
+
+
+def test_issues_identify_the_property_to_open(admin):
+    p = create_auction(admin)
+    item = add(admin, p, property_input())
+    images = workflow(admin, p)["stages"]["images"]["missing"]
+    main = next(i for i in images if i["field"] == "main_image")
+    assert main["item_id"] == item

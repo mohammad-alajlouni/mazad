@@ -812,13 +812,19 @@
     "fix": "Complete the data",
     "maxLength": " (maximum {limit} characters)",
     "agent_name": "Selling agent name",
-    "campaign_image": "Auction cover image",
+    "campaign_image": "Cover image (general auction image)",
     "main_image": "Main property image",
     "property_selection": "Property selection",
     "property_limit": "Property count limit",
     "agentFirst": "Your selling-agent details are incomplete; booklets, banners and posts all need them:",
     "agentFix": "Complete selling-agent details",
-    "agent_logo": "Selling-agent logo"
+    "agent_logo": "Selling-agent logo",
+    "goTo": "Go →",
+    "stepNeeds": "Needed to complete this step ({count}) — click an item to go to its field:",
+    "stepComplete": "✓ This step is complete.",
+    "clickToFix": "Click an item to go straight to its field, fill it in, then save.",
+    "properties": "Add at least one property",
+    "stepNeedsTitle": "Current step requirements"
   },
   "liveBooklet": {
     "title": "Live booklet preview",
@@ -881,5 +887,23 @@
     "failed": "Could not load your account details.",
     "retry": "Try again",
     "loading": "Loading your details…"
+  },
+  "imagesStep": {
+    "help": "Every required image has its own box: upload it there and it appears in the live preview at once.",
+    "cover": "Cover image (general auction image)",
+    "agentLogo": "Selling-agent logo (from your account)",
+    "mainOf": "Main image: {item}",
+    "additionalOf": "Additional images: {item}",
+    "projectImage": "General project image (not used)",
+    "required": "Required",
+    "optional": "Optional",
+    "added": "✓ Added",
+    "upload": "Upload",
+    "replace": "Replace",
+    "uploaded": "Uploaded images",
+    "useAs": "Use this image as",
+    "delete": "Delete",
+    "deleted": "Image deleted",
+    "updated": "Image use updated"
   }
 }

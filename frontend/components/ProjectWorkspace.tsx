@@ -1,7 +1,9 @@
 import LiveBookletPreview from "./LiveBookletPreview";
 import {
-  AgentReadiness,
+  type Issue,
   missingStage,
+  StepChecklist,
+  stepIssues,
   validateForms,
   WorkflowProblems,
 } from "./workflowValidation";
@@ -106,6 +108,62 @@ export default function ProjectWorkspace({
     else setTab(next);
   };
   const [auctionValid, setAuctionValid] = useState(false);
+  // Clicking a requirement opens its step (and property) and focuses the field.
+  const [focusTarget, setFocusTarget] = useState<string | null>(null);
+  useEffect(() => {
+    if (!focusTarget) return;
+    let tries = 0;
+    const timer = setInterval(() => {
+      const el = root.current?.querySelector<HTMLElement>(focusTarget);
+      if (!el && ++tries < 25) return;
+      clearInterval(timer);
+      setFocusTarget(null);
+      if (!el) return;
+      for (let node = el.parentElement; node; node = node.parentElement)
+        if (node instanceof HTMLDetailsElement) node.open = true;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.focus({ preventScroll: true });
+      el.classList.add("attention");
+      setTimeout(() => el.classList.remove("attention"), 2400);
+    }, 80);
+    return () => clearInterval(timer);
+  }, [focusTarget, tab, itemEditor]);
+  const fixIssue = async (issue: Issue) => {
+    if (issue.stage === "agent") {
+      window.dispatchEvent(new Event("open-account-profile"));
+      return;
+    }
+    const target = issue.stage === "images" ? "images" : issue.stage;
+    if (tab !== target) {
+      if (dirty && !(await confirm(tr("flow.notSaved")))) return;
+      setDirty(false);
+      setBlocked(null);
+      if (sharedMode === "booklet" && !steps.includes(target))
+        onSharedFix?.(target);
+      else setTab(target);
+    }
+    if (issue.stage === "auction") {
+      setFocusTarget(`[name="${issue.field}"]`);
+    } else if (issue.stage === "items") {
+      if (issue.field === "properties") {
+        setItemEditor("new");
+        return;
+      }
+      const item = detail.items.find((i) => i.id === issue.item_id);
+      if (item) setItemEditor(item);
+      setFocusTarget(
+        `[name="property.${issue.field}"], [name="boundary.${issue.field}"], [name="${issue.field}"]`,
+      );
+    } else if (issue.stage === "images") {
+      const slot =
+        issue.field === "campaign_image"
+          ? "cover"
+          : issue.field === "main_image"
+            ? `main:${issue.item_id}`
+            : issue.field;
+      setFocusTarget(`[data-slot="${slot}"]`);
+    }
+  };
   // Refuse input longer than the booklet, banner and posts can set, so no
   // length problem is left for the generation step.
   const limits = detail.workflow?.rules.limits;
@@ -128,10 +186,11 @@ export default function ProjectWorkspace({
           if ((event.target as HTMLElement).closest("form")) setDirty(true);
         }}
       >
-        <WorkflowProblems detail={detail} stage={blocked} />
-        {(tab === "auction" || blocked === "auction") && (
-          <AgentReadiness detail={detail} />
-        )}
+        <WorkflowProblems
+          detail={detail}
+          stage={blocked}
+          onIssue={(issue) => void fixIssue(issue)}
+        />
         <div className="project-meta">
           <Badge status={detail.project.status} />
           <span>{detail.project.customer || tr("ui.no_client_assigned")}</span>
@@ -170,6 +229,16 @@ export default function ProjectWorkspace({
               >
                 <span>{formatNumber(index + 1)}</span>
                 {tr("flow." + stepKeys[index])}
+                {stepIssues(detail, step).length > 0 && (
+                  <em
+                    className="step-missing"
+                    title={tr("validationFlow.stepNeeds", {
+                      count: stepIssues(detail, step).length,
+                    })}
+                  >
+                    {formatNumber(stepIssues(detail, step).length)}
+                  </em>
+                )}
               </button>
             ))}
           </nav>
@@ -178,6 +247,13 @@ export default function ProjectWorkspace({
           )}
           <p className="muted">{tr("flow.saveFirst")}</p>
         </section>
+        {blocked !== tab && (
+          <StepChecklist
+            detail={detail}
+            stage={tab === "excel import" ? "items" : tab}
+            onIssue={(issue) => void fixIssue(issue)}
+          />
+        )}
         {tab === "auction" && (
           <AuctionWorkspace
             key={tab}

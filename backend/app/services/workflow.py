@@ -149,8 +149,24 @@ def workflow(db, project):
                 limit(field, 28)
     rules["limits"] = limits
 
+    # Issues name a property by title; the id lets the form open that property.
+    from sqlalchemy import select as _select
+
+    from ..models import ProjectItem as _Item
+
+    item_ids = {}
+    for row in db.execute(
+        _select(_Item.title, _Item.id).where(_Item.project_id == project.id)
+    ):
+        item_ids.setdefault(row.title, row.id)
+
     def issue(section, field, item=None, limit=None):
-        value = {"field": field, "item": item, "limit": limit}
+        value = {
+            "field": field,
+            "item": item,
+            "limit": limit,
+            "item_id": item_ids.get(item),
+        }
         if value not in stages[section]["missing"]:
             stages[section]["missing"].append(value)
         stages[section]["valid"] = False
