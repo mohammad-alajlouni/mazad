@@ -412,3 +412,46 @@ def test_logos_take_each_cover_s_reference_position(cover, auction_box, agent_bo
         else agent.x0 - agent_box[0]
     )
     assert abs(anchored) < tolerance
+
+
+def test_times_and_slashed_dates_keep_their_digit_order_in_arabic():
+    """ "08 : 31" must not be drawn as "31 : 08" inside right-to-left text."""
+    import pymupdf
+    from weasyprint import HTML
+
+    from app.auction_schemas import AuctionData
+    from app.generation.engine import render_html, safe_fetch
+
+    project = project_with(
+        "hybrid",
+        auction_start_date="2026-07-27",
+        auction_end_date="2026-07-29",
+        start_time="08:31:00",
+        end_time="21:31:00",
+    )
+    project["auction"] = AuctionData.model_validate(project["auction"]).model_dump(
+        mode="json"
+    )
+    project.update(agent_logo="", selling_agent={"name": "وكيل"})
+    item = {
+        **item_with(auction_close_date="2026-07-29", auction_close_time="18:05"),
+        "id": "i",
+        "title": "عقار",
+    }
+    booklet = compose(project, [item])
+
+    def digits(kind):
+        page = next(p for p in booklet["pages"] if p["kind"] == kind)
+        content = {"project": project, "items": [item], "output_language": "ar"}
+        html = render_html({**content, "booklet": {**booklet, "pages": [page]}})
+        doc = pymupdf.open("pdf", HTML(string=html, url_fetcher=safe_fetch).write_pdf())
+        rows = {}
+        for x0, _, _, y1, word, *_ in doc[0].get_text("words"):
+            if any(c.isdigit() for c in word):
+                rows.setdefault(round(y1), []).append((x0, word))
+        return [" ".join(w for _, w in sorted(row)) for _, row in sorted(rows.items())]
+
+    # Right-to-left line: the first time sits on the right, each drawn "hh mm".
+    assert "09 31 08 31" in digits("auction")
+    assert any(row.startswith("09 31 08 31") for row in digits("contact"))
+    assert any("2026 07 29" in row for row in digits("property"))

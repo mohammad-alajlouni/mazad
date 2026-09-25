@@ -49,9 +49,15 @@ def nums(value):
 
     text = "" if value in (None, "") else str(value)
     parts = re.split(r"(\d+(?:\s?[:/٫,.]\s?\d+)*)", text)
+    # In Arabic text a spaced separator ("08 : 31", "2026 / 07 / 29") splits the
+    # figures into separate right-to-left pieces and reverses them. The Unicode
+    # isolate marks (LRI ... PDI) keep each run left-to-right as one unit; both
+    # WeasyPrint (Pango/FriBidi) and browsers honour them.
     return Markup(
         "".join(
-            f'<span class="num">{escape(part)}</span>' if index % 2 else escape(part)
+            f'<span class="num">⁦{escape(part)}⁩</span>'
+            if index % 2
+            else escape(part)
             for index, part in enumerate(parts)
         )
     )
