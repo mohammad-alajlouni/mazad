@@ -455,3 +455,36 @@ def test_times_and_slashed_dates_keep_their_digit_order_in_arabic():
     assert "09 31 08 31" in digits("auction")
     assert any(row.startswith("09 31 08 31") for row in digits("contact"))
     assert any("2026 07 29" in row for row in digits("property"))
+
+
+def test_pages_follow_the_guide_order_with_one_agent_page():
+    """Cover, Infath, agent (once, however long), auction, summary, properties,
+    rentals, terms, participation steps, contact - as in the reference booklet."""
+    project = project_with("hybrid", auction_start_date="2026-07-27")
+    project["selling_agent"] = {
+        "name": "شركة أعيان العقارية",
+        "description": "شركة سعودية رائدة في إدارة المزادات العقارية. " * 30,
+        "contact_information": "واتساب خدمة العملاء",
+    }
+    item = item_with(
+        property_type="فيلا",
+        rental_contracts=[{"unit_number": "1", "annual_rent_value": "1000"}],
+    )
+    item.update(id="i", title="عقار")
+    kinds = [p["kind"] for p in compose(project, [item])["pages"]]
+    assert kinds[:5] == ["cover", "introduction", "agent", "auction", "summary"]
+    assert kinds.count("agent") == 1
+    assert kinds.index("property") < kinds.index("rentals") < kinds.index("terms")
+    assert kinds[-3:] == ["terms", "participation", "contact"]
+    agent = next(p for p in compose(project, [item])["pages"] if p["kind"] == "agent")
+    assert agent["size"] < 17.02  # set smaller instead of repeating the page
+
+
+def test_agent_description_beyond_one_page_is_reported_for_account_settings():
+    from app.generation.booklet.fit import booklet_issues
+
+    agent = {"name": "وكيل", "description": "وصف طويل جدا لوكيل البيع. " * 200}
+    issue = next(
+        i for i in booklet_issues({}, agent, []) if i["field"] == "description"
+    )
+    assert issue["section"] == "agent" and 0 < issue["limit"] < 5000

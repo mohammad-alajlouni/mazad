@@ -1,3 +1,4 @@
+import { completeClosing, fillPages, finishPages } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -50,30 +51,20 @@ for (const flow of ["manual", "excel"])
     await page
       .getByRole("button", { name: /Auction and cover/, exact: true })
       .click();
+    // Pages in booklet order: cover (1), Infath (2), agent (3), auction (4).
     const auction = page.locator(".auction-workspace form").first();
-    await auction
-      .getByLabel("Auction name", { exact: true })
-      .fill("مزاد الاختبار المتكامل");
-    await auction.getByLabel("Auction type").selectOption("hybrid");
-
-    await auction.getByLabel("Start date", { exact: true }).fill("2026-10-10");
-    await auction.getByLabel("End date", { exact: true }).fill("2026-10-12");
-    await auction.getByLabel("Start time", { exact: true }).fill("16:00");
-    await auction.getByLabel("End time", { exact: true }).fill("18:00");
-    await auction
-      .getByLabel("Physical location", { exact: true })
-      .fill("الرياض");
-    await auction
-      .getByLabel("Electronic platform", { exact: true })
-      .fill("منصة تجريبية");
-    await auction
-      .locator('[name="electronic_platform_url"]')
-      .fill("https://example.com/auction/browser");
     await auction.locator('input[value="infath-5"]').check();
-    await auction
-      .getByRole("button", { name: "Save auction and cover" })
-      .click();
-    await expect(page.getByRole("status")).toContainText("Saved");
+    await fillPages(page, {
+      auction_type: "hybrid",
+      auction_name: "مزاد الاختبار المتكامل",
+      auction_start_date: "2026-10-10",
+      auction_end_date: "2026-10-12",
+      start_time: "16:00",
+      end_time: "18:00",
+      physical_location: "الرياض",
+      electronic_platform_name: "منصة تجريبية",
+    });
+    await finishPages(page);
     if (flow === "manual") {
       for (let n = 1; n <= 2; n++) {
         await page.getByRole("button", { name: /Properties/ }).click();
@@ -178,6 +169,10 @@ for (const flow of ["manual", "excel"])
       ).toBeVisible();
       await page.getByRole("button", { name: "Import 3 properties" }).click();
     }
+    // The closing pages (participation steps, contact) follow the properties.
+    await completeClosing(page, {
+      electronic_platform_url: "https://example.com/auction/browser",
+    });
     await page.getByRole("button", { name: /Review and generate/ }).click();
     await expect(
       page.getByText("Data is ready to generate a draft"),

@@ -11,7 +11,7 @@ type Preview = {
 };
 // Booklet pages follow the data-entry steps; later steps stay locked until the
 // earlier ones are complete, so the preview never runs ahead of the form.
-const STEPS = ["auction", "items", "images", "generate"];
+const STEPS = ["auction", "items", "images", "closing", "generate"];
 const PAGE_WIDTH = 794; // 595.276 pt in CSS pixels
 const PAGE_HEIGHT = 1123;
 function stepOf(stage: string) {
@@ -109,10 +109,22 @@ export default function LiveBookletPreview({
     request: number;
     result: Preview;
   } | null>(null);
+  // The booklet page the form is filling (a paged form marks it on itself).
+  const formPage = () =>
+    root.current?.querySelector<HTMLElement>("form[data-preview-page]")?.dataset
+      .previewPage;
+  useEffect(() => {
+    const follow = (event: Event) => {
+      setPage(null);
+      setFocus(String((event as CustomEvent).detail));
+    };
+    window.addEventListener("booklet-preview-page", follow);
+    return () => window.removeEventListener("booklet-preview-page", follow);
+  }, []);
   useEffect(() => {
     setDraft({});
     setPage(null);
-    setFocus(stage);
+    setFocus(formPage() || stage);
     imageVersion.current++;
     // Forms mount with the step; read their required fields once they exist.
     const timer = setTimeout(() =>
@@ -164,8 +176,13 @@ export default function LiveBookletPreview({
                 "agent",
                 "items",
                 "images",
+                "closing",
                 "generate",
                 "cover",
+                "introduction",
+                "terms",
+                "participation",
+                "contact",
               ].includes(focus)
                 ? focus
                 : "items",
@@ -241,7 +258,10 @@ export default function LiveBookletPreview({
           ...(cover ? { selected_cover_template_id: cover } : {}),
         },
       }));
-      setFocus(target.name === "cover-choice" ? "cover" : "auction");
+      setFocus(
+        form.dataset.previewPage ||
+          (target.name === "cover-choice" ? "cover" : "auction"),
+      );
     } else if (kind === "agent") {
       setDraft((d) => ({ ...d, agent: values }));
       setFocus("agent");

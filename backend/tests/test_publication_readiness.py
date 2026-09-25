@@ -155,3 +155,14 @@ def test_issues_identify_the_property_to_open(admin):
     images = workflow(admin, p)["stages"]["images"]["missing"]
     main = next(i for i in images if i["field"] == "main_image")
     assert main["item_id"] == item
+
+
+def test_closing_page_fields_are_entered_after_the_properties(admin):
+    """Contact number and QR links belong to the booklet's last pages."""
+    p = create_auction(admin)
+    flow = workflow(admin, p)
+    closing = {i["field"] for i in flow["stages"]["closing"]["missing"]}
+    auction = {i["field"] for i in flow["stages"]["auction"]["missing"]}
+    assert "auction_contact_number" in closing
+    assert not closing & auction
+    assert "auction_contact_number" in flow["rules"]["closing_fields"]

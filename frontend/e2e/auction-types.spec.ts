@@ -1,4 +1,5 @@
 import { completeAccount } from "./account-setup";
+import { fillPages, finishPages } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -42,9 +43,11 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
     await expect(form.locator('[name="auction_date"]')).toHaveCount(
       kind === "physical" ? 1 : 0,
     );
+    // Contact and QR links belong to the closing pages, entered later.
     await expect(form.locator('[name="electronic_platform_url"]')).toHaveCount(
-      kind === "physical" ? 0 : 1,
+      0,
     );
+    await expect(form.locator('[name="license_number"]')).toHaveCount(0);
     await expect(form.locator('[name="physical_location"]')).toHaveCount(
       kind === "electronic" ? 0 : 1,
     );
@@ -52,11 +55,13 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
       .locator(".workflow-navigation")
       .getByRole("button", { name: "Next", exact: true })
       .click();
-    await expect(form.locator('[name="license_number"]')).toBeVisible();
+    // The first missing value is on the cover page, which opens at that field.
+    const date = form.locator(
+      `[name="${kind === "physical" ? "auction_date" : "auction_start_date"}"]`,
+    );
+    await expect(date).toBeVisible();
     expect(
-      await form
-        .locator('[name="license_number"]')
-        .evaluate((el: HTMLInputElement) => el.validity.valid),
+      await date.evaluate((el: HTMLInputElement) => el.validity.valid),
     ).toBeFalsy();
     await page
       .locator(".project-sections")
@@ -65,10 +70,7 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
     await expect(page.locator(".banner-template-grid")).toHaveCount(0);
     const values: Record<string, string> = {
       auction_name: "مزاد آفاق",
-      license_number: "420000053",
-      auction_contact_number: "0555000000",
       legal_announcement_text: "إعلان تجريبي فقط",
-      booklet_url: "https://example.com/booklet",
       start_time: "16:00",
     };
     if (kind === "physical") {
@@ -79,12 +81,10 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
       values.auction_end_date = "2026-10-12";
       values.end_time = "18:00";
       values.electronic_platform_name = "منصة المزادات";
-      values.electronic_platform_url = "https://example.com/auction";
       if (kind === "hybrid") values.physical_location = "الرياض";
     }
-    for (const [key, value] of Object.entries(values))
-      await form.locator('[name="' + key + '"]').fill(value);
-    await form.getByRole("button", { name: "Save auction and cover" }).click();
+    await fillPages(page, values);
+    await finishPages(page);
     await page
       .getByRole("button", { name: "Add property", exact: true })
       .click();

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { api, send, Detail, Item, Run } from "./api";
+import { BookletPages } from "./BookletPages";
 
 type Values = Record<string, unknown>;
 const auctionGroups = [
@@ -341,6 +342,53 @@ export function PropertyFields({
   );
 }
 export function AuctionWorkspace({
+  detail,
+  run,
+  reload,
+  section = "auction",
+  bannerMode = false,
+  socialMode = false,
+  onSaved,
+}: {
+  detail: Detail;
+  run: Run;
+  reload: () => Promise<void>;
+  section?: "auction" | "agent" | "closing";
+  bannerMode?: boolean;
+  socialMode?: boolean;
+  onSaved?: () => void;
+}) {
+  // Booklet flows are entered page by page in the booklet's order.
+  if (
+    !bannerMode &&
+    !socialMode &&
+    (section === "auction" || section === "closing") &&
+    detail.workflow?.rules.closing_fields?.length
+  )
+    return (
+      <div className="auction-workspace">
+        <BookletPages
+          detail={detail}
+          run={run}
+          reload={reload}
+          section={section}
+          onSaved={onSaved}
+        />
+      </div>
+    );
+  return (
+    <LegacyAuctionForm
+      detail={detail}
+      run={run}
+      reload={reload}
+      section={section === "closing" ? "auction" : section}
+      bannerMode={bannerMode}
+      socialMode={socialMode}
+      onSaved={onSaved}
+    />
+  );
+}
+function LegacyAuctionForm({
   detail,
   run,
   reload,

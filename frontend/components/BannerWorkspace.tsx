@@ -170,7 +170,7 @@ export default function BannerWorkspace({
           : next === "images"
             ? ["auction", "items"]
             : next === "generate" || next === "outputs"
-              ? ["auction", "items", "images"]
+              ? ["auction", "items", "images", "closing"]
               : [];
       const missing = relevant.find(
         (key) => detail.workflow?.stages[key]?.valid === false,

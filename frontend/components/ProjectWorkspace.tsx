@@ -67,17 +67,33 @@ export default function ProjectWorkspace({
     setDirty(false);
     setBlocked(null);
   }, [detail]);
+  // Steps follow the booklet: its first pages, the properties and their
+  // photographs, then the closing pages (terms, participation, contact).
   const steps =
     sharedMode === "data"
-      ? ["auction", "items", "images"]
+      ? ["auction", "items", "images", "closing"]
       : sharedMode === "booklet"
         ? ["generate", "outputs"]
-        : ["auction", "items", "images", "generate", "outputs"];
-  const allStepKeys = ["auction", "properties", "images", "review", "export"];
+        : ["auction", "items", "images", "closing", "generate", "outputs"];
+  const allStepKeys = [
+    "auction",
+    "properties",
+    "images",
+    "closing",
+    "review",
+    "export",
+  ];
   const stepKeys = steps.map(
     (step) =>
       allStepKeys[
-        ["auction", "items", "images", "generate", "outputs"].indexOf(step)
+        [
+          "auction",
+          "items",
+          "images",
+          "closing",
+          "generate",
+          "outputs",
+        ].indexOf(step)
       ],
   );
   const stepIndex = steps.indexOf(tab === "excel import" ? "items" : tab);
@@ -121,10 +137,14 @@ export default function ProjectWorkspace({
       if (!el) return;
       for (let node = el.parentElement; node; node = node.parentElement)
         if (node instanceof HTMLDetailsElement) node.open = true;
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.focus({ preventScroll: true });
-      el.classList.add("attention");
-      setTimeout(() => el.classList.remove("attention"), 2400);
+      // A field on another booklet page: open that page, then focus it.
+      el.dispatchEvent(new Event("reveal", { bubbles: true }));
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus({ preventScroll: true });
+        el.classList.add("attention");
+        setTimeout(() => el.classList.remove("attention"), 2400);
+      }, 60);
     }, 80);
     return () => clearInterval(timer);
   }, [focusTarget, tab, itemEditor]);
@@ -142,7 +162,7 @@ export default function ProjectWorkspace({
         onSharedFix?.(target);
       else setTab(target);
     }
-    if (issue.stage === "auction") {
+    if (issue.stage === "auction" || issue.stage === "closing") {
       setFocusTarget(`[name="${issue.field}"]`);
     } else if (issue.stage === "items") {
       if (issue.field === "properties") {
@@ -456,6 +476,19 @@ export default function ProjectWorkspace({
               await reloadProject();
               setDirty(false);
               setTab("items");
+            }}
+          />
+        )}
+        {tab === "closing" && (
+          <AuctionWorkspace
+            key={tab}
+            section="closing"
+            detail={detail}
+            run={run}
+            reload={reloadProject}
+            onSaved={() => {
+              setDirty(false);
+              if (sharedMode !== "data") setTab("generate");
             }}
           />
         )}

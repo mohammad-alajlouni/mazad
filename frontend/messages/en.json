@@ -558,10 +558,10 @@
     "images": "Images and attachments",
     "review": "Review and generate",
     "export": "Preview and download",
-    "auctionHelp": "Set the auction type, schedule, location and legal details, then choose a cover.",
+    "auctionHelp": "The booklet's first pages in order: cover, about Infath, selling agent, auction information. The live preview moves to each page as you fill it.",
     "agentHelp": "Selling agent details come from your account settings.",
     "propertiesHelp": "Add properties manually or import Excel. Complete deeds, boundaries, features and rental contracts.",
-    "imagesHelp": "Upload property photos, plans and the auction logo. Your selling agent logo comes from your account.",
+    "imagesHelp": "Upload each property's photographs: the main image, then additional ones. The auction icon and cover are fixed; the agent logo comes from your account.",
     "reviewHelp": "Check details and missing fields. Complete required information, then generate a draft booklet.",
     "exportHelp": "Preview the pages, then approve the booklet to enable PDF download. Later data changes require regeneration.",
     "continue": "Continue booklet",
@@ -610,7 +610,9 @@
     "saveAuctionOnly": "Save auction and continue",
     "typeHelp_physical": "Physical: auction date, time and venue. Electronic platform fields are omitted from publications.",
     "typeHelp_electronic": "Electronic: bidding start and end, and platform details. Physical venue fields are omitted.",
-    "typeHelp_hybrid": "Hybrid: electronic bidding period and platform, plus the physical venue. Both participation methods appear in publications."
+    "typeHelp_hybrid": "Hybrid: electronic bidding period and platform, plus the physical venue. Both participation methods appear in publications.",
+    "closing": "Closing pages",
+    "closingHelp": "The booklet's last pages in order: terms, participation steps, contact."
   },
   "excel": {
     "title": "Import properties from the approved template",
@@ -824,7 +826,9 @@
     "stepComplete": "✓ This step is complete.",
     "clickToFix": "Click an item to go straight to its field, fill it in, then save.",
     "properties": "Add at least one property",
-    "stepNeedsTitle": "Current step requirements"
+    "stepNeedsTitle": "Current step requirements",
+    "description": "Selling-agent profile",
+    "contact_information": "Selling-agent additional contact"
   },
   "liveBooklet": {
     "title": "Live booklet preview",
@@ -905,5 +909,34 @@
     "delete": "Delete",
     "deleted": "Image deleted",
     "updated": "Image use updated"
+  },
+  "bookletPages": {
+    "order": "Booklet pages in order",
+    "page": "Page {number}",
+    "closingPage": "Last pages",
+    "cover": "Cover",
+    "coverHelp": "Choose one of the six approved covers, then the auction type, name and date as they appear on the cover. The auction icon is fixed by the identity; the selling-agent logo comes from your account.",
+    "introduction": "About Infath",
+    "introductionHelp": "A fixed page from the guide; its content never changes. Nothing to enter.",
+    "agent": "Selling agent",
+    "agentHelp": "One page: logo, name, profile, X account, phone and website from your account settings. A long profile is set smaller to stay on its page.",
+    "agentEdit": "Edit the selling agent in my account",
+    "agentMissing": "Complete these in your account settings:",
+    "agentLogo": "Selling-agent logo (from your account)",
+    "agentLogoHelp": "Shown in white at the foot of the cover, at its fixed size and position.",
+    "noLogo": "No logo uploaded yet",
+    "auction": "Auction information",
+    "auctionHelp": "The legal announcement and court decision, then the time and the location or platform for this auction type ({type}).",
+    "terms": "Auction entry terms",
+    "termsHelp": "The terms page for this auction type ({type}) follows the property pages unchanged.",
+    "participation": "Participation steps",
+    "participationHelp": "The electronic platform link appears as a QR code on the participation-steps page (second to last).",
+    "contact": "Contact",
+    "contactHelp": "The contact number and the auction hall location link appear on the last page.",
+    "marketing": "Banner and post details",
+    "marketingHelp": "Not printed in the booklet; used by the banners and posts generated with the project.",
+    "previous": "Previous",
+    "next": "Save and next: {title}",
+    "finishClosing": "Save and continue to review"
   }
 }

@@ -1,3 +1,4 @@
+import { fillPages, finishPages } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -83,19 +84,17 @@ test("Arabic default, administrator provisioning, private author booklet and app
     page
       .locator(".workflow-steps")
       .getByRole("button", { name: new RegExp(t(`flow.${key}`)) });
-  await expect(page.locator(".workflow-steps button")).toHaveCount(5);
+  await expect(page.locator(".workflow-steps button")).toHaveCount(6);
   await step("review").click();
   await expect(
     page.locator('.auction-workspace [name="auction_date"]'),
   ).toBeVisible();
-  await page
-    .getByLabel(t("auction.auction_date"), { exact: true })
-    .fill("2026-11-10");
-  await page.getByLabel(t("auction.start_time"), { exact: true }).fill("16:00");
-  await page
-    .getByLabel(t("auction.physical_location"), { exact: true })
-    .fill("الرياض");
-  await page.getByRole("button", { name: t("auction.save_auction") }).click();
+  await fillPages(page, {
+    auction_date: "2026-11-10",
+    start_time: "16:00",
+    physical_location: "الرياض",
+  });
+  await finishPages(page);
   await expect(page.locator(".workflow-steps .selected")).toContainText(
     t("flow.properties"),
   );

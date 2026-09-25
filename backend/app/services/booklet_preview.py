@@ -25,9 +25,20 @@ class PreviewImage(BaseModel):
 
 class PreviewInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    stage: Literal["auction", "agent", "items", "images", "generate", "cover"] = (
-        "auction"
-    )
+    # A workflow step or a page kind: each part of the forms shows its own page.
+    stage: Literal[
+        "auction",
+        "agent",
+        "items",
+        "images",
+        "closing",
+        "generate",
+        "cover",
+        "introduction",
+        "terms",
+        "participation",
+        "contact",
+    ] = "auction"
     page: int | None = Field(default=None, ge=0, le=20000)
     auction: dict[str, Any] = Field(default_factory=dict, max_length=30)
     agent: dict[str, Any] = Field(default_factory=dict, max_length=12)
@@ -207,9 +218,9 @@ def preview(db, project, body):
             "agent": "agent",
             "items": "property" if focused else "summary",
             "images": "property" if focused else "cover",
+            "closing": "contact",
             "generate": "cover",
-            "cover": "cover",
-        }[body.stage]
+        }.get(body.stage, body.stage)
         selected = next(
             (
                 n
@@ -256,5 +267,5 @@ def page_step(page):
     if kind == "images":
         return "images"
     if kind in ("terms", "participation", "contact"):
-        return "generate"
+        return "closing"
     return "auction"

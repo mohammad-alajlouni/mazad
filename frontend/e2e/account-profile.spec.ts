@@ -96,7 +96,7 @@ test("account onboarding supplies projects and can only be edited in account set
     .getByRole("button", { name: /My projects/ })
     .click();
   await page.getByText("Profile project", { exact: true }).click();
-  await expect(page.locator(".workflow-steps button")).toHaveCount(3);
+  await expect(page.locator(".workflow-steps button")).toHaveCount(4);
   await expect(page.locator(".workflow-steps")).not.toContainText(
     "Selling agent",
   );

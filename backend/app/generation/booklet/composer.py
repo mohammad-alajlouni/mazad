@@ -42,7 +42,7 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 4
+LAYOUT_VERSION = 5
 # Rows that the reference tables hold before continuing on another page.
 SUMMARY_ROWS = 10
 RENTAL_ROWS = 19
@@ -62,6 +62,10 @@ INFO_PAGE = (11, 500, 33)
 NUMBER_INDENT = 11
 # Other text regions: (font size, width, lines), measured on the reference.
 AGENT_TEXT = (17.02, 387.6, 8)
+AGENT_BOX = 216  # points of height for the agent's description (8 lines of 27)
+# The agent's extra contact text sits under the numbers on the contact page.
+CONTACT_EXTRA = (10, 360, 2)
+AGENT_MIN = 11.5  # smallest size the description is set at before it must be shortened
 # Right-aligned (not justified): lines use the full measured width.
 ANNOUNCEMENT = (19, 373, 3)
 BOUNDARY_PAGE = (15, 444, 4)  # the fifth line carries the length
@@ -178,6 +182,22 @@ def lines_used(text, size, width):
     return fit_length(text, size, width, 10**6)[1]
 
 
+def agent_size(text):
+    """Largest size (reference 17.02 pt, line 27 pt) that sets the description on page 3.
+
+    The guide has exactly one agent page; a longer description is set smaller,
+    and below AGENT_MIN it has to be shortened (reported in the workflow).
+    """
+    size = AGENT_TEXT[0]
+    while True:
+        lines = int(AGENT_BOX // (27 * size / AGENT_TEXT[0]))
+        if fit_length(text, size, AGENT_TEXT[1], lines)[0] >= len(text.rstrip()):
+            return size, True
+        if size <= AGENT_MIN:
+            return AGENT_MIN, False
+        size = max(AGENT_MIN, round(size - 0.25, 2))
+
+
 def boundaries_need_page(boundaries, layout="landscape"):
     # Each direction has one line beside its label on the property page.
     return any(
@@ -250,13 +270,18 @@ def compose(project, items):
         {"kind": "cover", "cover_number": cover.display_order},
         {"kind": "introduction"},
     ]
+    # Guide order: cover, Infath, the selling agent (one page), the auction.
     agent = project.get("selling_agent", {})
-    for text in measured_chunks(agent.get("description", ""), *AGENT_TEXT) or [""]:
-        pages.append({"kind": "agent", "text": text})
-    for text in measured_chunks(agent.get("contact_information", ""), *INFO_PAGE):
-        pages.append(
-            {"kind": "information", "heading": "contact_information", "text": text}
-        )
+    description = (agent.get("description") or "").strip()
+    size, _ = agent_size(description)
+    pages.append(
+        {
+            "kind": "agent",
+            "text": description,
+            "size": size,
+            "line_height": round(27 * size / AGENT_TEXT[0], 2),
+        }
+    )
     auction_page = {"kind": "auction"}
     pages.append(auction_page)
     announcement = "\n".join(

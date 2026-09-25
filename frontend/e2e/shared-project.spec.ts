@@ -1,3 +1,4 @@
+import { fillPages } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -179,15 +180,18 @@ test("one project reuses data for booklet, banners and social posts", async ({
   await sections
     .getByRole("button", { name: "Project data", exact: true })
     .click();
-  await page.locator('[name="auction_contact_number"]').fill("0555111111");
+  // The contact number is on the booklet's closing pages.
+  await page
+    .locator(".workflow-steps")
+    .getByRole("button", { name: /Closing pages/ })
+    .click();
+  await fillPages(page, { auction_contact_number: "0555111111" });
   const savedAuction = page.waitForResponse(
     (response) =>
       response.url().endsWith(`/projects/${p.id}`) &&
       response.request().method() === "PUT",
   );
-  await page
-    .getByRole("button", { name: "Save auction and cover", exact: true })
-    .click();
+  await page.locator(".page-part-actions button.primary").click();
   expect((await savedAuction).ok()).toBeTruthy();
   const changed = await page.request
     .get("/api/projects/" + p.id)

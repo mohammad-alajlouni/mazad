@@ -14,6 +14,18 @@ AUCTION_COMMON = [
     "legal_announcement_text",
     "court_decision_text",
 ]
+# Fields of the booklet's closing pages (participation steps, contact) and the
+# links printed as QR codes. In booklet flows they are entered after the
+# properties and photographs, in the order the pages appear.
+CLOSING = [
+    "auction_contact_number",
+    "electronic_platform_url",
+    "auction_location_url",
+    "booklet_url",
+    "contact_url",
+    "license_number",
+    "supervising_authority",
+]
 AUCTION_BY_TYPE = {
     "physical": [
         "auction_date",
@@ -47,13 +59,16 @@ def workflow(db, project):
     scope = project.workspace_type
     stages = {
         key: {"valid": True, "missing": []}
-        for key in ["auction", "agent", "items", "images"]
+        for key in ["auction", "agent", "items", "images", "closing"]
     }
+    # Booklet flows enter data page by page; the other flows keep one auction form.
+    paged = scope in ("project", "booklet")
     rules = {
         "auction": {},
         "property_required": ["property_type", "city"],
         "agent_required": ["name"],
         "agent_logo_required": scope != "booklet",
+        "closing_fields": CLOSING if paged else [],
     }
     for kind, visible in AUCTION_BY_TYPE.items():
         required = ["auction_name", "start_time"]
@@ -161,6 +176,8 @@ def workflow(db, project):
         item_ids.setdefault(row.title, row.id)
 
     def issue(section, field, item=None, limit=None):
+        if paged and section == "auction" and field in CLOSING:
+            section = "closing"
         value = {
             "field": field,
             "item": item,

@@ -120,6 +120,37 @@ def booklet_issues(auction, agent, items, language="ar"):
                 }
             )
 
+    from .composer import agent_size
+
+    description = (agent.get("description") or "").strip()
+    if description and not agent_size(description)[1]:
+        # Characters that still fit on the single agent page at the smallest size.
+        from .composer import AGENT_BOX, AGENT_MIN, AGENT_TEXT, fit_length
+
+        lines = int(AGENT_BOX // (27 * AGENT_MIN / AGENT_TEXT[0]))
+        issues.append(
+            {
+                "section": "agent",
+                "field": "description",
+                "item": None,
+                "limit": fit_length(description, AGENT_MIN, AGENT_TEXT[1], lines)[0],
+            }
+        )
+    extra = (agent.get("contact_information") or "").strip()
+    if extra:
+        from .composer import CONTACT_EXTRA, fit_length
+
+        size, width, lines = CONTACT_EXTRA
+        length = fit_length(extra, size, width, lines, "RuaqArabic-Medium", 1.0)[0]
+        if length < len(extra):
+            issues.append(
+                {
+                    "section": "agent",
+                    "field": "contact_information",
+                    "item": None,
+                    "limit": length,
+                }
+            )
     name = auction.get("auction_name", "")
     for key, section, text in (
         ("auction_name", "auction", name),

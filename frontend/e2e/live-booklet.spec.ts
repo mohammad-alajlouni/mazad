@@ -76,9 +76,26 @@ for (const mobile of [false, true])
     );
     for (const option of steps.filter((o) => /Terms|Contact/.test(o.text)))
       expect(option.disabled).toBe(true);
+    // The auction name is entered on the cover page, which the preview shows.
     await expect(page.locator(".live-preview-paper")).toHaveAttribute(
       "data-page-kind",
-      "auction",
+      "cover",
+    );
+    // A page cannot be left with its required values empty.
+    const infath = page
+      .locator(".page-parts")
+      .getByRole("button", { name: /About Infath/ });
+    await infath.click();
+    await expect(page.locator(".live-preview-paper")).toHaveAttribute(
+      "data-page-kind",
+      "cover",
+    );
+    // Each booklet page of the form brings its page into the preview.
+    await page.locator('[name="auction_date"]').fill("2026-10-10");
+    await infath.click();
+    await expect(page.locator(".live-preview-paper")).toHaveAttribute(
+      "data-page-kind",
+      "introduction",
     );
     const project = (
       await page.request.get("/api/projects").then((r) => r.json())

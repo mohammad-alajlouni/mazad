@@ -2,7 +2,9 @@
 {{ art('agent') }}
 {% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, 180, 40) %}<img class="logo" style="{{ box(506.5 - A.width, 212.9 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
 <div class="t r w7" style="{{ T(505.1, 304.3, fit.box_size('agent_name', agent.name), width=390) }};color:#12395f" data-fit="agent-name" data-max-height="40pt">{{ agent.name }}</div>
-<div class="t p j r w3 body" style="{{ T(503.2, 340.0, 17.02, lh=27, width=387.6) }}" data-fit="agent-description" data-max-height="216pt">{{ page.text|trim }}</div>
+{#- One agent page (guide p.12): a longer description is set smaller, never continued. -#}
+{% set size = page.size or 17.02 %}{% set lh = page.line_height or 27 %}
+<div class="t p j r w3 body" style="{{ T(503.2, 320.27 + lh / 2 + 0.366 * size, size, lh=lh, width=387.6) }}" data-fit="agent-description" data-max-height="216pt">{{ page.text|trim }}</div>
 {#- Each value sits left of its icon; long values are set smaller, never clipped. -#}
 {% for key, icon_left, value, width in [('x', 471, agent.social_accounts, 74), ('phone', 369, agent.phone, 74), ('web', 266, agent.website, 170)] %}
 {% if value %}{% set size = [10.21, width / ((value|length) * 0.6)]|min %}

@@ -22,6 +22,8 @@
 <div class="t l w5" style="{{ T(398.9, 530.0, 14.61, 'l', width=130) }};color:#159d9d" dir="ltr">{{ agent.whatsapp }}</div>{% endif %}
 {% if phone %}{% set right = 253.8 if agent.whatsapp else 326.3 %}<img class="icon" style="{{ box(right + 11.2, 516, 18, 19) }}" src="{{ asset('booklet-art/contact-phone.png') }}">
 <div class="t l w5" style="{{ T(right, 530.0, 14.61, 'l', width=130) }};color:#159d9d" dir="ltr">{{ phone }}</div>{% endif %}
+{#- The agent's additional contact text (account settings), under the numbers. -#}
+{% if agent.contact_information and agent.contact_information.strip() %}<div class="t p r w5" style="{{ T(300, 556.5, 10, lh=14, align='center', width=360) }};color:#159d9d;white-space:pre-line" data-fit="contact-extra" data-max-height="28pt">{{ agent.contact_information|trim|nums }}</div>{% endif %}
 {% set target = (booklet.auction_qrs|selectattr('label', 'equalto', 'electronic_platform_url' if auction.auction_type == 'electronic' else 'auction_location_url')|list) or booklet.auction_qrs %}
 {% if target %}{% set link = target[0] %}
 <a class="hit" href="{{ link.url }}" style="{{ box(231.4, 595.8, 137, 45.5) }}"></a><img class="qr-code" style="{{ box(231.4, 595.8, 45.5, 45.5) }}" src="{{ link.image }}">

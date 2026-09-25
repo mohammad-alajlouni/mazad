@@ -93,6 +93,8 @@ export type Detail = {
       property_required: string[];
       agent_required: string[];
       agent_logo_required: boolean;
+      // Booklet flows: auction fields entered with the closing pages.
+      closing_fields?: string[];
       // Longest value every output of the project can set in its design.
       limits?: Record<string, number>;
     };

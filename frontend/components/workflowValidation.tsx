@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Detail } from "./api";
-export const dataStages = ["auction", "items", "images"];
+export const dataStages = ["auction", "items", "images", "closing"];
 // The seller's name and logo come from the account profile but every output
 // needs them, so they are part of completing the first (auction) step.
 export function missingStage(detail: Detail, before = "generate") {
@@ -138,7 +138,7 @@ export function StepChecklist({
   onIssue: (issue: Issue) => void;
 }) {
   const t = useTranslations("validationFlow");
-  if (!["auction", "items", "images"].includes(stage)) return null;
+  if (!["auction", "items", "images", "closing"].includes(stage)) return null;
   const issues = stepIssues(detail, stage);
   return issues.length ? (
     <section className="notice step-checklist" aria-label={t("stepNeedsTitle")}>
