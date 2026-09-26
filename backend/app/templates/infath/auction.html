@@ -19,4 +19,5 @@
 {% set size = fit.box_size(icon == 'location' and 'physical_location' or 'electronic_platform_name', text) if icon in ('location', 'platform') else 13.48 %}
 <div class="t r w5" style="{{ T(437.9, base, size, width=330) }};color:#3abdba" data-fit="auction-schedule-{{ icon }}" data-max-height="26pt">{{ text|nums }}</div>
 {% endfor %}
-<div class="t r w3" style="{{ T(498.4, 584.3, 10, width=400) }};color:#000">{{ bt('recording_notice') }}</div>
+{#- Filming happens in the auction hall: in-person and hybrid auctions only. -#}
+{% if auction.auction_type != 'electronic' %}<div class="t r w3" style="{{ T(498.4, 584.3, 10, width=400) }};color:#000">{{ bt('recording_notice') }}</div>{% endif %}

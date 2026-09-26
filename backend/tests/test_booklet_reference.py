@@ -488,3 +488,29 @@ def test_agent_description_beyond_one_page_is_reported_for_account_settings():
         i for i in booklet_issues({}, agent, []) if i["field"] == "description"
     )
     assert issue["section"] == "agent" and 0 < issue["limit"] < 5000
+
+
+@pytest.mark.parametrize(
+    "kind, shown", [("physical", True), ("hybrid", True), ("electronic", False)]
+)
+def test_recording_notice_only_where_the_auction_has_a_hall(kind, shown):
+    from app.auction_schemas import AuctionData
+    from app.generation.booklet.labels import label
+    from app.generation.engine import render_html
+
+    project = project_with(kind, auction_start_date="2026-07-27")
+    project["auction"] = AuctionData.model_validate(project["auction"]).model_dump(
+        mode="json"
+    )
+    project.update(agent_logo="", selling_agent={"name": "وكيل"})
+    booklet = compose(project, [])
+    page = next(p for p in booklet["pages"] if p["kind"] == "auction")
+    html = render_html(
+        {
+            "project": project,
+            "items": [],
+            "booklet": {**booklet, "pages": [page]},
+            "output_language": "ar",
+        }
+    )
+    assert (label("recording_notice", "ar") in html) is shown
