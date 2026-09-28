@@ -11,7 +11,8 @@ import {
   type Run,
 } from "./api";
 import { AuctionWorkspace } from "./AuctionWorkspace";
-import { ItemForm, ExcelUpload, ImageUpload } from "./ProjectForms";
+import { ExcelUpload, ImageUpload } from "./ProjectForms";
+import PropertyManager from "./PropertyManager";
 import { OutputList } from "./shared";
 import SocialTemplateFields, {
   socialDefaults,
@@ -338,67 +339,16 @@ export default function BannerWorkspace({
           onSaved={() => setStep("items")}
         />
       )}
-      {step === "items" &&
-        (editor ? (
-          <ItemForm
-            projectId={detail.project.id}
-            requiredFields={detail.workflow?.rules.property_required}
-            auctionType={String(
-              detail.project.auction?.auction_type || "physical",
-            )}
-            existing={editor === "new" ? undefined : editor}
-            run={run}
-            onDone={() => {
-              setEditor(null);
-              void reloadProject();
-            }}
-          />
-        ) : (
-          <section className="panel form-panel">
-            <h2>{t("step.items")}</h2>
-            <p>{t("propertiesHelp")}</p>
-            <div className="flex-row">
-              <button className="primary" onClick={() => setEditor("new")}>
-                {tr("ui.add_item")}
-              </button>
-              <button className="secondary" onClick={() => void go("excel")}>
-                {tr("flow.importProperties")}
-              </button>
-            </div>
-            {detail.items.map((item) => (
-              <div className="banner-property-row" key={item.id}>
-                <strong>{item.title}</strong>
-                <span>
-                  <bdi>{String(item.property_data?.deed_number || "—")}</bdi>
-                </span>
-                <button className="text-button" onClick={() => setEditor(item)}>
-                  {tr("ui.edit")}
-                </button>
-                <button
-                  className="text-button danger"
-                  onClick={async () => {
-                    if (
-                      await confirm(
-                        tr(
-                          "ui.delete_this_item_and_its_image_associations_existing_outputs_will",
-                        ),
-                      )
-                    )
-                      void run(async () => {
-                        await api(
-                          `/projects/${detail.project.id}/items/${item.id}`,
-                          { method: "DELETE" },
-                        );
-                        await reloadProject();
-                      });
-                  }}
-                >
-                  {tr("ui.delete")}
-                </button>
-              </div>
-            ))}
-          </section>
-        ))}
+      {step === "items" && (
+        <PropertyManager
+          detail={detail}
+          run={run}
+          reload={reloadProject}
+          editing={editor}
+          setEditing={setEditor}
+          onImport={() => void go("excel")}
+        />
+      )}
       {step === "excel" && (
         <ExcelUpload
           projectId={detail.project.id}

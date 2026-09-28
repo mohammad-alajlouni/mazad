@@ -115,11 +115,23 @@ export function ProjectForm({
     </form>
   );
 }
+export type SaveAction = "close" | "new" | "similar" | "next";
+// A property's own name when the author leaves it empty: type and district.
+function autoTitle(prop: Record<string, unknown>, number?: number) {
+  const parts = [prop.property_type, prop.district || prop.city]
+    .map((v) => String(v || "").trim())
+    .filter(Boolean);
+  return parts.length ? parts.join(" · ") : `عقار ${number || ""}`.trim();
+}
 export function ItemForm({
   projectId,
   run,
   onDone,
+  onSaved,
   existing,
+  template,
+  number,
+  hasNext = false,
   requiredFields,
   auctionType,
 }: {
@@ -128,9 +140,15 @@ export function ItemForm({
   projectId: string;
   run: Run;
   onDone: () => void;
+  // Continuous entry: what to do after saving (another property, the next...).
+  onSaved?: (action: SaveAction, item: Item) => void | Promise<void>;
   existing?: Item;
+  template?: Record<string, unknown>;
+  number?: number;
+  hasNext?: boolean;
 }) {
   const tr = useTranslations();
+  const pt = useTranslations("properties");
 
   const [jsonError, setJsonError] = useState("");
   return (
@@ -138,9 +156,12 @@ export function ItemForm({
       data-stage-form
       data-preview-form="item"
       data-item-id={existing?.id}
-      className="panel form-panel"
+      className="panel form-panel property-form"
       onSubmit={(e) => {
         e.preventDefault();
+        const submitter = (e.nativeEvent as SubmitEvent)
+          .submitter as HTMLButtonElement | null;
+        const action = (submitter?.value || "close") as SaveAction;
         const data = Object.fromEntries(new FormData(e.currentTarget));
         const form = new FormData(e.currentTarget);
         const property_data = readProperty(form);
@@ -162,79 +183,112 @@ export function ItemForm({
           setJsonError("ui.additional_attributes_must_be_a_json_object");
           return;
         }
-        void run(async () => {
-          await api(
-            `/projects/${projectId}/items${existing ? "/" + existing.id : ""}`,
-            {
-              method: existing ? "PUT" : "POST",
-              body: send({
-                ...data,
-                attributes,
-                property_data,
-                sequence_number: existing?.sequence_number || 0,
-              }),
-            },
-          );
-          onDone();
-        }, tr("ui.item_saved"));
+        const title =
+          String(data.title || "").trim() || autoTitle(property_data, number);
+        void run(
+          async () => {
+            const saved = await api<Item>(
+              `/projects/${projectId}/items${existing ? "/" + existing.id : ""}`,
+              {
+                method: existing ? "PUT" : "POST",
+                body: send({
+                  ...data,
+                  title,
+                  attributes,
+                  property_data,
+                  sequence_number: existing?.sequence_number || 0,
+                }),
+              },
+            );
+            // The next form opens only once the list is reloaded, so a quick
+            // click on another property cannot be undone by a late reload.
+            if (onSaved) await onSaved(action, saved);
+            else onDone();
+          },
+          onSaved ? pt("saved", { title }) : tr("ui.item_saved"),
+        );
       }}
     >
-      <h2>{existing ? tr("ui.edit_item") : tr("ui.add_an_item")}</h2>
-      <div className="form-grid">
+      <h2>
+        {existing
+          ? pt("editHeading", {
+              number: String(number || "").padStart(2, "0"),
+              title: existing.title,
+            })
+          : pt("newHeading", { number: String(number || "").padStart(2, "0") })}
+      </h2>
+      {template && !existing && <p className="notice">{pt("similarHint")}</p>}
+      <label>
+        {pt("titleLabel")}
+        <input
+          name="title"
+          maxLength={300}
+          placeholder={pt("titleHint")}
+          defaultValue={existing?.title || ""}
+        />
+      </label>
+      <PropertyFields
+        existing={existing}
+        template={template}
+        requiredFields={requiredFields}
+        auctionType={auctionType}
+      >
+        <label>
+          {tr("ui.description")}
+          <textarea
+            rows={3}
+            name="description"
+            defaultValue={existing?.description ?? ""}
+          />
+        </label>
+      </PropertyFields>
+      <details>
+        <summary>{pt("advanced")}</summary>
         {[
-          ["title", tr("ui.item_title")],
-          ["reference", tr("ui.reference")],
-          ["category", tr("ui.category")],
-          ["quantity", tr("ui.quantity")],
-          ["financial_value", tr("ui.unit_financial_value")],
+          ["specifications", tr("ui.specifications")],
+          ["technical_information", tr("ui.technical_information")],
+          ["notes", tr("ui.notes")],
         ].map(([key, label]) => (
           <label key={key}>
             {label}
-            <input
-              dir={
-                ["reference", "quantity", "financial_value"].includes(key)
-                  ? "ltr"
-                  : undefined
-              }
+            <textarea
+              rows={2}
               name={key}
-              required={key === "title"}
-              type={
-                ["quantity", "financial_value"].includes(key)
-                  ? "number"
-                  : "text"
-              }
-              min={key === "quantity" ? "0.0001" : "0"}
-              step={key === "quantity" ? "0.0001" : "0.01"}
-              defaultValue={String(
-                existing?.[key as keyof Item] ??
-                  (key === "quantity" ? 1 : key === "financial_value" ? 0 : ""),
-              )}
+              defaultValue={String(existing?.[key as keyof Item] ?? "")}
             />
           </label>
         ))}
-      </div>
-      <PropertyFields
-        existing={existing}
-        requiredFields={requiredFields}
-        auctionType={auctionType}
-      />
-      {[
-        ["description", tr("ui.description")],
-        ["specifications", tr("ui.specifications")],
-        ["technical_information", tr("ui.technical_information")],
-        ["notes", tr("ui.notes")],
-      ].map(([key, label]) => (
-        <label key={key}>
-          {label}
-          <textarea
-            rows={2}
-            name={key}
-            defaultValue={String(existing?.[key as keyof Item] ?? "")}
-          />
-        </label>
-      ))}
-      <details>
-        <summary>{tr("flow.otherTools")}</summary>
+        <div className="form-grid">
+          {[
+            ["reference", tr("ui.reference")],
+            ["category", tr("ui.category")],
+            ["quantity", tr("ui.quantity")],
+            ["financial_value", tr("ui.unit_financial_value")],
+          ].map(([key, label]) => (
+            <label key={key}>
+              {label}
+              <input
+                dir={key === "category" ? undefined : "ltr"}
+                name={key}
+                type={
+                  ["quantity", "financial_value"].includes(key)
+                    ? "number"
+                    : "text"
+                }
+                min={key === "quantity" ? "0.0001" : "0"}
+                step={key === "quantity" ? "0.0001" : "0.01"}
+                defaultValue={String(
+                  existing?.[key as keyof Item] ??
+                    (key === "quantity"
+                      ? 1
+                      : key === "financial_value"
+                        ? 0
+                        : ""),
+                )}
+              />
+            </label>
+          ))}
+        </div>
         <label>
           {tr("ui.additional_attributes_json")}
           <textarea
@@ -246,17 +300,47 @@ export function ItemForm({
         </label>
       </details>
       {jsonError && <p className="error">{tr(jsonError)}</p>}
-      <div className="actions">
-        <button type="submit" className="primary">
-          {tr("ui.save_item")}
-        </button>
-        <button type="button" className="secondary" onClick={onDone}>
+      <div className="actions item-actions">
+        {onSaved ? (
+          <>
+            {existing ? (
+              <>
+                <button type="submit" value="close" className="primary">
+                  {pt("save")}
+                </button>
+                {hasNext && (
+                  <button type="submit" value="next" className="secondary">
+                    {pt("saveNext")}
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <button type="submit" value="new" className="primary">
+                  {pt("saveNew")}
+                </button>
+                <button type="submit" value="similar" className="secondary">
+                  {pt("saveSimilar")}
+                </button>
+                <button type="submit" value="close" className="secondary">
+                  {pt("saveClose")}
+                </button>
+              </>
+            )}
+          </>
+        ) : (
+          <button type="submit" className="primary">
+            {tr("ui.save_item")}
+          </button>
+        )}
+        <button type="button" className="text-button" onClick={onDone}>
           {tr("ui.cancel")}
         </button>
       </div>
     </form>
   );
 }
+
 export { default as ExcelUpload } from "./ApprovedExcelUpload";
 export function ImageUpload({
   detail,

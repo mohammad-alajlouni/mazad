@@ -69,15 +69,21 @@ for (const flow of ["manual", "excel"])
       for (let n = 1; n <= 2; n++) {
         await page.getByRole("button", { name: /Properties/ }).click();
         await page
-          .getByRole("button", { name: "Add property", exact: true })
+          .getByRole("button", { name: "New property", exact: true })
           .click();
-        await page.getByLabel("Item title").fill(`عقار المتصفح ${n}`);
+        await page
+          .getByLabel("Property name (optional)")
+          .fill(`عقار المتصفح ${n}`);
         await page
           .getByLabel("Property type", { exact: true })
           .fill("أرض سكنية");
         await page.getByLabel("City", { exact: true }).fill("الرياض");
         await page.getByLabel("District", { exact: true }).fill("النرجس");
         await page.getByLabel("Area m²", { exact: true }).fill("1200");
+        // Page settings are rarely changed: their section starts closed.
+        await page
+          .locator("summary", { hasText: "Property booklet layout and pages" })
+          .click();
         await page
           .locator('[name="property.booklet_layout"]')
           .selectOption(n === 1 ? "landscape" : "portrait");
@@ -122,7 +128,7 @@ for (const flow of ["manual", "excel"])
             response.request().method() === "POST",
         );
         await page
-          .getByRole("button", { name: "Save item", exact: true })
+          .getByRole("button", { name: "Save and close", exact: true })
           .click();
         const savedItem = await (await savedRequest).json();
         expect(savedItem.property_data.booklet_layout).toBe(
@@ -153,7 +159,7 @@ for (const flow of ["manual", "excel"])
     } else {
       await page
         .getByRole("button", {
-          name: "Import properties from Excel",
+          name: "Import from Excel",
           exact: true,
         })
         .click();

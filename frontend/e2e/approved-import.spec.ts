@@ -44,7 +44,7 @@ test("approved template download, invalid files, atomic import and stale preview
     .getByRole("button", { name: new RegExp(t("flow.properties")) })
     .click();
   await page
-    .getByRole("button", { name: t("flow.importProperties"), exact: true })
+    .getByRole("button", { name: t("properties.import"), exact: true })
     .click();
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("link", { name: t("excel.download") }).click();
@@ -116,7 +116,7 @@ test("approved template download, invalid files, atomic import and stale preview
   );
   await expect(
     page
-      .locator("tbody strong")
+      .locator(".property-cards strong")
       .getByText("أرض · حي تجريبي 1", { exact: true }),
   ).toBeVisible();
 });

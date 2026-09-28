@@ -61,8 +61,10 @@ test("social campaign validates media, exports exact pixels and remains separate
   }))
     await form.locator(`[name="${field}"]`).fill(value);
   await page.getByRole("button", { name: "Save auction and continue" }).click();
-  await page.getByRole("button", { name: "Add property", exact: true }).click();
-  await page.getByLabel("Item title").fill("عقار المنشور التجريبي");
+  await page.getByRole("button", { name: "New property", exact: true }).click();
+  await page
+    .getByLabel("Property name (optional)")
+    .fill("عقار المنشور التجريبي");
   for (const [field, value] of Object.entries({
     property_type: "أرض سكنية",
     city: "الرياض",
@@ -71,7 +73,9 @@ test("social campaign validates media, exports exact pixels and remains separate
     deed_number: "001234",
   }))
     await page.locator(`[name="property.${field}"]`).fill(value);
-  await page.getByRole("button", { name: "Save item", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
   await page
     .locator(".workflow-steps")
     .getByRole("button", { name: /Review and generate/ })

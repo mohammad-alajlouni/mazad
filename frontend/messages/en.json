@@ -938,5 +938,29 @@
     "previous": "Previous",
     "next": "Save and next: {title}",
     "finishClosing": "Save and continue to review"
+  },
+  "properties": {
+    "title": "Properties",
+    "count": "{count} properties",
+    "add": "New property",
+    "import": "Import from Excel",
+    "newHeading": "Property {number} — new",
+    "editHeading": "Property {number}: {title}",
+    "save": "Save",
+    "saveNew": "Save and add a new property",
+    "saveSimilar": "Save and add a similar property",
+    "saveClose": "Save and close",
+    "saveNext": "Save and go to the next property",
+    "complete": "✓ Complete",
+    "missing": "{count} missing",
+    "saved": "Saved “{title}”.",
+    "similarHint": "Type, city, district, use and plan were copied from the previous property. Enter the deed, plot and area.",
+    "titleLabel": "Property name (optional)",
+    "titleHint": "Built from the type and district if left empty",
+    "advanced": "Additional fields (optional)",
+    "duplicate": "Add a similar property",
+    "moveUp": "Move up",
+    "empty": "No properties yet. Enter the first one in the form below, or import an Excel workbook.",
+    "pick": "Choose a property from the list to edit it, or add a new one."
   }
 }

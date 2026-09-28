@@ -69,21 +69,27 @@ test("administrator completes manual and Excel input, uploads image, reviews and
   ).toBeVisible();
   await completeBookletBasics(page);
   await page.getByRole("button", { name: /Properties/ }).click();
-  await page.getByRole("button", { name: "Add property", exact: true }).click();
-  await page.getByLabel("Item title").fill("وحدة طاقة تجريبية");
+  await page.getByRole("button", { name: "New property", exact: true }).click();
+  await page.getByLabel("Property name (optional)").fill("وحدة طاقة تجريبية");
   await page.locator('[name="property.property_type"]').fill("معدات");
   await page.locator('[name="property.city"]').fill("الرياض");
+  await page
+    .locator("form summary")
+    .filter({ hasText: "Additional fields (optional)" })
+    .click();
   await page.getByLabel("Quantity", { exact: true }).fill("2");
   await page.getByLabel("Unit financial value").fill("1200.50");
   await page
     .getByLabel("Description", { exact: true })
     .fill("بيانات تجريبية للمراجعة");
-  await page.getByRole("button", { name: "Save item", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
   await expect(
     page.getByText("وحدة طاقة تجريبية", { exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Import properties from Excel", exact: true })
+    .getByRole("button", { name: "Import from Excel", exact: true })
     .click();
   await page
     .getByLabel("Excel workbook")
@@ -101,7 +107,7 @@ test("administrator completes manual and Excel input, uploads image, reviews and
   );
   await expect(
     page
-      .locator("tbody strong")
+      .locator(".property-cards strong")
       .getByText("أرض · حي تجريبي 1", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: /Images and attachments/ }).click();

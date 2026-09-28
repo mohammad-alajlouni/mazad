@@ -99,15 +99,15 @@ test("Arabic default, administrator provisioning, private author booklet and app
     t("flow.properties"),
   );
   await page
-    .getByRole("button", { name: t("ui.add_item"), exact: true })
+    .getByRole("button", { name: t("properties.add"), exact: true })
     .click();
-  await page.getByLabel(t("ui.item_title")).fill("أرض سكنية — اختبار");
+  await page.getByLabel(t("properties.titleLabel")).fill("أرض سكنية — اختبار");
   await page
     .getByLabel(t("auction.property_type"), { exact: true })
     .fill("أرض");
   await page.getByLabel(t("auction.city"), { exact: true }).fill("الرياض");
   await page
-    .getByRole("button", { name: t("ui.save_item"), exact: true })
+    .getByRole("button", { name: t("properties.saveClose"), exact: true })
     .click();
   await expect(
     page.getByText("أرض سكنية — اختبار", { exact: true }),

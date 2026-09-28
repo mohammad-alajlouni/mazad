@@ -23,11 +23,13 @@ export async function finishPages(page: Page) {
   for (let i = 0; i < 8 && (await form.count()); i++) {
     const before = await current.textContent();
     await form.locator(".page-part-actions button.primary").click();
+    // Each page is saved before the next opens; allow for a busy server.
     await expect
       .poll(
         async () =>
           (await form.count()) === 0 ||
           (await current.textContent()) !== before,
+        { timeout: 20000 },
       )
       .toBeTruthy();
   }

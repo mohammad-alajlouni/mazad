@@ -93,7 +93,7 @@ test("missing requirements are listed per step and lead to their fields", async 
   const district = page.locator('[name="property.district"]');
   await expect(district).toBeFocused();
   await district.fill("النرجس");
-  await page.getByRole("button", { name: "Save item", exact: true }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByRole("status")).toBeVisible();
 
   // The images step asks only for property photographs; the link reaches its box.

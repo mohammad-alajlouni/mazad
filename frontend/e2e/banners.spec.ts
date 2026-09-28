@@ -58,8 +58,8 @@ test("independent banner workspace validates, generates and exports", async ({
   }))
     await auction.locator(`[name="${field}"]`).fill(value);
   await page.getByRole("button", { name: "Save auction and continue" }).click();
-  await page.getByRole("button", { name: "Add property", exact: true }).click();
-  await page.getByLabel("Item title").fill("عقار البنر التجريبي");
+  await page.getByRole("button", { name: "New property", exact: true }).click();
+  await page.getByLabel("Property name (optional)").fill("عقار البنر التجريبي");
   for (const [field, value] of Object.entries({
     property_type: "أرض سكنية",
     city: "الرياض",
@@ -71,7 +71,9 @@ test("independent banner workspace validates, generates and exports", async ({
     plot_number: "12",
   }))
     await page.locator(`[name="property.${field}"]`).fill(value);
-  await page.getByRole("button", { name: "Save item", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
   await expect(
     page.locator('[name="property.execution_request_number"]'),
   ).toBeVisible();
@@ -83,7 +85,9 @@ test("independent banner workspace validates, generates and exports", async ({
   await page
     .locator('[name="property.execution_request_number"]')
     .fill("987654321");
-  await page.getByRole("button", { name: "Save item", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Save and close", exact: true })
+    .click();
   await page
     .locator(".workflow-steps")
     .getByRole("button", { name: /Photos and logos/ })

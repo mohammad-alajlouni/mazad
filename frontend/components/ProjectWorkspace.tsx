@@ -1,4 +1,5 @@
 import LiveBookletPreview from "./LiveBookletPreview";
+import PropertyManager from "./PropertyManager";
 import {
   type Issue,
   missingStage,
@@ -12,16 +13,11 @@ import { useConfirm } from "./Confirmation";
 import { formatNumber, formatDate } from "../i18n/format";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useRef } from "react";
-import { ArrowUpRight, Plus, Layers, Sparkles } from "lucide-react";
+import { ArrowUpRight, Layers, Sparkles } from "lucide-react";
 import { api, send, Detail, Item, Output, Run } from "./api";
 import { Config } from "./Settings";
-import { Badge, Empty, OutputList, title } from "./shared";
-import {
-  ProjectForm,
-  ItemForm,
-  ExcelUpload,
-  ImageUpload,
-} from "./ProjectForms";
+import { Badge, OutputList, title } from "./shared";
+import { ProjectForm, ExcelUpload, ImageUpload } from "./ProjectForms";
 export default function ProjectWorkspace({
   detail,
   config,
@@ -287,17 +283,6 @@ export default function ProjectWorkspace({
             }}
           />
         )}
-        {tab === "items" && !itemEditor && (
-          <div className="flow-actions">
-            <p>{tr("flow.propertiesHelp")}</p>
-            <button
-              className="secondary"
-              onClick={() => void go("excel import")}
-            >
-              {tr("flow.importProperties")}
-            </button>
-          </div>
-        )}
         {tab === "overview" && (
           <div className="project-overview">
             <section className="panel form-panel">
@@ -350,124 +335,16 @@ export default function ProjectWorkspace({
             </section>
           </div>
         )}
-        {tab === "items" &&
-          (itemEditor ? (
-            <ItemForm
-              projectId={detail.project.id}
-              requiredFields={detail.workflow?.rules.property_required}
-              auctionType={String(
-                detail.project.auction?.auction_type || "physical",
-              )}
-              existing={itemEditor === "new" ? undefined : itemEditor}
-              run={run}
-              onDone={() => {
-                setItemEditor(null);
-                void reloadProject();
-              }}
-            />
-          ) : (
-            <section className="panel">
-              <div className="panel-heading flex-row">
-                <h2>{tr("ui.normalized_items")}</h2>
-                <button
-                  className="primary"
-                  onClick={() => setItemEditor("new")}
-                >
-                  <Plus size={16} />
-                  {tr("ui.add_item")}
-                </button>
-              </div>
-              {detail.items.length ? (
-                <div className="table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>{tr("ui.item")}</th>
-                        <th>{tr("ui.category")}</th>
-                        <th>{tr("ui.quantity")}</th>
-                        <th>{tr("ui.unit_value")}</th>
-                        <th />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detail.items.map((i) => (
-                        <tr key={i.id}>
-                          <td>
-                            <strong>{i.title}</strong>
-                            <small dir="ltr">{i.reference}</small>
-                          </td>
-                          <td>{i.category || "—"}</td>
-                          <td>{formatNumber(i.quantity)}</td>
-                          <td>{formatNumber(i.financial_value)}</td>
-                          <td>
-                            <div className="actions">
-                              <button
-                                className="text-button"
-                                onClick={() => setItemEditor(i)}
-                              >
-                                {tr("ui.edit")}
-                              </button>
-                              <button
-                                className="text-button"
-                                disabled={detail.items.indexOf(i) === 0}
-                                onClick={() =>
-                                  void run(async () => {
-                                    const ids = detail.items.map((v) => v.id);
-                                    const index = ids.indexOf(i.id);
-                                    [ids[index - 1], ids[index]] = [
-                                      ids[index],
-                                      ids[index - 1],
-                                    ];
-                                    await api(
-                                      `/projects/${detail.project.id}/item-order`,
-                                      {
-                                        method: "PUT",
-                                        body: send({ item_ids: ids }),
-                                      },
-                                    );
-                                    await reloadProject();
-                                  })
-                                }
-                              >
-                                {tr("auction.move_up")}
-                              </button>
-                              <button
-                                className="text-button danger"
-                                onClick={async () => {
-                                  if (
-                                    await confirm(
-                                      tr(
-                                        "ui.delete_this_item_and_its_image_associations_existing_outputs_will",
-                                      ),
-                                    )
-                                  )
-                                    void run(async () => {
-                                      await api(
-                                        `/projects/${detail.project.id}/items/${i.id}`,
-                                        { method: "DELETE" },
-                                      );
-                                      await reloadProject();
-                                    }, tr("ui.item_deleted"));
-                                }}
-                              >
-                                {tr("ui.delete")}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <Empty
-                  text={tr(
-                    "ui.add_an_item_manually_or_import_an_excel_workbook",
-                  )}
-                />
-              )}
-            </section>
-          ))}
+        {tab === "items" && (
+          <PropertyManager
+            detail={detail}
+            run={run}
+            reload={reloadProject}
+            editing={itemEditor}
+            setEditing={setItemEditor}
+            onImport={() => void go("excel import")}
+          />
+        )}
         {tab === "excel import" && (
           <ExcelUpload
             projectId={detail.project.id}

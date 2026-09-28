@@ -86,10 +86,12 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
     await fillPages(page, values);
     await finishPages(page);
     await page
-      .getByRole("button", { name: "Add property", exact: true })
+      .getByRole("button", { name: "New property", exact: true })
       .click();
-    await page.getByLabel("Item title").fill("عقار تجريبي");
-    await page.getByRole("button", { name: "Save item", exact: true }).click();
+    await page.getByLabel("Property name (optional)").fill("عقار تجريبي");
+    await page
+      .getByRole("button", { name: "Save and close", exact: true })
+      .click();
     await expect(page.locator('[name="property.property_type"]')).toBeVisible();
     expect(
       await page

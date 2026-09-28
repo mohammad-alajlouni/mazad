@@ -137,20 +137,23 @@ for (const locale of ["en", "ar"] as const)
         .getByRole("button", { name: new RegExp(t("flow.properties")) })
         .click();
       await page
-        .getByRole("button", { name: t("ui.add_item"), exact: true })
+        .getByRole("button", { name: t("properties.add"), exact: true })
         .click();
-      await page.getByLabel(t("ui.item_title")).fill("مولد Generator A-01");
+      await page
+        .getByLabel(t("properties.titleLabel"))
+        .fill("مولد Generator A-01");
       await page.locator('[name="property.property_type"]').fill("معدات");
       await page.locator('[name="property.city"]').fill("الرياض");
-      await page.getByLabel(t("ui.quantity"), { exact: true }).fill("2");
-      await page.getByLabel(t("ui.unit_financial_value")).fill("1200.50");
+      // Generic item fields sit in the optional section of the property form.
       await page
         .locator("form summary")
-        .filter({ hasText: t("flow.otherTools") })
+        .filter({ hasText: t("properties.advanced") })
         .click();
+      await page.getByLabel(t("ui.quantity"), { exact: true }).fill("2");
+      await page.getByLabel(t("ui.unit_financial_value")).fill("1200.50");
       await page.getByLabel(t("ui.additional_attributes_json")).fill("invalid");
       await page
-        .getByRole("button", { name: t("ui.save_item"), exact: true })
+        .getByRole("button", { name: t("properties.saveClose"), exact: true })
         .click();
       await expect(
         page.getByText(t("ui.additional_attributes_must_be_a_json_object")),
@@ -159,13 +162,14 @@ for (const locale of ["en", "ar"] as const)
         .getByLabel(t("ui.additional_attributes_json"))
         .fill('{"URL":"https://example.com/A-01","البريد":"test@example.com"}');
       await page
-        .getByRole("button", { name: t("ui.save_item"), exact: true })
+        .getByRole("button", { name: t("properties.saveClose"), exact: true })
         .click();
       await expect(
         page.getByText("مولد Generator A-01", { exact: true }),
       ).toBeVisible();
+      // The list's delete button is named after its property.
       await page
-        .getByRole("button", { name: t("ui.delete"), exact: true })
+        .getByRole("button", { name: t("ui.delete") + " مولد Generator A-01" })
         .click();
       await expect(page.getByRole("dialog")).toBeVisible();
       await expect(page.getByRole("dialog")).toHaveCSS(
@@ -180,7 +184,7 @@ for (const locale of ["en", "ar"] as const)
         page.getByText("مولد Generator A-01", { exact: true }),
       ).toBeVisible();
       await page
-        .getByRole("button", { name: t("flow.importProperties"), exact: true })
+        .getByRole("button", { name: t("properties.import"), exact: true })
         .click();
       await page
         .getByLabel(t("ui.excel_workbook"))
@@ -200,7 +204,7 @@ for (const locale of ["en", "ar"] as const)
       );
       await expect(
         page
-          .locator("tbody strong")
+          .locator(".property-cards strong")
           .getByText("أرض · حي تجريبي 1", { exact: true }),
       ).toBeVisible();
       await page

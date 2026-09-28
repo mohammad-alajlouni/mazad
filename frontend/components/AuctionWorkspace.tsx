@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { api, send, Detail, Item, Run } from "./api";
 import { BookletPages } from "./BookletPages";
@@ -204,15 +204,21 @@ export function readProperty(form: FormData) {
 }
 export function PropertyFields({
   existing,
+  template,
   requiredFields = [],
   auctionType = "physical",
+  children,
 }: {
   existing?: Item;
+  // Starting values for a new property (e.g. copied from a similar one).
+  template?: Values;
   requiredFields?: string[];
   auctionType?: string;
+  // Shown right after the main details (the description, as on the page).
+  children?: React.ReactNode;
 }) {
   const t = useTranslations("auction");
-  const prop = existing?.property_data || {};
+  const prop = existing?.property_data || template || {};
   const [rentals, setRentals] = useState<{ key: number; data: Values }[]>(
     ((prop.rental_contracts || []) as Values[]).map((data, key) => ({
       key,
@@ -222,65 +228,25 @@ export function PropertyFields({
   const [nextKey, setNextKey] = useState(rentals.length);
   return (
     <>
-      <details open>
-        <summary>{t("booklet_pages")}</summary>
-        <label>
-          {t("booklet_layout")}
-          <select
-            name="property.booklet_layout"
-            defaultValue={String(prop.booklet_layout || "auto")}
-          >
-            {["auto", "landscape", "portrait"].map((value) => (
-              <option key={value} value={value}>
-                {t(`layout_${value}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {t("booklet_image_fit")}
-          <select
-            name="property.booklet_image_fit"
-            defaultValue={String(prop.booklet_image_fit || "cover")}
-          >
-            <option value="cover">{t("image_cover")}</option>
-            <option value="contain">{t("image_contain")}</option>
-          </select>
-        </label>
-        {[
-          "include_information_page",
-          "include_images_page",
-          "include_rentals_page",
-        ].map((field) => (
-          <label key={field}>
-            {t(field)}
-            <select
-              name={`booklet.${field}`}
-              defaultValue={String(prop[field] ?? true)}
-            >
-              <option value="true">{t("page_enabled")}</option>
-              <option value="false">{t("page_disabled")}</option>
-            </select>
-          </label>
-        ))}
-        <p className="muted">{t("booklet_pages_hint")}</p>
-      </details>
       {propertyGroups.map((fields, index) => (
-        <details key={index} open={index === 0}>
-          <summary>
-            {t(index === 0 ? "property_details" : "property_links")}
-          </summary>
-          <Fields
-            fields={fields.filter(
-              (key) =>
-                auctionType !== "physical" ||
-                !["auction_close_date", "auction_close_time"].includes(key),
-            )}
-            prefix="property."
-            values={prop}
-            requiredFields={requiredFields}
-          />
-        </details>
+        <React.Fragment key={index}>
+          <details open={index === 0}>
+            <summary>
+              {t(index === 0 ? "property_details" : "property_links")}
+            </summary>
+            <Fields
+              fields={fields.filter(
+                (key) =>
+                  auctionType !== "physical" ||
+                  !["auction_close_date", "auction_close_time"].includes(key),
+              )}
+              prefix="property."
+              values={prop}
+              requiredFields={requiredFields}
+            />
+          </details>
+          {index === 0 && children}
+        </React.Fragment>
       ))}
       <details>
         <summary>{t("features")}</summary>
@@ -337,6 +303,49 @@ export function PropertyFields({
         >
           {t("add_rental")}
         </button>
+      </details>
+      <details>
+        <summary>{t("booklet_pages")}</summary>
+        <label>
+          {t("booklet_layout")}
+          <select
+            name="property.booklet_layout"
+            defaultValue={String(prop.booklet_layout || "auto")}
+          >
+            {["auto", "landscape", "portrait"].map((value) => (
+              <option key={value} value={value}>
+                {t(`layout_${value}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          {t("booklet_image_fit")}
+          <select
+            name="property.booklet_image_fit"
+            defaultValue={String(prop.booklet_image_fit || "cover")}
+          >
+            <option value="cover">{t("image_cover")}</option>
+            <option value="contain">{t("image_contain")}</option>
+          </select>
+        </label>
+        {[
+          "include_information_page",
+          "include_images_page",
+          "include_rentals_page",
+        ].map((field) => (
+          <label key={field}>
+            {t(field)}
+            <select
+              name={`booklet.${field}`}
+              defaultValue={String(prop[field] ?? true)}
+            >
+              <option value="true">{t("page_enabled")}</option>
+              <option value="false">{t("page_disabled")}</option>
+            </select>
+          </label>
+        ))}
+        <p className="muted">{t("booklet_pages_hint")}</p>
       </details>
     </>
   );
