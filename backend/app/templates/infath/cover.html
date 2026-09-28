@@ -18,7 +18,8 @@
 {% set first = g.first_base - (30 * (lines - 1) if photo_cover else 0) %}
 <div class="t r w7 white" style="{{ T(g.title_right, first, 25, lh=30) }}">{{ prefix }}</div>
 <div class="t p r w7 white" data-fit="cover-title" data-max-height="{{ 30 * lines }}pt" style="{{ T(g.title_right, first + 30, 25, lh=30, width=250) }};white-space:normal">{{ name }}</div>
-{% set date = fmt.day_range(auction, output_language, weekday=false, suffix='م' if ar else '', dash='-') %}
+{#- The cover shows the auction's start date only. -#}
+{% set date = fmt.day_range(dict(auction, auction_end_date=None), output_language, weekday=false, suffix='م' if ar else '', dash='-') %}
 {% if wide %}
 <div class="t r w5 white" style="{{ T(37.2, 800.0, 10, align='left', width=200) }}">{{ date|nums }}</div>
 {% else %}

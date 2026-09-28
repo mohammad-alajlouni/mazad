@@ -249,8 +249,11 @@ def test_dates_times_and_amounts_follow_the_reference():
         f.day_range(auction, "ar", weekday=False, suffix="م", dash="-")
         == "27-29 يوليو 2026م"
     )
-    assert f.time_range(auction, "ar") == "10 : 00 صباحاً - 07 : 00 مساءً"
-    assert f.slash_date("2026-07-29") == "2026 / 07 / 29"
+    # Figure groups carry invisible isolate marks that keep their order in RTL.
+    assert f.time_range(auction, "ar") == (
+        "\u206610 : 00\u2069 صباحاً - \u206607 : 00\u2069 مساءً"
+    )
+    assert f.slash_date("2026-07-29") == "\u20662026 / 07 / 29\u2069"
     assert f.money("10000.00") == "10,000 ريال"
     assert f.number("1130.4510") == "1130٫451"
 
@@ -542,3 +545,34 @@ def test_long_summary_values_wrap_in_their_cell_without_shrinking():
     assert sum(len(p["rows"]) for p in tables) == 25
     assert all(p["bottoms"][-1] <= SUMMARY_LIMIT for p in tables)
     assert all(len(p["rows"]) <= 10 for p in tables)
+
+
+def test_typed_plan_numbers_keep_the_order_shown_in_the_form():
+    """ "118 / 1400 / ج / 2" typed in the (right-to-left) form reads the same in
+    the booklet: drawn left to right as 2, ج, 1400, 118 - as in the input."""
+    import pymupdf
+    from weasyprint import HTML
+
+    from app.auction_schemas import AuctionData
+    from app.generation.engine import render_html, safe_fetch
+
+    project = project_with("physical", auction_date="2026-07-27")
+    project["auction"] = AuctionData.model_validate(project["auction"]).model_dump(
+        mode="json"
+    )
+    project.update(agent_logo="", selling_agent={"name": "وكيل"})
+    item = {
+        **item_with(property_type="عمارة", plan_number="118 / 1400 / ج / 2"),
+        "id": "i",
+        "title": "عقار",
+    }
+    booklet = compose(project, [item])
+    for kind in ("property", "summary"):
+        page = next(p for p in booklet["pages"] if p["kind"] == kind)
+        content = {"project": project, "items": [item], "output_language": "ar"}
+        html = render_html({**content, "booklet": {**booklet, "pages": [page]}})
+        doc = pymupdf.open("pdf", HTML(string=html, url_fetcher=safe_fetch).write_pdf())
+        words = [w for w in doc[0].get_text("words") if w[4] in ("118", "1400", "2")]
+        # Read as the form reads it: line by line, each line right to left.
+        drawn = [w[4] for w in sorted(words, key=lambda w: (round(w[3]), -w[0]))]
+        assert drawn == ["118", "1400", "2"], (kind, drawn)

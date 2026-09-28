@@ -42,7 +42,7 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 6
+LAYOUT_VERSION = 7
 # Rows that the reference tables hold before continuing on another page.
 SUMMARY_ROWS = 10
 # Reference page 5 table: column edges (right to left) and row bottoms, in points.
@@ -217,7 +217,8 @@ def summary_value(item, key, language="ar"):
 def cell_lines(text, width):
     """Lines a value takes in a table cell: words in Ruaq, figures in Lama."""
     return max(
-        fit_length(text, size, width, 10**6, name, 1.0)[1]
+        # 8% margin: the renderer breaks a line slightly before the measured edge.
+        fit_length(text, size, width, 10**6, name, 0.92)[1]
         for name, size in (("RuaqArabic-Medium", 8.12), ("LamaSans-Medium", 8))
     )
 

@@ -48,14 +48,21 @@ def nums(value):
     from markupsafe import Markup, escape
 
     text = "" if value in (None, "") else str(value)
-    parts = re.split(r"(\d+(?:\s?[:/٫,.]\s?\d+)*)", text)
-    # In Arabic text a spaced separator ("08 : 31", "2026 / 07 / 29") splits the
-    # figures into separate right-to-left pieces and reverses them. The Unicode
-    # isolate marks (LRI ... PDI) keep each run left-to-right as one unit; both
-    # WeasyPrint (Pango/FriBidi) and browsers honour them.
+    # A figure run as the Unicode algorithm sees it: digits joined by one
+    # unspaced separator (1400/118, 2,500). Spaced groups made by the booklet
+    # (times, dates) are isolated where they are formatted; typed values such
+    # as "118 / 1400 / ج / 2" keep the order the author sees in the form.
+    # A group already isolated by the formatter stays one run (one element).
+    parts = re.split(r"(\u2066[^\u2069]*\u2069|\d+(?:[:/٫,.]\d+)*)", text)
+    # Each run is wrapped in Unicode isolate marks (LRI ... PDI), honoured by
+    # WeasyPrint (Pango/FriBidi) and browsers alike.
     return Markup(
         "".join(
-            f'<span class="num">⁦{escape(part)}⁩</span>'
+            (
+                f'<span class="num">{escape(part)}</span>'
+                if part.startswith("\u2066")
+                else f'<span class="num">\u2066{escape(part)}\u2069</span>'
+            )
             if index % 2
             else escape(part)
             for index, part in enumerate(parts)

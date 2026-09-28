@@ -69,6 +69,16 @@ def auction_days(auction):
     return start, as_date(auction.get("auction_end_date")) or start
 
 
+def ltr(text):
+    """A figure group kept left-to-right inside Arabic text (Unicode isolate).
+
+    Spaced separators ("08 : 31", "2026 / 07 / 29") would otherwise split the
+    group into pieces laid out right to left. Only values the booklet formats
+    itself are grouped; text the author typed keeps its own (input) order.
+    """
+    return f"\u2066{text}\u2069"
+
+
 def clock(value, language):
     """10 : 00 صباحاً — the reference spaces the colon and names the period."""
     moment = as_time(value)
@@ -76,8 +86,10 @@ def clock(value, language):
         return ""
     hour = moment.hour % 12 or 12
     if language == "ar":
-        return f"{hour:02d} : {moment.minute:02d} " + (
-            "صباحاً" if moment.hour < 12 else "مساءً"
+        return (
+            ltr(f"{hour:02d} : {moment.minute:02d}")
+            + " "
+            + ("صباحاً" if moment.hour < 12 else "مساءً")
         )
     return f"{hour}:{moment.minute:02d} " + ("AM" if moment.hour < 12 else "PM")
 
@@ -114,7 +126,7 @@ def day_range(auction, language, weekday=True, suffix="", dash=" - "):
 def slash_date(value):
     """2026 / 07 / 29, as on the closing-time badge."""
     day = as_date(value)
-    return f"{day.year} / {day.month:02d} / {day.day:02d}" if day else ""
+    return ltr(f"{day.year} / {day.month:02d} / {day.day:02d}") if day else ""
 
 
 def number(value, language="ar", grouping=False):
