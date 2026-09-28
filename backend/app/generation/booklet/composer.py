@@ -42,9 +42,15 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 5
+LAYOUT_VERSION = 6
 # Rows that the reference tables hold before continuing on another page.
 SUMMARY_ROWS = 10
+# Reference page 5 table: column edges (right to left) and row bottoms, in points.
+SUMMARY_COLS = (509.2, 455.1, 413.1, 350.6, 308.6, 265.9, 225.9, 152.6, 37.6)
+SUMMARY_TOP = 297.7
+SUMMARY_BOTTOMS = (327.7, 353.8, 379.8, 405.8, 434.4, 460.4, 486.4, 512.4, 541.0, 567.0)
+SUMMARY_LIMIT = 740.0  # a taller table still ends above the footer
+SUMMARY_LINE = 10.5  # line height of a value wrapped inside its cell
 RENTAL_ROWS = 19
 # Links shown on the property page; the rest continue on a links page.
 PAGE_LINKS = 4
@@ -198,6 +204,65 @@ def agent_size(text):
         size = max(AGENT_MIN, round(size - 0.25, 2))
 
 
+def summary_value(item, key, language="ar"):
+    """A property's value as the summary table prints it."""
+    from .formatting import number
+
+    value = item["property_data"].get(key)
+    if key in ("area", "participation_amount"):
+        value = number(value, language, key == "participation_amount")
+    return str(value or "-")
+
+
+def cell_lines(text, width):
+    """Lines a value takes in a table cell: words in Ruaq, figures in Lama."""
+    return max(
+        fit_length(text, size, width, 10**6, name, 1.0)[1]
+        for name, size in (("RuaqArabic-Medium", 8.12), ("LamaSans-Medium", 8))
+    )
+
+
+def summary_pages(items, language="ar"):
+    """Summary tables with every value shown whole, at the reference size.
+
+    A value too long for its column wraps inside its cell and only that row
+    grows; rows that fit keep the reference geometry. A page takes rows while
+    the table stays above the footer, and at most the reference's ten.
+    """
+    pages, rows, bottoms, lines = [], [], [], []
+
+    def reference(position):
+        top = SUMMARY_BOTTOMS[position - 1] if position else SUMMARY_TOP
+        return SUMMARY_BOTTOMS[position] - top
+
+    for item in items:
+        counts = {
+            key: cell_lines(
+                summary_value(item, key, language),
+                SUMMARY_COLS[i] - SUMMARY_COLS[i + 1] - 4,
+            )
+            for i, key in enumerate(SUMMARY_FIELDS)
+        }
+        needed = max(counts.values()) * SUMMARY_LINE + 6
+        if rows and (
+            len(rows) == SUMMARY_ROWS
+            or bottoms[-1] + max(reference(len(rows)), needed) > SUMMARY_LIMIT
+        ):
+            pages.append(
+                {"kind": "summary", "rows": rows, "bottoms": bottoms, "lines": lines}
+            )
+            rows, bottoms, lines = [], [], []
+        top = bottoms[-1] if bottoms else SUMMARY_TOP
+        rows.append(item)
+        bottoms.append(round(top + max(reference(len(rows) - 1), needed), 2))
+        lines.append(counts)
+    if rows:
+        pages.append(
+            {"kind": "summary", "rows": rows, "bottoms": bottoms, "lines": lines}
+        )
+    return pages
+
+
 def boundaries_need_page(boundaries, layout="landscape"):
     # Each direction has one line beside its label on the property page.
     return any(
@@ -298,8 +363,7 @@ def compose(project, items):
         pages.append(
             {"kind": "information", "heading": "legal_announcement_text", "text": text}
         )
-    for rows in chunks(items, SUMMARY_ROWS):
-        pages.append({"kind": "summary", "rows": rows})
+    pages += summary_pages(items, auction.get("document_language") or "ar")
     for index, item in enumerate(items, 1):
         item["number"] = index
         prop = item["property_data"]

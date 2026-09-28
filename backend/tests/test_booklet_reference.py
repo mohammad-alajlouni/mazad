@@ -514,3 +514,31 @@ def test_recording_notice_only_where_the_auction_has_a_hall(kind, shown):
         }
     )
     assert (label("recording_notice", "ar") in html) is shown
+
+
+def test_long_summary_values_wrap_in_their_cell_without_shrinking():
+    """A long district or plan number stays whole inside its column; only its
+    row grows, and rows that fit keep the reference geometry."""
+    from app.generation.booklet.composer import SUMMARY_BOTTOMS, SUMMARY_LIMIT
+
+    short = item_with(property_type="فيلا", city="ابها", district="العزيزية")
+    long = item_with(
+        property_type="ارض مقام عليها هناجر",
+        city="خميس مشيط",
+        district="مخطط لطيفة بنت سلطان بن عبدالعزيز",
+        plan_number="1433 / 234 / ع / 17",
+    )
+    pages = [
+        p
+        for p in compose(project_with("physical"), [short, long, short])["pages"]
+        if p["kind"] == "summary"
+    ]
+    page = pages[0]
+    assert page["bottoms"][0] == SUMMARY_BOTTOMS[0]  # a row that fits is unchanged
+    assert page["lines"][1]["district"] >= 2 and page["lines"][1]["city"] >= 2
+    assert page["bottoms"][1] - page["bottoms"][0] > 26.1  # only the long row grows
+    many = compose(project_with("physical"), [long] * 25)["pages"]
+    tables = [p for p in many if p["kind"] == "summary"]
+    assert sum(len(p["rows"]) for p in tables) == 25
+    assert all(p["bottoms"][-1] <= SUMMARY_LIMIT for p in tables)
+    assert all(len(p["rows"]) <= 10 for p in tables)
