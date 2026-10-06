@@ -1,5 +1,5 @@
 import { completeAccount } from "./account-setup";
-import { completeBookletBasics } from "./required-setup";
+import { completeBookletBasics, newProject } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -30,6 +30,8 @@ async function uploadTo(
   const slot = page.locator(".image-slot").filter({ hasText: box });
   await slot.locator('input[type="file"]').setInputFiles(file);
   await slot.getByRole("button", { name: /^(Upload|Replace)$/ }).click();
+  // The box shows the photograph once the upload has been stored.
+  await expect(slot.locator("img")).toBeVisible();
 }
 
 test("administrator completes manual and Excel input, uploads image, reviews and exports", async ({
@@ -50,20 +52,9 @@ test("administrator completes manual and Excel input, uploads image, reviews and
   await expect(
     page.getByRole("heading", { name: "Account administration" }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Create project", exact: true })
-    .first()
-    .click();
-  await page
-    .getByLabel("Project / auction name", { exact: true })
-    .fill("Browser workflow demo");
-  await page.getByLabel("Reference code").fill("BROWSER-" + Date.now());
-  await page.getByLabel("Customer / entity").fill("Development demo");
-  await page.getByLabel("Project type").selectOption("booklet");
-  await page
-    .locator("form")
-    .getByRole("button", { name: "Create project" })
-    .click();
+  await newProject(page, "Browser workflow demo", "booklet", {
+    customer: "Development demo",
+  });
   await expect(
     page.getByRole("heading", { name: "Browser workflow demo" }),
   ).toBeVisible();
@@ -116,7 +107,6 @@ test("administrator completes manual and Excel input, uploads image, reviews and
     "Main image: وحدة طاقة تجريبية",
     path.join(root, "samples/demo-generator.jpg"),
   );
-  await expect(page.getByAltText("Uploaded project asset")).toBeVisible();
   await page.getByRole("button", { name: /Review and generate/ }).click();
   await page
     .getByRole("button", { name: "Additional tools and outputs", exact: true })

@@ -57,15 +57,16 @@ export default function GenerateProject({
     >
       <h2>{t("title")}</h2>
       <p>{t("help")}</p>
-      <div className="publication-summary">
-        <span>{t("booklet")}</span>
-        <span>
+      {/* What will be produced, as plain facts (the sections are the tabs above). */}
+      <ul className="publication-summary">
+        <li>{t("booklet")}</li>
+        <li>
           {t("banner")} · {reviews?.[0].config?.size || "4x2"} m
-        </span>
-        <span>
+        </li>
+        <li>
           {t("social")} · {reviews?.[1].config?.format || "instagram"}
-        </span>
-      </div>
+        </li>
+      </ul>
       {!ready && (
         <p className="muted">
           {dirty

@@ -97,12 +97,15 @@ export function BookletPages({
   reload,
   section,
   onSaved,
+  onPage,
 }: {
   detail: Detail;
   run: Run;
   reload: () => Promise<void>;
   section: "auction" | "closing";
   onSaved?: () => void;
+  // The page being filled and how many there are, for the step navigation.
+  onPage?: (index: number, count: number) => void;
 }) {
   const t = useTranslations("auction");
   const p = useTranslations("bookletPages");
@@ -135,6 +138,22 @@ export function BookletPages({
       void run(async () => setCovers(await api("/booklet-templates")));
   }, []);
   useEffect(() => showPage(part.page), [part.page]);
+  const at = useRef(index);
+  at.current = index;
+  useEffect(() => onPage?.(index, parts.length), [index, parts.length]);
+  // "Previous" in the step navigation: back one page while there is one.
+  useEffect(() => {
+    const element = form.current;
+    if (!element) return;
+    const back = (event: Event) => {
+      if (at.current > 0) {
+        event.preventDefault();
+        setIndex(at.current - 1);
+      }
+    };
+    element.addEventListener("wizard-previous", back);
+    return () => element.removeEventListener("wizard-previous", back);
+  }, []);
   // A requirement link or a failed check reveals the page holding the field.
   useEffect(() => {
     const element = form.current;
@@ -170,6 +189,13 @@ export function BookletPages({
         method: "PUT",
         body: send({
           ...detail.project,
+          // The project is called after its auction until it is given its own name.
+          name:
+            values.auction_name &&
+            (!auction.auction_name ||
+              detail.project.name === auction.auction_name)
+              ? String(values.auction_name)
+              : detail.project.name,
           // Each part saves into the one auction record without clearing the others.
           auction: {
             ...auction,
@@ -484,24 +510,8 @@ export function BookletPages({
           )}
         </div>
       ))}
-      <div className="flow-actions page-part-actions">
-        {index > 0 && (
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => setIndex(index - 1)}
-          >
-            {p("previous")}
-          </button>
-        )}
-        <button className="primary">
-          {last
-            ? section === "auction"
-              ? t("save_auction")
-              : p("finishClosing")
-            : p("next", { title: p(parts[index + 1].key) })}
-        </button>
-      </div>
+      {/* No buttons of its own: the step navigation saves this page and moves
+          on (submit), or steps back a page ("wizard-previous"). */}
     </form>
   );
 }

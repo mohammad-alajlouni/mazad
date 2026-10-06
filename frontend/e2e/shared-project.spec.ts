@@ -1,4 +1,4 @@
-import { fillPages } from "./required-setup";
+import { fillPages, newProject } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -27,18 +27,8 @@ test("one project reuses data for booklet, banners and social posts", async ({
   await completeAccount(page);
   await expect(page.locator(".sidebar")).toBeVisible();
   const before = await page.request.get("/api/projects").then((r) => r.json());
-  await page
-    .getByRole("button", { name: "Create project", exact: true })
-    .first()
-    .click();
-  await expect(page.getByLabel("Project type")).toHaveValue("project");
   const name = "Shared " + Date.now();
-  await page.getByLabel("Project / auction name", { exact: true }).fill(name);
-  await page.getByLabel("Reference code").fill("SHARED-" + Date.now());
-  await page
-    .locator("form")
-    .getByRole("button", { name: "Create project" })
-    .click();
+  await newProject(page, name, "project");
   const sections = page.getByRole("navigation", { name: "Project sections" });
   await expect(sections.getByRole("button")).toHaveCount(5);
   const projects = await page.request
@@ -191,7 +181,7 @@ test("one project reuses data for booklet, banners and social posts", async ({
       response.url().endsWith(`/projects/${p.id}`) &&
       response.request().method() === "PUT",
   );
-  await page.locator(".page-part-actions button.primary").click();
+  await page.locator(".workflow-navigation .nav-next").click();
   expect((await savedAuction).ok()).toBeTruthy();
   const changed = await page.request
     .get("/api/projects/" + p.id)
@@ -201,6 +191,11 @@ test("one project reuses data for booklet, banners and social posts", async ({
       (o: { status: string }) => o.status === "NEEDS_REGENERATION",
     ),
   ).toBeTruthy();
+  // Generating is the last step of the same wizard.
+  await page
+    .locator(".workflow-steps")
+    .getByRole("button", { name: /Generate/ })
+    .click();
   const batch = page.waitForResponse(
     (r) =>
       r.url().endsWith(`/projects/${p.id}/generate`) &&

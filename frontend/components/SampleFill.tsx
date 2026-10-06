@@ -117,7 +117,16 @@ export default function SampleFill({
       };
       await api(`/projects/${project.id}`, {
         method: "PUT",
-        body: send({ ...project, auction }),
+        // A project still called after its auction follows the new name.
+        body: send({
+          ...project,
+          name:
+            !project.auction?.auction_name ||
+            project.name === project.auction.auction_name
+              ? name
+              : project.name,
+          auction,
+        }),
       });
       let items: Item[] = detail.items;
       if (!items.length) {

@@ -155,6 +155,24 @@ export default function SharedProjectWorkspace({
           setReview={setReview}
           sharedMode={section}
           onSharedFix={fix}
+          finish={
+            <GenerateProject
+              detail={detail}
+              busy={busy}
+              dirty={dirty}
+              run={run}
+              onDone={async () => {
+                await reloadProject();
+                setSection("outputs");
+              }}
+              onFix={(target, step) => {
+                if (target === "data") {
+                  setDataTab(step || "auction");
+                  setSection("data");
+                } else void select(target);
+              }}
+            />
+          }
           tab={section === "data" ? dataTab : bookletTab}
           setTab={section === "data" ? setDataTab : setBookletTab}
         />
@@ -176,38 +194,6 @@ export default function SharedProjectWorkspace({
           reloadProject={reloadProject}
           setReview={setReview}
         />
-      )}
-      {(section === "data" || section === "booklet") && (
-        <GenerateProject
-          detail={detail}
-          busy={busy}
-          dirty={dirty}
-          run={run}
-          onDone={async () => {
-            await reloadProject();
-            setSection("outputs");
-          }}
-          onFix={(target, step) => {
-            if (target === "data") {
-              setDataTab(step || "auction");
-              setSection("data");
-            } else void select(target);
-          }}
-        />
-      )}
-      {section === "data" && (
-        <div className="flow-actions">
-          <p>{t("choose")}</p>
-          {(["booklet", "banner", "social"] as ProjectSection[]).map((key) => (
-            <button
-              className="secondary"
-              key={key}
-              onClick={() => void select(key)}
-            >
-              {t(key)}
-            </button>
-          ))}
-        </div>
       )}
     </div>
   );

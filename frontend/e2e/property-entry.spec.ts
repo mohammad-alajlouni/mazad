@@ -1,3 +1,4 @@
+import { newProject } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -22,18 +23,8 @@ test("properties are entered one after another without leaving the form", async 
   await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
   await page.getByRole("button", { name: "Sign in to workspace" }).click();
   await completeAccount(page);
-  await page
-    .getByRole("button", { name: "Create project", exact: true })
-    .first()
-    .click();
   const name = "Entry " + Date.now();
-  await page.getByLabel("Project / auction name", { exact: true }).fill(name);
-  await page.getByLabel("Reference code").fill("ENT-" + Date.now());
-  await page.getByLabel("Project type").selectOption("booklet");
-  await page
-    .locator("form")
-    .getByRole("button", { name: "Create project" })
-    .click();
+  await newProject(page, name, "booklet");
   const p = (
     await page.request.get("/api/projects").then((r) => r.json())
   ).find((x: { name: string }) => x.name === name);

@@ -360,6 +360,7 @@ export function AuctionWorkspace({
   bannerMode = false,
   socialMode = false,
   onSaved,
+  onPage,
 }: {
   detail: Detail;
   run: Run;
@@ -368,6 +369,7 @@ export function AuctionWorkspace({
   bannerMode?: boolean;
   socialMode?: boolean;
   onSaved?: () => void;
+  onPage?: (index: number, count: number) => void;
 }) {
   // Booklet flows are entered page by page in the booklet's order.
   if (
@@ -384,6 +386,7 @@ export function AuctionWorkspace({
           reload={reload}
           section={section}
           onSaved={onSaved}
+          onPage={onPage}
         />
       </div>
     );

@@ -612,7 +612,10 @@
     "typeHelp_electronic": "Electronic: bidding start and end, and platform details. Physical venue fields are omitted.",
     "typeHelp_hybrid": "Hybrid: electronic bidding period and platform, plus the physical venue. Both participation methods appear in publications.",
     "closing": "Closing pages",
-    "closingHelp": "The booklet's last pages in order: terms, participation steps, contact."
+    "closingHelp": "The booklet's last pages in order: terms, participation steps, contact.",
+    "finish": "Generate",
+    "finishHelp": "Generate the booklet, banners and social posts from the project data in one go.",
+    "newProject": "New project"
   },
   "excel": {
     "title": "Import properties from the approved template",

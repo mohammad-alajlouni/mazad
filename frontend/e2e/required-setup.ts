@@ -26,13 +26,14 @@ export async function fillPages(page: Page, values: Record<string, string>) {
   }
 }
 
-// "Save and next" through the remaining pages until the step is saved.
+// "Next" through the remaining pages until the step is saved.
 export async function finishPages(page: Page) {
   const form = page.locator(".auction-workspace form");
   const current = form.locator('.page-parts [aria-current="step"]');
   for (let i = 0; i < 8 && (await form.count()); i++) {
     const before = await current.textContent();
-    await form.locator(".page-part-actions button.primary").click();
+    // The one Next of the flow saves this page and opens the following one.
+    await page.locator(".workflow-navigation .nav-next").click();
     // Each page is saved before the next opens; allow for a busy server.
     await expect
       .poll(
@@ -69,4 +70,40 @@ export async function completeBookletBasics(page: Page) {
     physical_location: "الرياض",
   });
   await finishPages(page);
+}
+
+// A project created through the API and opened from "My projects". (In the
+// app "Create project" opens the wizard directly; tests that need a given
+// name or a booklet-only project start here.)
+export async function newProject(
+  page: Page,
+  name: string,
+  type: "project" | "booklet" = "project",
+  extra: Record<string, string> = {},
+) {
+  const response = await page.request.post("/api/projects", {
+    data: {
+      name,
+      code: `E2E-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+      workspace_type: type,
+      ...extra,
+      auction: {
+        auction_name: name,
+        auction_type: "physical",
+        selected_cover_template_id: "infath-2",
+        document_language: "ar",
+      },
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  const project = await response.json();
+  await page.reload();
+  const projects = page.locator(".sidebar nav button").nth(1);
+  // The sidebar is there once the workspace has loaded (hidden on phones).
+  await projects.waitFor({ state: "attached" });
+  if (!(await projects.isVisible())) await page.locator(".mobile-menu").click();
+  await projects.click();
+  await page.getByText(name, { exact: true }).first().click();
+  await expect(page.locator(".workflow-steps")).toBeVisible();
+  return project as { id: string; name: string };
 }

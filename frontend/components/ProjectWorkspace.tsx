@@ -14,7 +14,7 @@ import { AuctionWorkspace, AuctionReview } from "./AuctionWorkspace";
 import { useConfirm } from "./Confirmation";
 import { formatNumber, formatDate } from "../i18n/format";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -39,8 +39,11 @@ export default function ProjectWorkspace({
   setReview,
   sharedMode,
   onSharedFix,
+  finish,
 }: {
   sharedMode?: "data" | "booklet";
+  // What the shared project's last step shows (generate all outputs).
+  finish?: React.ReactNode;
   onSharedFix?: (step: string) => void;
   detail: Detail;
   config: Config | null;
@@ -66,6 +69,8 @@ export default function ProjectWorkspace({
   }, [detail.project.auction?.document_language]);
   const [itemEditor, setItemEditor] = useState<Item | "new" | null>(null);
   const [formVersion, setFormVersion] = useState(0); // reopen forms after a sample fill
+  // Steps entered page by page report [current page, page count].
+  const [pages, setPages] = useState<[number, number]>([0, 1]);
   const [selected, setSelected] = useState<string[]>(["project_booklet"]);
   const [otherTools, setOtherTools] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -75,34 +80,27 @@ export default function ProjectWorkspace({
   }, [detail]);
   // Steps follow the booklet: its first pages, the properties and their
   // photographs, then the closing pages (terms, participation, contact).
+  // A shared project ends its data steps with generating everything at once.
   const steps =
     sharedMode === "data"
-      ? ["auction", "items", "images", "closing"]
+      ? ["auction", "items", "images", "closing", "finish"]
       : sharedMode === "booklet"
         ? ["generate", "outputs"]
         : ["auction", "items", "images", "closing", "generate", "outputs"];
-  const allStepKeys = [
-    "auction",
-    "properties",
-    "images",
-    "closing",
-    "review",
-    "export",
-  ];
-  const stepKeys = steps.map(
-    (step) =>
-      allStepKeys[
-        [
-          "auction",
-          "items",
-          "images",
-          "closing",
-          "generate",
-          "outputs",
-        ].indexOf(step)
-      ],
-  );
+  const stepNames: Record<string, string> = {
+    auction: "auction",
+    items: "properties",
+    images: "images",
+    closing: "closing",
+    generate: "review",
+    outputs: "export",
+    finish: "finish",
+  };
+  const stepKeys = steps.map((step) => stepNames[step]);
   const stepIndex = steps.indexOf(tab === "excel import" ? "items" : tab);
+  const paged = tab === "auction" || tab === "closing";
+  const pagedForm = () =>
+    root.current?.querySelector<HTMLFormElement>("form.booklet-pages") || null;
   const go = async (next: string) => {
     if (next === "agent") {
       window.dispatchEvent(new Event("open-account-profile"));
@@ -309,6 +307,7 @@ export default function ProjectWorkspace({
             detail={detail}
             run={run}
             reload={reloadProject}
+            onPage={(index, count) => setPages([index, count])}
             onSaved={() => {
               setDirty(false);
               setTab("items");
@@ -395,12 +394,14 @@ export default function ProjectWorkspace({
             detail={detail}
             run={run}
             reload={reloadProject}
+            onPage={(index, count) => setPages([index, count])}
             onSaved={() => {
               setDirty(false);
-              if (sharedMode !== "data") setTab("generate");
+              setTab(sharedMode === "data" ? "finish" : "generate");
             }}
           />
         )}
+        {tab === "finish" && finish}
         {tab === "images" && (
           <ImageUpload
             detail={detail}
@@ -573,18 +574,37 @@ export default function ProjectWorkspace({
         )}
         {stepIndex >= 0 && (
           <div className="workflow-navigation">
+            {/* The only Previous / Next of the flow. In a step entered page by
+                page, Next saves the page and opens the next one, then the next
+                step; Previous goes back a page, then a step. */}
             <button
               className="text-button nav-previous"
-              disabled={busy || stepIndex === 0}
-              onClick={() => void go(steps[stepIndex - 1])}
+              disabled={busy || (stepIndex === 0 && (!paged || pages[0] === 0))}
+              onClick={() => {
+                const form = pagedForm();
+                if (form) {
+                  const event = new Event("wizard-previous", {
+                    cancelable: true,
+                  });
+                  form.dispatchEvent(event);
+                  if (event.defaultPrevented) return;
+                }
+                void go(steps[stepIndex - 1]);
+              }}
             >
               <ArrowLeft size={17} />
               {tr("flow.previous")}
             </button>
             <button
               className="primary nav-next"
-              disabled={busy || stepIndex === steps.length - 1}
-              onClick={() => void go(steps[stepIndex + 1])}
+              // The last step has its own action (generate, or the outputs list).
+              hidden={!paged && stepIndex === steps.length - 1}
+              disabled={busy || (!paged && stepIndex === steps.length - 1)}
+              onClick={() => {
+                const form = pagedForm();
+                if (form) form.requestSubmit();
+                else void go(steps[stepIndex + 1]);
+              }}
             >
               {tr("flow.next")}
               <ArrowRight size={17} />

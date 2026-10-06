@@ -1,5 +1,5 @@
 import { completeAccount } from "./account-setup";
-import { completeBookletBasics } from "./required-setup";
+import { completeBookletBasics, newProject } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -26,19 +26,7 @@ test("approved template download, invalid files, atomic import and stale preview
     .getByRole("button", { name: t("ui.sign_in_to_workspace") })
     .click();
   await completeAccount(page);
-  await page
-    .getByRole("button", { name: t("flow.create"), exact: true })
-    .first()
-    .click();
-  await page
-    .getByLabel(t("ui.project_name"), { exact: true })
-    .fill("فحص القالب المعتمد");
-  await page.getByLabel(t("projectFlow.scope")).selectOption("booklet");
-  await page.getByLabel(t("ui.reference_code")).fill(`APPROVED-${Date.now()}`);
-  await page
-    .locator("form")
-    .getByRole("button", { name: t("flow.create") })
-    .click();
+  await newProject(page, "فحص القالب المعتمد", "booklet");
   await completeBookletBasics(page);
   await page
     .getByRole("button", { name: new RegExp(t("flow.properties")) })

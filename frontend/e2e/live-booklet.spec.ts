@@ -1,3 +1,4 @@
+import { newProject } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -24,22 +25,8 @@ for (const mobile of [false, true])
     await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in to workspace" }).click();
     await completeAccount(page);
-    if (mobile)
-      await page.getByRole("button", { name: "Toggle navigation" }).click();
-    await expect(
-      page.getByRole("button", { name: "Create project", exact: true }).first(),
-    ).toBeVisible();
-    await page
-      .getByRole("button", { name: "Create project", exact: true })
-      .first()
-      .click();
     const name = "Live " + Date.now();
-    await page.getByLabel("Project / auction name", { exact: true }).fill(name);
-    await page.getByLabel("Reference code").fill("LIVE-" + Date.now());
-    await page
-      .locator("form")
-      .getByRole("button", { name: "Create project" })
-      .click();
+    await newProject(page, name, "project");
     await expect(
       page.getByRole("complementary", { name: "Live booklet preview" }),
     ).toBeVisible();

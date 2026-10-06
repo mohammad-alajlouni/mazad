@@ -27,9 +27,8 @@ import {
   X,
   Users,
 } from "lucide-react";
-import { api, Project, Output, Detail, Run, Account } from "./api";
+import { api, send, Project, Output, Detail, Run, Account } from "./api";
 import { ProjectList, OutputList, title } from "./shared";
-import { ProjectForm } from "./ProjectForms";
 import OutputReview from "./OutputReview";
 import Settings, { Config } from "./Settings";
 type Page =
@@ -151,7 +150,32 @@ export default function Workspace() {
     if (detail) setDetail(await api<Detail>("/projects/" + detail.project.id));
     await refresh();
   };
+  // A new project opens straight in its wizard: its name is the auction name
+  // entered on the first page, so nothing has to be asked beforehand.
+  const createProject = () =>
+    run(async () => {
+      const created = await api<Project>("/projects", {
+        method: "POST",
+        body: send({
+          name: tr("flow.newProject"),
+          code: "MZ-" + Date.now().toString(36).toUpperCase(),
+          auction: {
+            auction_name: "",
+            auction_type: "physical",
+            selected_cover_template_id: "infath-2",
+            document_language: "ar",
+          },
+        }),
+      });
+      await refresh();
+      await openProject(created.id);
+    });
   const navigate = (next: Page) => {
+    if (next === "create") {
+      setMobile(false);
+      void createProject();
+      return;
+    }
     setPage(next);
     setReview(null);
     setMobile(false);
@@ -587,15 +611,6 @@ export default function Workspace() {
               )}
               {page === "banner-create" && (
                 <BannerCreate
-                  run={run}
-                  onDone={(id) => {
-                    void openProject(id);
-                    void refresh();
-                  }}
-                />
-              )}
-              {page === "create" && (
-                <ProjectForm
                   run={run}
                   onDone={(id) => {
                     void openProject(id);

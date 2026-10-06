@@ -1,5 +1,5 @@
 import { completeAccount } from "./account-setup";
-import { completeBookletBasics } from "./required-setup";
+import { completeBookletBasics, newProject } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -86,52 +86,25 @@ for (const locale of ["en", "ar"] as const)
           .getByRole("button", { name, exact: true })
           .click();
       };
-      await nav(t("ui.create_project"));
-      // Required validation uses the selected language; unsaved input survives switching.
-      await page
-        .locator("form")
-        .getByRole("button", { name: t("ui.create_project") })
-        .click();
-      expect(
-        await page
-          .getByLabel(t("ui.project_name"), { exact: true })
-          .evaluate((e: HTMLInputElement) => e.validationMessage),
-      ).toBe(t("common.required"));
       const projectName = `مشروع Atlas ${locale} ${mobile ? "mobile" : "desktop"} — Long mixed project title for layout checking`;
-      await page
-        .getByLabel(t("ui.project_name"), { exact: true })
-        .fill(projectName);
+      const projectId = (
+        await newProject(page, projectName, "booklet", {
+          customer: "مؤسسة Atlas / Amman",
+          description:
+            "تفاصيل المشروع مع رابط https://example.com/assets?id=A-01 وبريد test@example.com",
+        })
+      ).id;
+      await expect(
+        page.getByRole("heading", { name: projectName }),
+      ).toBeVisible();
+      // Unsaved input survives switching the language.
+      const date = page.locator('[name="auction_date"]');
+      await date.fill("2026-10-10");
       await page
         .locator(".language-switcher")
         .selectOption(locale === "ar" ? "en" : "ar");
       await page.locator(".language-switcher").selectOption(locale);
-      await expect(
-        page.getByLabel(t("ui.project_name"), { exact: true }),
-      ).toHaveValue(projectName);
-      await page.getByLabel(t("projectFlow.scope")).selectOption("booklet");
-      await page.getByLabel(t("ui.reference_code")).fill("L10N-" + Date.now());
-      await expect(page.getByLabel(t("ui.reference_code"))).toHaveAttribute(
-        "dir",
-        "ltr",
-      );
-      await page
-        .getByLabel(t("ui.customer_entity"))
-        .fill("مؤسسة Atlas / Amman");
-      await page
-        .getByLabel(t("ui.description"), { exact: true })
-        .fill(
-          "تفاصيل المشروع مع رابط https://example.com/assets?id=A-01 وبريد test@example.com",
-        );
-      await page
-        .locator("form")
-        .getByRole("button", { name: t("ui.create_project") })
-        .click();
-      await expect(
-        page.getByRole("heading", { name: projectName }),
-      ).toBeVisible();
-      const projectId = (
-        await page.request.get("/api/projects").then((r) => r.json())
-      ).find((p: { name: string }) => p.name === projectName).id;
+      await expect(date).toHaveValue("2026-10-10");
       await completeBookletBasics(page);
       await page
         .getByRole("button", { name: new RegExp(t("flow.properties")) })
@@ -218,9 +191,8 @@ for (const locale of ["en", "ar"] as const)
       await mainBox
         .getByRole("button", { name: t("imagesStep.upload"), exact: true })
         .click();
-      await expect(
-        page.getByAltText(t("ui.uploaded_project_asset")),
-      ).toBeVisible();
+      // The box shows the photograph once the upload has been stored.
+      await expect(mainBox.locator("img")).toBeVisible();
       await page
         .getByRole("button", { name: new RegExp(t("flow.review")) })
         .click();

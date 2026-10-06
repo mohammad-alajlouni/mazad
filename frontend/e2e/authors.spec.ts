@@ -1,4 +1,4 @@
-import { fillPages, finishPages } from "./required-setup";
+import { fillPages, finishPages, newProject } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -67,19 +67,7 @@ test("Arabic default, administrator provisioning, private author booklet and app
   expect(await page.request.get("/api/projects").then((r) => r.json())).toEqual(
     [],
   );
-  await page
-    .getByRole("button", { name: t("flow.create"), exact: true })
-    .first()
-    .click();
-  await page
-    .getByLabel(t("ui.project_name"), { exact: true })
-    .fill("مزاد المستخدم الجديد");
-  await page.getByLabel(t("projectFlow.scope")).selectOption("booklet");
-  await page.getByLabel(t("ui.reference_code")).fill(`AUTHOR-${Date.now()}`);
-  await page
-    .locator("form")
-    .getByRole("button", { name: t("flow.create") })
-    .click();
+  await newProject(page, "مزاد المستخدم الجديد", "booklet");
   const step = (key: keyof typeof ar.flow) =>
     page
       .locator(".workflow-steps")

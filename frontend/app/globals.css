@@ -1783,7 +1783,6 @@ html[dir="rtl"] .nav-previous .lucide-arrow-left { transform: scaleX(-1); }
    actions are pinned and the step navigation stays in the page flow. */
 .booklet-workflow:has(.property-form) .workflow-navigation { position: static; box-shadow: none; }
 .property-form .item-actions { bottom: 0; border-radius: 0 0 18px 18px; }
-.page-part-actions { border-top: 1px solid var(--line); padding-top: 16px; }
 
 /* Properties */
 .property-cards li { border-radius: 14px; border-width: 1.5px; }
@@ -1795,7 +1794,6 @@ html[dir="rtl"] .nav-previous .lucide-arrow-left { transform: scaleX(-1); }
 /* Generate */
 .project-generation { border-color: var(--g-line); background: linear-gradient(#f4fbf7, #fff 70%); }
 .publication-summary span { border-radius: 12px; background: #fff; border: 1px solid var(--line); padding: 10px 14px; font-weight: 600; }
-.flow-actions { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; }
 
 /* Live preview card */
 .live-booklet-preview { background: #fff; border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 1px 2px #1018280a; }
@@ -1835,3 +1833,16 @@ html[dir="rtl"] .nav-previous .lucide-arrow-left { transform: scaleX(-1); }
 }
 /* The form must not clip: its save bar sticks to the window, not to the card. */
 .property-form { overflow: visible; }
+
+/* What the project produces: a plain line of facts, not buttons. */
+.publication-summary { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 16px; padding: 0; color: #475467; font-size: 13px; }
+.publication-summary li { display: inline-flex; align-items: center; gap: 8px; }
+.publication-summary li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--g); }
+.publication-summary span, .publication-summary li { border: 0; background: transparent; padding: 0; font-weight: 500; }
+.project-generation > .primary { margin-top: 6px; }
+
+/* Five steps in one row: compact, and scrolling sideways rather than overlapping. */
+.workflow-steps button { flex: 1 0 auto; min-width: max-content; padding: 10px 8px; gap: 6px; font-size: 13px; }
+.workflow-steps button > span { width: 22px; height: 22px; font-size: 12px; }
+.workflow-steps .step-missing { min-width: 16px; height: 16px; line-height: 16px; font-size: 10px; padding: 0 4px; }
+.workflow-navigation:has(.nav-next[hidden]) { justify-content: flex-start; }

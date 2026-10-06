@@ -16,7 +16,7 @@ const PAGE_WIDTH = 794; // 595.276 pt in CSS pixels
 const PAGE_HEIGHT = 1123;
 function stepOf(stage: string) {
   if (stage === "excel import") return "items";
-  if (stage === "outputs") return "generate";
+  if (stage === "outputs" || stage === "finish") return "generate";
   return STEPS.includes(stage) ? stage : "auction";
 }
 function requiredComplete(root: HTMLElement | null) {

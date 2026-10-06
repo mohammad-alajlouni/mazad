@@ -1,5 +1,5 @@
 import { completeAccount } from "./account-setup";
-import { fillPages, finishPages } from "./required-setup";
+import { fillPages, finishPages, newProject } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -26,18 +26,7 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
     await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Sign in to workspace" }).click();
     await completeAccount(page);
-    await page
-      .locator(".sidebar")
-      .getByRole("button", { name: "Create project", exact: true })
-      .click();
-    await page
-      .getByLabel("Project / auction name", { exact: true })
-      .fill("Type " + kind);
-    await page.getByLabel("Reference code").fill(kind + Date.now());
-    await page
-      .locator("form")
-      .getByRole("button", { name: "Create project" })
-      .click();
+    await newProject(page, "Type " + kind, "project");
     const form = page.locator(".auction-workspace form");
     // The auction type is chosen from three cards (radio buttons).
     await form

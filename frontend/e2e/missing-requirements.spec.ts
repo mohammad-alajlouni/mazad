@@ -1,3 +1,4 @@
+import { newProject } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -22,17 +23,8 @@ test("missing requirements are listed per step and lead to their fields", async 
   await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
   await page.getByRole("button", { name: "Sign in to workspace" }).click();
   await completeAccount(page);
-  await page
-    .getByRole("button", { name: "Create project", exact: true })
-    .first()
-    .click();
   const name = "Requirements " + Date.now();
-  await page.getByLabel("Project / auction name", { exact: true }).fill(name);
-  await page.getByLabel("Reference code").fill("REQ-" + Date.now());
-  await page
-    .locator("form")
-    .getByRole("button", { name: "Create project" })
-    .click();
+  await newProject(page, name, "project");
   await expect(
     page.getByRole("navigation", { name: "Project sections" }),
   ).toBeVisible();
