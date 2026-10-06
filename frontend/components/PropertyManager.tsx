@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowUp, Copy, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowUp, Copy, FileSpreadsheet, Plus, Trash2 } from "lucide-react";
 import { api, send, Detail, Item, Run } from "./api";
 import { useConfirm } from "./Confirmation";
 import { ItemForm, SaveAction } from "./ProjectForms";
@@ -98,20 +98,33 @@ export default function PropertyManager({
   return (
     <div className="property-manager">
       <section className="panel property-list-panel">
+        {/* How properties come in: the approved Excel file, or one by one. */}
+        <div className="choice-cards method-cards">
+          <button type="button" className="choice-card" onClick={onImport}>
+            <span className="choice-icon">
+              <FileSpreadsheet size={20} />
+            </span>
+            <strong>{t("import")}</strong>
+            <small aria-hidden="true">{t("methodExcelHelp")}</small>
+          </button>
+          <button
+            type="button"
+            className={
+              current === "new" ? "choice-card selected" : "choice-card"
+            }
+            onClick={() => open("new")}
+          >
+            <span className="choice-icon">
+              <Plus size={20} />
+            </span>
+            <strong>{t("add")}</strong>
+            <small aria-hidden="true">{t("methodManualHelp")}</small>
+          </button>
+        </div>
         <div className="panel-heading flex-row">
           <h2>
             {t("title")} <small>{t("count", { count: items.length })}</small>
           </h2>
-          <div className="flex-row">
-            <button className="secondary" onClick={onImport}>
-              <Upload size={16} />
-              {t("import")}
-            </button>
-            <button className="primary" onClick={() => open("new")}>
-              <Plus size={16} />
-              {t("add")}
-            </button>
-          </div>
         </div>
         {items.length === 0 ? (
           <p className="muted">{t("empty")}</p>

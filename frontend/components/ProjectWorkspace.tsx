@@ -1,7 +1,9 @@
 import LiveBookletPreview from "./LiveBookletPreview";
 import PropertyManager from "./PropertyManager";
+import SampleFill from "./SampleFill";
 import {
   type Issue,
+  dataStages,
   missingStage,
   StepChecklist,
   stepIssues,
@@ -13,7 +15,14 @@ import { useConfirm } from "./Confirmation";
 import { formatNumber, formatDate } from "../i18n/format";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useRef } from "react";
-import { ArrowUpRight, Layers, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  Layers,
+  Sparkles,
+} from "lucide-react";
 import { api, send, Detail, Item, Output, Run } from "./api";
 import { Config } from "./Settings";
 import { Badge, OutputList, title } from "./shared";
@@ -56,6 +65,7 @@ export default function ProjectWorkspace({
       setOutputLanguage(String(detail.project.auction.document_language));
   }, [detail.project.auction?.document_language]);
   const [itemEditor, setItemEditor] = useState<Item | "new" | null>(null);
+  const [formVersion, setFormVersion] = useState(0); // reopen forms after a sample fill
   const [selected, setSelected] = useState<string[]>(["project_booklet"]);
   const [otherTools, setOtherTools] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -207,6 +217,17 @@ export default function ProjectWorkspace({
           stage={blocked}
           onIssue={(issue) => void fixIssue(issue)}
         />
+        {!sharedMode && (
+          <SampleFill
+            detail={detail}
+            run={run}
+            reload={reloadProject}
+            onFilled={() => {
+              setItemEditor(null);
+              setFormVersion((v) => v + 1);
+            }}
+          />
+        )}
         <div className="project-meta">
           <Badge status={detail.project.status} />
           <span>{detail.project.customer || tr("ui.no_client_assigned")}</span>
@@ -243,7 +264,18 @@ export default function ProjectWorkspace({
                 className={stepIndex === index ? "selected" : ""}
                 onClick={() => void go(step)}
               >
-                <span>{formatNumber(index + 1)}</span>
+                {/* A saved, complete data step shows a tick instead of its number. */}
+                <span>
+                  {index !== stepIndex &&
+                  dataStages.includes(step) &&
+                  detail.workflow?.stages[step] &&
+                  (step === "auction" || detail.items.length > 0) &&
+                  stepIssues(detail, step).length === 0 ? (
+                    <Check size={15} />
+                  ) : (
+                    formatNumber(index + 1)
+                  )}
+                </span>
                 {tr("flow." + stepKeys[index])}
                 {stepIssues(detail, step).length > 0 && (
                   <em
@@ -272,7 +304,7 @@ export default function ProjectWorkspace({
         )}
         {tab === "auction" && (
           <AuctionWorkspace
-            key={tab}
+            key={tab + formVersion}
             section={tab}
             detail={detail}
             run={run}
@@ -358,7 +390,7 @@ export default function ProjectWorkspace({
         )}
         {tab === "closing" && (
           <AuctionWorkspace
-            key={tab}
+            key={tab + formVersion}
             section="closing"
             detail={detail}
             run={run}
@@ -542,18 +574,20 @@ export default function ProjectWorkspace({
         {stepIndex >= 0 && (
           <div className="workflow-navigation">
             <button
-              className="secondary"
+              className="text-button nav-previous"
               disabled={busy || stepIndex === 0}
               onClick={() => void go(steps[stepIndex - 1])}
             >
+              <ArrowLeft size={17} />
               {tr("flow.previous")}
             </button>
             <button
-              className="secondary"
+              className="primary nav-next"
               disabled={busy || stepIndex === steps.length - 1}
               onClick={() => void go(steps[stepIndex + 1])}
             >
               {tr("flow.next")}
+              <ArrowRight size={17} />
             </button>
           </div>
         )}

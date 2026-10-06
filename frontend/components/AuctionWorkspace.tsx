@@ -99,8 +99,10 @@ export function Fields({
     >
       {fields.map((key) => (
         <label key={key}>
-          {t(key)}
-          {requiredFields.includes(key) && <span aria-hidden="true"> *</span>}
+          <span className="label-text">
+            {t(key)}
+            {requiredFields.includes(key) && <b aria-hidden="true"> *</b>}
+          </span>
           {key.endsWith("_text") ||
           key.endsWith("_description") ||
           [
@@ -616,24 +618,43 @@ export function AuctionReview({
   return (
     <section className="auction-review">
       <h2>{t("review")}</h2>
-      <p>
-        {String(review.auction.auction_name || "-")} ·{" "}
-        {t(String(review.auction.auction_type || "physical"))} ·{" "}
-        {String(review.selling_agent.name || "-")}
-      </p>
-      <p>
-        {String(
-          review.auction.auction_date ||
-            review.auction.auction_start_date ||
-            "-",
-        )}{" "}
-        · {String(review.auction.start_time || "-")} ·{" "}
-        {String(
-          review.auction.physical_location ||
-            review.auction.electronic_platform_name ||
-            "-",
-        )}
-      </p>
+      {/* The same facts as before, laid out as summary tiles. */}
+      <div className="review-tiles">
+        <div>
+          <small>{t("auction_name")}</small>
+          <strong>{String(review.auction.auction_name || "-")}</strong>
+        </div>
+        <div>
+          <small>{t("auction_type")}</small>
+          <strong>
+            {t(String(review.auction.auction_type || "physical"))} ·{" "}
+            {String(review.selling_agent.name || "-")}
+          </strong>
+        </div>
+        <div>
+          <small>{t("schedule")}</small>
+          <strong>
+            <bdi dir="ltr">
+              {String(
+                review.auction.auction_date ||
+                  review.auction.auction_start_date ||
+                  "-",
+              )}
+            </bdi>{" "}
+            · <bdi dir="ltr">{String(review.auction.start_time || "-")}</bdi>
+          </strong>
+        </div>
+        <div>
+          <small>{t("location_links")}</small>
+          <strong>
+            {String(
+              review.auction.physical_location ||
+                review.auction.electronic_platform_name ||
+                "-",
+            )}
+          </strong>
+        </div>
+      </div>
       <p>{t("property_count", { count: review.property_count })}</p>
       <div className="table-scroll">
         <table>
@@ -711,7 +732,7 @@ export function AuctionReview({
           </p>
         ))}
       </details>
-      {review.valid && <p className="notice">{t("ready")}</p>}
+      {review.valid && <p className="notice success ready">{t("ready")}</p>}
     </section>
   );
 }

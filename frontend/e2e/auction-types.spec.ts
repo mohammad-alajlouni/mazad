@@ -39,7 +39,10 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
       .getByRole("button", { name: "Create project" })
       .click();
     const form = page.locator(".auction-workspace form");
-    await form.locator('[name="auction_type"]').selectOption(kind);
+    // The auction type is chosen from three cards (radio buttons).
+    await form
+      .locator(`[name="auction_type"][value="${kind}"]`)
+      .check({ force: true });
     await expect(form.locator('[name="auction_date"]')).toHaveCount(
       kind === "physical" ? 1 : 0,
     );

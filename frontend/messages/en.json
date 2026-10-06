@@ -937,7 +937,8 @@
     "marketingHelp": "Not printed in the booklet; used by the banners and posts generated with the project.",
     "previous": "Previous",
     "next": "Save and next: {title}",
-    "finishClosing": "Save and continue to review"
+    "finishClosing": "Save and continue to review",
+    "duration": "Duration: {days} days"
   },
   "properties": {
     "title": "Properties",
@@ -961,6 +962,17 @@
     "duplicate": "Add a similar property",
     "moveUp": "Move up",
     "empty": "No properties yet. Enter the first one in the form below, or import an Excel workbook.",
-    "pick": "Choose a property from the list to edit it, or add a new one."
+    "pick": "Choose a property from the list to edit it, or add a new one.",
+    "methodExcel": "Upload an Excel file",
+    "methodExcelHelp": "Import properties from the approved template",
+    "methodManual": "Add manually",
+    "methodManualHelp": "Enter properties one by one"
+  },
+  "sample": {
+    "prompt": "Enter your auction details, or try a ready sample",
+    "action": "Sample fill",
+    "confirm": "The auction details will be filled with random sample data, and three properties with photographs are added if the project has none. Continue?",
+    "done": "Sample data filled in. Review it, then generate the outputs.",
+    "photo": "Sample photo - {title}"
   }
 }

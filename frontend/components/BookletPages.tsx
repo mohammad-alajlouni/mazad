@@ -1,6 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import {
+  Building2,
+  CalendarDays,
+  Check,
+  Clock3,
+  Globe,
+  Layers,
+} from "lucide-react";
 import { api, send, Detail, Run } from "./api";
 import { Fields } from "./AuctionWorkspace";
 
@@ -220,9 +228,6 @@ export function BookletPages({
       }}
     >
       <h2>{f(section === "auction" ? "auction" : "closing")}</h2>
-      <p className="muted">
-        {f(section === "auction" ? "auctionHelp" : "closingHelp")}
-      </p>
       <ol className="page-parts" aria-label={p("order")}>
         {parts.map((item, at) => (
           <li key={item.key}>
@@ -236,11 +241,7 @@ export function BookletPages({
                 setIndex(at);
               }}
             >
-              <span>
-                {item.number
-                  ? p("page", { number: item.number })
-                  : p("closingPage")}
-              </span>
+              {item.number && <span>{p("page", { number: item.number })}</span>}
               {p(item.key)}
             </button>
           </li>
@@ -286,30 +287,109 @@ export function BookletPages({
                   </label>
                 ))}
               </div>
-              <label>
-                {t("auction_type")}
-                <select
-                  name="auction_type"
-                  value={kind}
-                  onChange={(e) => setKind(e.target.value)}
-                >
-                  {["physical", "electronic", "hybrid"].map((k) => (
-                    <option key={k} value={k}>
-                      {t(k)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <p className="muted">{f("typeHelp_" + kind)}</p>
             </>
           )}
-          {item.fields && (
-            <Fields
-              fields={visible(item.fields)}
-              values={{ ...auction, ...draft }}
-              requiredFields={rules?.required}
-            />
-          )}
+          {item.fields &&
+            (() => {
+              // Dates and times sit together in a schedule panel; the fields
+              // before and after it keep their order.
+              const shown = visible(item.fields);
+              const timed = (key: string) => /_(date|time)$/.test(key);
+              const first = shown.findIndex(timed);
+              const before = first < 0 ? shown : shown.slice(0, first);
+              const schedule = shown.filter(timed);
+              const after =
+                first < 0 ? [] : shown.slice(first).filter((k) => !timed(k));
+              const values = { ...auction, ...draft };
+              const days = (() => {
+                const start = Date.parse(String(values.auction_start_date));
+                const end = Date.parse(String(values.auction_end_date));
+                return item.cover && start && end && end >= start
+                  ? Math.round((end - start) / 86400000) + 1
+                  : 0;
+              })();
+              return (
+                <>
+                  {before.length > 0 && (
+                    <Fields
+                      fields={before}
+                      values={values}
+                      requiredFields={rules?.required}
+                    />
+                  )}
+                  {item.cover && (
+                    <fieldset className="choice-group">
+                      <legend>{t("auction_type")}</legend>
+                      <div className="choice-cards">
+                        {(
+                          [
+                            ["electronic", Globe],
+                            ["physical", Building2],
+                            ["hybrid", Layers],
+                          ] as const
+                        ).map(([key, Icon]) => (
+                          <label
+                            key={key}
+                            className={
+                              kind === key
+                                ? "choice-card selected"
+                                : "choice-card"
+                            }
+                          >
+                            <input
+                              type="radio"
+                              name="auction_type"
+                              value={key}
+                              checked={kind === key}
+                              onChange={() => setKind(key)}
+                            />
+                            <span className="choice-icon">
+                              <Icon size={20} />
+                            </span>
+                            {kind === key && (
+                              <Check className="choice-check" size={18} />
+                            )}
+                            <strong>{t(key)}</strong>
+                            <small>{f("typeHelp_" + key)}</small>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
+                  {schedule.length > 0 && (
+                    <section className="schedule-panel">
+                      <header>
+                        <h4>
+                          {item.cover ? (
+                            <CalendarDays size={18} />
+                          ) : (
+                            <Clock3 size={18} />
+                          )}
+                          {t("schedule")}
+                        </h4>
+                        {days > 0 && (
+                          <span className="chip done">
+                            {p("duration", { days })}
+                          </span>
+                        )}
+                      </header>
+                      <Fields
+                        fields={schedule}
+                        values={values}
+                        requiredFields={rules?.required}
+                      />
+                    </section>
+                  )}
+                  {after.length > 0 && (
+                    <Fields
+                      fields={after}
+                      values={values}
+                      requiredFields={rules?.required}
+                    />
+                  )}
+                </>
+              );
+            })()}
           {item.cover && (
             <>
               <div className="form-grid">

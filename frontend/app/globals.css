@@ -1580,3 +1580,258 @@ form[data-stage-form] select:user-invalid { border-color: #a12626; }
 .page-parts{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;padding:0}.page-parts button{display:grid;gap:2px;text-align:start;padding:8px 12px;border-radius:12px;border:1px solid #d7e3e0;background:#fff;cursor:pointer;min-width:120px}.page-parts button span{font-size:11px;color:#6b7c7a}.page-parts button.selected{border-color:#236b55;background:#236b55;color:#fff}.page-parts button.selected span{color:#d7efe6}.page-parts button.done{border-color:#9fd0bd;background:#f1faf6}.page-part h3{margin:8px 0}.page-part h4{margin:12px 0 6px}.page-part-actions{display:flex;gap:10px;justify-content:space-between;margin-top:16px}.agent-card{display:grid;gap:12px;border:1px solid #d7e3e0;border-radius:14px;padding:14px;background:#fff;margin-top:12px}.agent-card img{max-width:180px;max-height:80px;object-fit:contain}.agent-card.compact{grid-template-columns:auto 1fr;align-items:center}.agent-card dl{display:grid;gap:8px;margin:0}.agent-card dt{font-size:12px;color:#6b7c7a}.agent-card dd{margin:0;white-space:pre-line;max-height:9em;overflow:auto}
 /* Properties: list always in view, form below, actions pinned while scrolling. */
 .property-manager{display:grid;gap:14px}.property-list-panel h2 small{font-size:13px;color:#6b7c7a;font-weight:500}.property-cards{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px;max-height:320px;overflow:auto}.property-cards li{display:flex;align-items:center;gap:6px;border:1px solid #d7e3e0;border-radius:12px;background:#fff;padding-inline-end:6px}.property-cards li.selected{border-color:#236b55;box-shadow:0 0 0 2px #236b5522}.property-card{all:unset;box-sizing:border-box;cursor:pointer;flex:1;display:flex;align-items:center;gap:12px;padding:10px 12px;min-width:0}.property-number{font-weight:700;color:#fff;background:#0f7f7c;border-radius:8px;padding:4px 8px;font-size:13px}.property-text{display:grid;min-width:0;flex:1}.property-text strong,.property-text small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.property-text small{color:#6b7c7a}.chip{font-size:12px;border-radius:999px;padding:3px 10px;white-space:nowrap}.chip.done{background:#e8f6ef;color:#1f7a4d}.chip.warning{background:#fff1e0;color:#b45309}.property-tools{display:flex;gap:2px}.icon-button{border:0;background:transparent;border-radius:8px;padding:6px;cursor:pointer;color:#35524d}.icon-button:hover:not(:disabled){background:#eef4f3}.icon-button:disabled{opacity:.35;cursor:default}.icon-button.danger{color:#b42318}.property-editor{scroll-margin-top:12px}.property-hint{padding:18px;text-align:center;border:1px dashed #cbd8d5;border-radius:14px}.property-form .item-actions{position:sticky;bottom:0;z-index:5;background:#fff;border-top:1px solid #e3ecea;margin:12px -20px -20px;padding:12px 20px;display:flex;flex-wrap:wrap;gap:8px;box-shadow:0 -6px 16px #0000000d}
+
+/* ───────── Wizard redesign: one calm card per step, segmented tabs, choice
+   cards, a pinned navigation bar. Layout and styling only. ───────── */
+:root {
+  --g: #1f8a5b;
+  --g-dark: #176f49;
+  --g-soft: #eaf6ef;
+  --g-line: #bfe3cf;
+  --ink: #101828;
+  --muted: #667085;
+  --line: #e6e9ee;
+  --paper: #f7f8fa;
+  --green: #1f8a5b;
+}
+body {
+  font-family:
+    "IBM Plex Sans Arabic", "SF Arabic", "Segoe UI", system-ui, -apple-system,
+    Tahoma, Arial, sans-serif;
+  font-size: 14px;
+}
+label { font-size: 13px; font-weight: 600; color: #1d2939; gap: 8px; }
+input, textarea, select {
+  border: 1.5px solid #e3e7ec;
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-size: 14px;
+  min-height: 50px;
+}
+input[type="checkbox"], input[type="radio"], input[type="color"] { min-height: 0; }
+textarea { min-height: 96px; }
+input:focus, textarea:focus, select:focus {
+  border-color: var(--g);
+  box-shadow: 0 0 0 4px #1f8a5b1f;
+}
+.primary, .secondary {
+  border-radius: 14px;
+  padding: 13px 22px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.primary { background: var(--g); box-shadow: 0 6px 14px #1f8a5b33; }
+.primary:hover { background: var(--g-dark); }
+.primary:disabled { box-shadow: none; }
+.secondary { border: 1.5px solid #e3e7ec; color: #344054; }
+.secondary:hover { background: #f7f8fa; }
+.text-button { font-size: 14px; font-weight: 600; color: #475467; }
+.panel { border-radius: 20px; border-color: var(--line); box-shadow: 0 1px 2px #1018280a; }
+.form-panel { padding: 26px; }
+.form-panel > h2, .panel-heading h2 { font-size: 18px; }
+/* Arrows follow the reading direction (see .lucide-arrow-right above). */
+html[dir="rtl"] .nav-previous .lucide-arrow-left { transform: scaleX(-1); }
+
+/* Project header and its sections */
+.project-hub {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px #1018280a;
+}
+.hub-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.hub-heading h2 { margin: 0; font-size: 20px; }
+.hub-heading p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.hub-icon {
+  display: grid; place-items: center; flex: none;
+  width: 46px; height: 46px; border-radius: 14px;
+  background: var(--g-soft); color: var(--g); border: 1px solid var(--g-line);
+}
+.hub-count {
+  margin-inline-start: auto; white-space: nowrap; font-size: 12px; font-weight: 600;
+  color: var(--g-dark); background: var(--g-soft); border-radius: 999px; padding: 6px 12px;
+}
+.segmented, .workflow-steps, .page-parts,
+.live-booklet-fields .workflow-steps {
+  display: flex; flex-direction: row; flex-wrap: nowrap; gap: 6px; list-style: none;
+  background: #f2f4f7; border-radius: 16px; padding: 6px; margin: 0;
+  overflow-x: auto;
+}
+.segmented button, .workflow-steps button, .page-parts button {
+  flex: 1 1 0; min-width: max-content;
+  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px;
+  border: 0; background: transparent; border-radius: 12px;
+  padding: 12px 14px; font-size: 14px; font-weight: 600; color: #475467;
+  white-space: nowrap; text-align: center; cursor: pointer;
+}
+.segmented button:hover:not(.selected), .workflow-steps button:hover:not(.selected),
+.page-parts button:hover:not(.selected) { background: #e9ecf1; }
+.segmented button.selected, .workflow-steps button.selected, .page-parts button.selected {
+  background: #fff; color: var(--g-dark); border: 0;
+  box-shadow: 0 1px 3px #1018281f, 0 1px 2px #1018280f;
+}
+.project-sections { border: 0; }
+
+/* Sample fill */
+.sample-fill {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  padding: 12px 18px; margin-bottom: 16px;
+}
+.sample-fill > span { display: inline-flex; align-items: center; gap: 10px; color: #475467; }
+.sample-fill > span svg { color: var(--g); }
+.sample-button {
+  display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent;
+  color: var(--g-dark); font-weight: 700; font-size: 14px; cursor: pointer;
+  padding: 8px 12px; border-radius: 10px;
+}
+.sample-button svg { color: #f5a524; }
+.sample-button:hover { background: var(--g-soft); }
+
+/* Step tabs */
+.booklet-workflow .project-meta { margin: 0 0 12px; font-size: 12px; }
+.workflow-guide { border: 0; background: transparent; padding: 0; margin-block: 0 16px; border-radius: 0; }
+.workflow-title { margin-bottom: 10px; }
+.workflow-title h2 { margin: 0; font-size: 16px; }
+.workflow-title span { font-size: 12px; color: var(--muted); font-weight: 600; }
+.workflow-steps { margin-block: 0 12px; grid-template-columns: none; }
+.workflow-steps button > span, .page-parts button > span {
+  display: grid; place-items: center; flex: none;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #e4e7ec; color: #475467; font-size: 13px; font-weight: 700;
+}
+.workflow-steps button.selected > span { background: var(--g); color: #fff; }
+.workflow-steps button > span:has(svg) { background: var(--g-soft); color: var(--g); border: 1px solid var(--g-line); }
+.workflow-steps button:not(.selected):has(span svg) { color: var(--g-dark); }
+.step-missing { margin-inline-start: 0; background: #f04438; }
+.workflow-guide > p { margin: 0; color: var(--muted); font-size: 13px; }
+.workflow-guide > p.muted { display: none; }
+
+/* Page tabs inside a step */
+.page-parts { margin: 14px 0 18px; padding: 5px; border-radius: 14px; flex-wrap: wrap; }
+.page-parts li { flex: 1 1 auto; display: flex; }
+.page-parts button { padding: 9px 12px; border-radius: 10px; font-size: 13px; }
+.page-parts button > span { width: auto; height: auto; padding: 3px 8px; border-radius: 999px; font-size: 11px; background: #e4e7ec; }
+.page-parts button.selected > span { background: var(--g-soft); color: var(--g-dark); }
+.page-parts button.done > span { background: var(--g-soft); color: var(--g-dark); }
+.page-parts button.done { background: transparent; border: 0; }
+.page-part > h3 { font-size: 16px; margin: 4px 0 10px; }
+.page-part > .notice { background: #f9fafb; border: 1px solid var(--line); color: #475467; border-radius: 14px; font-size: 13px; }
+
+/* Choice cards (auction type, how to add properties) */
+.choice-group, .form-panel fieldset.choice-group { border: 0; padding: 0; margin: 0 0 20px; min-width: 0; }
+.form-grid > label:only-child { grid-column: 1 / -1; }
+.choice-group legend { font-size: 13px; font-weight: 600; color: #1d2939; margin-bottom: 8px; padding: 0; }
+.choice-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.method-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 16px; }
+.choice-card {
+  position: relative; display: grid; gap: 6px; align-content: start; text-align: start;
+  background: #fff; border: 1.5px solid #e3e7ec; border-radius: 16px;
+  padding: 16px; margin: 0; cursor: pointer; font-weight: 400; color: var(--ink);
+}
+.choice-card:hover { border-color: #cfd6de; }
+.choice-card.selected { border-color: var(--g); background: #f4fbf7; box-shadow: 0 0 0 3px #1f8a5b14; }
+.choice-card input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; }
+.choice-card:has(input:focus-visible) { outline: 3px solid #83b69d; outline-offset: 2px; }
+.choice-icon {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px;
+  background: #f2f4f7; color: #475467;
+}
+.choice-card.selected .choice-icon { background: var(--g); color: #fff; }
+.choice-check { position: absolute; top: 16px; inset-inline-end: 16px; color: var(--g); }
+.choice-card strong { font-size: 15px; }
+.choice-card small { color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+/* Schedule panel */
+.schedule-panel { border: 1px solid var(--line); border-radius: 18px; padding: 18px; margin: 0 0 20px; background: #fff; }
+.schedule-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.schedule-panel h4 { margin: 0; display: inline-flex; align-items: center; gap: 8px; font-size: 15px; }
+.schedule-panel h4 svg { color: var(--g); }
+.schedule-panel .form-grid { gap: 14px; }
+.schedule-panel .form-grid > label {
+  border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 0; background: #fcfcfd;
+}
+.chip { font-weight: 600; }
+
+/* Covers: six in a row, small */
+.live-booklet-fields .cover-options, .cover-options { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
+.cover-option { border: 1.5px solid #e3e7ec; border-radius: 14px; padding: 8px; font-size: 12px; text-align: center; }
+.cover-option.selected { border-color: var(--g); background: #f4fbf7; box-shadow: 0 0 0 3px #1f8a5b14; }
+.cover-option input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; }
+.cover-option img { border-radius: 8px; }
+.page-part h4 { font-size: 13px; font-weight: 600; color: #1d2939; margin: 0 0 8px; }
+
+/* Requirements and notices */
+.notice { border-radius: 14px; }
+.step-checklist { border-radius: 16px; }
+.issue-link { border-radius: 12px; }
+
+/* Pinned navigation */
+.workflow-navigation {
+  position: sticky; bottom: 12px; z-index: 6;
+  background: #fff; border: 1px solid var(--line); border-radius: 18px;
+  padding: 12px 16px; margin-block: 20px 12px;
+  box-shadow: 0 10px 30px #1018281a;
+}
+.workflow-navigation .nav-previous { display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; }
+.workflow-navigation .nav-previous:hover:not(:disabled) { background: #f2f4f7; }
+.workflow-navigation .nav-previous:disabled, .workflow-navigation .nav-next:disabled { opacity: 0.45; }
+.workflow-navigation .nav-next { min-width: 130px; }
+/* One pinned bar at a time: while a property is being edited its own save
+   actions are pinned and the step navigation stays in the page flow. */
+.booklet-workflow:has(.property-form) .workflow-navigation { position: static; box-shadow: none; }
+.property-form .item-actions { bottom: 0; border-radius: 0 0 18px 18px; }
+.page-part-actions { border-top: 1px solid var(--line); padding-top: 16px; }
+
+/* Properties */
+.property-cards li { border-radius: 14px; border-width: 1.5px; }
+.property-number { background: var(--g-soft); color: var(--g-dark); border-radius: 10px; }
+.property-cards li.selected { border-color: var(--g); box-shadow: 0 0 0 3px #1f8a5b14; }
+.form-panel details { border-radius: 14px; }
+.image-slot { border-radius: 16px; }
+
+/* Generate */
+.project-generation { border-color: var(--g-line); background: linear-gradient(#f4fbf7, #fff 70%); }
+.publication-summary span { border-radius: 12px; background: #fff; border: 1px solid var(--line); padding: 10px 14px; font-weight: 600; }
+.flow-actions { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 18px; }
+
+/* Live preview card */
+.live-booklet-preview { background: #fff; border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 1px 2px #1018280a; }
+
+@media (max-width: 900px) {
+  .choice-cards { grid-template-columns: minmax(0, 1fr); }
+  .live-booklet-fields .cover-options, .cover-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hub-heading { flex-wrap: wrap; }
+  .hub-count { margin-inline-start: 0; }
+  .sample-fill { flex-wrap: wrap; }
+}
+
+.label-text b { color: #d92d20; font-weight: 700; }
+.cover-option { display: grid; gap: 6px; align-content: start; cursor: pointer; }
+.cover-option img { width: 100%; height: auto; aspect-ratio: 595 / 842; object-fit: cover; display: block; }
+.workflow-steps button { padding: 11px 8px; gap: 8px; font-size: 13.5px; min-width: 0; }
+.page-parts { flex-wrap: nowrap; }
+.page-parts li { flex: 1 1 0; min-width: 0; }
+.page-parts button { padding: 9px 6px; gap: 6px; font-size: 12.5px; min-width: 0; width: 100%; }
+.page-parts button > span { padding: 2px 7px; }
+
+/* Review before generating */
+.review-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 14px 0; }
+.review-tiles > div { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: #fcfcfd; display: grid; gap: 6px; min-width: 0; }
+.review-tiles small { color: var(--muted); font-size: 12px; }
+.review-tiles strong { font-size: 14px; overflow-wrap: anywhere; }
+.auction-review table { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; border-collapse: separate; border-spacing: 0; width: 100%; }
+.auction-review th { background: #f9fafb; color: #475467; font-size: 12px; }
+.notice.ready { font-weight: 700; border-radius: 16px; padding: 14px 18px; }
+@media (max-width: 900px) { .review-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+@media (max-width: 900px) {
+  /* Tabs scroll sideways instead of squeezing their labels. */
+  .workflow-steps button, .segmented button { min-width: max-content; padding-inline: 14px; }
+  .page-parts { flex-wrap: wrap; }
+  .page-parts li { flex: 1 1 auto; }
+}
+/* The form must not clip: its save bar sticks to the window, not to the card. */
+.property-form { overflow: visible; }

@@ -1,4 +1,6 @@
 "use client";
+import { Building2 } from "lucide-react";
+import SampleFill from "./SampleFill";
 import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -47,6 +49,7 @@ export default function SharedProjectWorkspace({
       : initialSection,
   );
   const [dataTab, setDataTab] = useState("auction");
+  const [filled, setFilled] = useState(0); // forms reopen after a sample fill
   const [bookletTab, setBookletTab] = useState("generate");
   const [dirty, setDirty] = useState(false);
   useEffect(() => {
@@ -90,16 +93,23 @@ export default function SharedProjectWorkspace({
         if ((event.target as HTMLElement).closest("form")) setDirty(true);
       }}
     >
-      <section className="panel form-panel">
-        <h2>{t("title")}</h2>
-        <p>{t("reused")}</p>
-        <p className="muted">
-          {t("counts", {
-            items: detail.items.length,
-            images: detail.images.length,
-          })}
-        </p>
-        <nav className="tabs project-sections" aria-label={t("sections")}>
+      <section className="project-hub">
+        <div className="hub-heading">
+          <span className="hub-icon">
+            <Building2 size={22} />
+          </span>
+          <div>
+            <h2>{t("title")}</h2>
+            <p>{t("reused")}</p>
+          </div>
+          <span className="hub-count">
+            {t("counts", {
+              items: detail.items.length,
+              images: detail.images.length,
+            })}
+          </span>
+        </div>
+        <nav className="project-sections segmented" aria-label={t("sections")}>
           {(
             [
               "data",
@@ -121,10 +131,21 @@ export default function SharedProjectWorkspace({
           ))}
         </nav>
       </section>
+      {section === "data" && (
+        <SampleFill
+          detail={detail}
+          run={run}
+          reload={reloadProject}
+          onFilled={() => {
+            setDataTab("auction");
+            setFilled((v) => v + 1);
+          }}
+        />
+      )}
       <WorkflowProblems detail={detail} stage={blocked} />
       {section === "data" || section === "booklet" ? (
         <ProjectWorkspace
-          key={section}
+          key={section + filled}
           detail={detail}
           config={config}
           types={types}

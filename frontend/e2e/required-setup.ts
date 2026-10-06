@@ -5,10 +5,20 @@ import { Page, expect } from "@playwright/test";
 export async function fillPages(page: Page, values: Record<string, string>) {
   const form = page.locator(".auction-workspace form");
   for (const [name, value] of Object.entries(values)) {
-    const field = form.locator(`[name="${name}"]`);
-    await field.evaluate((el) =>
-      el.dispatchEvent(new Event("reveal", { bubbles: true })),
-    );
+    const named = form.locator(`[name="${name}"]`);
+    await named
+      .first()
+      .evaluate((el) =>
+        el.dispatchEvent(new Event("reveal", { bubbles: true })),
+      );
+    // A choice among cards (radio buttons): pick the card with that value.
+    if ((await named.first().getAttribute("type")) === "radio") {
+      await named
+        .and(form.locator(`[value="${value}"]`))
+        .check({ force: true });
+      continue;
+    }
+    const field = named;
     await expect(field).toBeVisible();
     if ((await field.evaluate((el) => el.tagName)) === "SELECT")
       await field.selectOption(value);
@@ -28,7 +38,9 @@ export async function finishPages(page: Page) {
       .poll(
         async () =>
           (await form.count()) === 0 ||
-          (await current.textContent()) !== before,
+          // (the form may close between the two checks: do not wait for it)
+          (await current.textContent({ timeout: 500 }).catch(() => null)) !==
+            before,
         { timeout: 20000 },
       )
       .toBeTruthy();
