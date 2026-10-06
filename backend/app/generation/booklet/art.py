@@ -59,17 +59,18 @@ def photo(src, window, fit="cover", backdrop=None):
     )
 
 
-def page_shape(d, fill, stroke=None, width=0.25):
+def page_shape(d, fill, stroke=None, width=0.25, dy=0):
+    """Reference shapes on a page-sized canvas, optionally moved down by dy."""
     svg = (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {PAGE_W} {PAGE_H}" '
-        f'width="{PAGE_W}pt" height="{PAGE_H}pt">'
+        f'width="{PAGE_W}pt" height="{PAGE_H}pt"><g transform="translate(0 {dy})">'
         + "".join(
             f'<path d="{p}" fill="{fill}"/>'
             if not stroke
             else f'<path d="{p}" fill="none" stroke="{stroke}" stroke-width="{width}"/>'
             for p in ([d] if isinstance(d, str) else d)
         )
-        + "</svg>"
+        + "</g></svg>"
     )
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
@@ -103,12 +104,12 @@ def shape_in(d, fill):
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
-def summary_column(bottom):
-    """The numbered side column of a table, closed at its last row (page 5)."""
+def summary_column(bottom, top=293.62):
+    """The numbered side column of a table, from top to its last row (page 5)."""
     return (
-        f"M559.47 293.62V{bottom - 10.11:.2f}C555.52 {bottom - 6.16:.2f} 553.31 "
-        f"{bottom - 3.95:.2f} 549.36 {bottom:.2f}H521.1V303.73C525.05 299.78 527.26 "
-        "297.57 531.21 293.62Z"
+        f"M559.47 {top:.2f}V{bottom - 10.11:.2f}C555.52 {bottom - 6.16:.2f} 553.31 "
+        f"{bottom - 3.95:.2f} 549.36 {bottom:.2f}H521.1V{top + 10.11:.2f}"
+        f"C525.05 {top + 6.16:.2f} 527.26 {top + 3.95:.2f} 531.21 {top:.2f}Z"
     )
 
 
@@ -201,26 +202,81 @@ def white_logo(src):
     return prepared_logo(src, True)[0]
 
 
-def original_pdf_artwork(pdf, content):
-    """Overlay immutable original forms on their reserved pages in both preview/export."""
+def vector_boxes(document):
+    """Boxes the templates reserved for vector artwork, per rendered page.
+
+    Each is (name, x0, y0, x1, y1) in points. The artwork itself is not in the
+    HTML: export places the original vector file in the box (see below).
+    """
+    pages = []
+    for page in document.pages:
+        found, seen = [], set()
+
+        def walk(box):
+            element = getattr(box, "element", None)
+            name = element.get("data-vector") if element is not None else None
+            if name and id(element) not in seen:
+                seen.add(id(element))
+                x, y = box.border_box_x(), box.border_box_y()
+                found.append(
+                    (
+                        name,
+                        x * 0.75,
+                        y * 0.75,
+                        (x + box.border_width()) * 0.75,
+                        (y + box.border_height()) * 0.75,
+                    )
+                )
+            for child in getattr(box, "children", ()):
+                walk(child)
+
+        walk(page._page_box)
+        pages.append(found)
+    return pages
+
+
+def original_pdf_artwork(pdf, content, document=None):
+    """Place the immutable original artwork on its pages, as vectors.
+
+    The Infath page and the terms block are original PDF pages; icons, tiles,
+    the footer bar and the covers are the vector files built by
+    scripts/build_vector_art.py, placed beneath the text in the boxes the
+    templates reserved (document is the rendered WeasyPrint document).
+    """
     import pymupdf
 
     if not content.get("booklet"):
         return pdf
-    with pymupdf.open(stream=pdf, filetype="pdf") as document:
+    stamps = vector_boxes(document) if document is not None else []
+    sources = {}
+
+    def source(name):
+        if name not in sources:
+            sources[name] = pymupdf.open(ASSETS / name)
+        return sources[name]
+
+    with pymupdf.open(stream=pdf, filetype="pdf") as output:
         for n, page in enumerate(content["booklet"]["pages"]):
-            if n >= len(document):
+            if n >= len(output):
                 break  # The normal page-count preflight rejects an invalid composition.
+            # Later insertions go further down: reversed keeps the document order
+            # (a cover background stays beneath the icon drawn on it).
+            for name, x0, y0, x1, y1 in reversed(stamps[n] if n < len(stamps) else []):
+                output[n].show_pdf_page(
+                    pymupdf.Rect(x0, y0, x1, y1),
+                    source(f"booklet-art/vector/{name}.pdf"),
+                    0,
+                    keep_proportion=False,
+                    overlay=False,
+                )
             if page["kind"] == "introduction":
-                name = "reference-introduction.pdf"
-                box = document[n].rect
+                output[n].show_pdf_page(
+                    output[n].rect, source("reference-introduction.pdf"), 0
+                )
             elif page["kind"] == "terms":
                 # Reference page 19, clipped to the terms block; footer is the template's.
-                name = "booklet-art/terms.pdf"
                 box = pymupdf.Rect(110, 110, 505, 692)
-            else:
-                continue
-            with pymupdf.open(ASSETS / name) as artwork:
-                clip = box if page["kind"] == "terms" else None
-                document[n].show_pdf_page(box, artwork, 0, clip=clip)
-        return document.tobytes(garbage=3, deflate=True)
+                output[n].show_pdf_page(
+                    box, source("booklet-art/terms.pdf"), 0, clip=box
+                )
+        return output.tobytes(garbage=3, deflate=True)

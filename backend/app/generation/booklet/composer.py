@@ -42,16 +42,29 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 7
+LAYOUT_VERSION = 8
 # Rows that the reference tables hold before continuing on another page.
-SUMMARY_ROWS = 10
-# Reference page 5 table: column edges (right to left) and row bottoms, in points.
+# Summary table (guide p.14). Column edges (right to left) come from the open
+# reference booklet; the title and table sit where the guide places them, and
+# the table fills its area down to the footer: rows share the height evenly.
 SUMMARY_COLS = (509.2, 455.1, 413.1, 350.6, 308.6, 265.9, 225.9, 152.6, 37.6)
-SUMMARY_TOP = 297.7
-SUMMARY_BOTTOMS = (327.7, 353.8, 379.8, 405.8, 434.4, 460.4, 486.4, 512.4, 541.0, 567.0)
-SUMMARY_LIMIT = 740.0  # a taller table still ends above the footer
+SUMMARY_SHIFT = -103.5  # from the open booklet's position up to the guide's
+SUMMARY_TOP = 297.7 + SUMMARY_SHIFT
+SUMMARY_LIMIT = 740.0  # the table ends above the footer
+SUMMARY_MIN_ROW = 26.0  # the reference row: at most 20 properties on a page
+SUMMARY_ROWS = int((SUMMARY_LIMIT - SUMMARY_TOP) // SUMMARY_MIN_ROW)
+# With few properties a row grows no taller than in a full eight-row table
+# (the guide's), so a short list does not turn into oversized rows.
+SUMMARY_MAX_ROW = (SUMMARY_LIMIT - SUMMARY_TOP) / 8
 SUMMARY_LINE = 10.5  # line height of a value wrapped inside its cell
 RENTAL_ROWS = 19
+# Rentals table (reference page 18): column edges right to left, the reference
+# row, and the lowest row bottom that still leaves room for the note under it.
+RENTAL_COLS = (516.5, 462.3, 430.4, 382.9, 327.4, 271.2, 215.0, 159.0, 95.5, 44.0)
+RENTAL_TOP = 152.8
+RENTAL_ROW = 26.3
+RENTAL_LIMIT = 690.0
+RENTAL_NOTE_GAP = 12.0  # the fixed note follows the last row
 # Links shown on the property page; the rest continue on a links page.
 PAGE_LINKS = 4
 LINK_ORDER = (
@@ -67,11 +80,14 @@ INFO_BOX = {"landscape": (10, 268, 11), "portrait": (10, 262, 8)}
 INFO_PAGE = (11, 500, 33)
 NUMBER_INDENT = 11
 # Other text regions: (font size, width, lines), measured on the reference.
-AGENT_TEXT = (17.02, 387.6, 8)
-AGENT_BOX = 216  # points of height for the agent's description (8 lines of 27)
+# Guide p.12 (selling agent): Ruaq Medium 16.02 pt on 28.5 pt lines, ten lines
+# in a 317 pt column whose right edge (466) is shared by the logo and the name.
+AGENT_TEXT = (16.02, 317.0, 10)
+AGENT_LINE = 28.5
+AGENT_BOX = 285  # points of height for the agent's description (10 lines)
 # The agent's extra contact text sits under the numbers on the contact page.
 CONTACT_EXTRA = (10, 360, 2)
-AGENT_MIN = 11.5  # smallest size the description is set at before it must be shortened
+AGENT_MIN = 11.0  # smallest size the description is set at before it must be shortened
 # Right-aligned (not justified): lines use the full measured width.
 ANNOUNCEMENT = (19, 373, 3)
 BOUNDARY_PAGE = (15, 444, 4)  # the fifth line carries the length
@@ -189,19 +205,86 @@ def lines_used(text, size, width):
 
 
 def agent_size(text):
-    """Largest size (reference 17.02 pt, line 27 pt) that sets the description on page 3.
+    """Largest size (guide: 16.02 pt on 28.5 pt lines) that sets the description
+    on page 3.
 
     The guide has exactly one agent page; a longer description is set smaller,
     and below AGENT_MIN it has to be shortened (reported in the workflow).
     """
     size = AGENT_TEXT[0]
     while True:
-        lines = int(AGENT_BOX // (27 * size / AGENT_TEXT[0]))
-        if fit_length(text, size, AGENT_TEXT[1], lines)[0] >= len(text.rstrip()):
+        lines = int(AGENT_BOX // (AGENT_LINE * size / AGENT_TEXT[0]))
+        fitted = fit_length(text, size, AGENT_TEXT[1], lines, "RuaqArabic-Medium")
+        if fitted[0] >= len(text.rstrip()):
             return size, True
         if size <= AGENT_MIN:
             return AGENT_MIN, False
         size = max(AGENT_MIN, round(size - 0.25, 2))
+
+
+# Letters that join the next one: a kashida (tatweel) may follow them.
+JOINING = set("بتثجحخسشصضطظعغفقكلمنهيئـ")
+TATWEEL = "ـ"
+
+
+def wrap_lines(text, size, width, name):
+    """Text broken into lines as the page breaks it; each is (line, ends_paragraph)."""
+    lines = []
+    for paragraph in text.split("\n"):
+        current = ""
+        for token in TOKENS.findall(paragraph):
+            candidate = (current + token).rstrip()
+            if current.strip() and text_width(candidate, size, name) > width:
+                lines.append((current.rstrip(), False))
+                current = token.lstrip()
+            else:
+                current += token
+        lines.append((current.rstrip(), True))
+    return lines
+
+
+def kashida(line, size, width, name, per_word=4):
+    """A line lengthened towards width with kashidas, as the guide sets its
+    justified Arabic text; the small remainder is left to word spacing."""
+    unit = text_width(TATWEEL, size, name)
+    room = int((width - text_width(line, size, name)) // unit) if unit else 0
+    words = line.split(" ")
+    spots = []
+    for word in words:
+        # The join into the word's last letters reads best; never inside lam-alef.
+        found = [
+            i
+            for i in range(len(word) - 1)
+            if word[i] in JOINING
+            and "\u0621" <= word[i + 1] <= "\u064a"
+            and not (word[i] == "ل" and word[i + 1] in "اأإآ")
+        ]
+        spots.append(found[-1] if found and len(word) > 2 else None)
+    added = [0] * len(words)
+    while room > 0:
+        progressed = False
+        for n, spot in enumerate(spots):
+            if spot is not None and added[n] < per_word and room > 0:
+                added[n] += 1
+                room -= 1
+                progressed = True
+        if not progressed:
+            break
+    return " ".join(
+        word if spot is None else word[: spot + 1] + TATWEEL * extra + word[spot + 1 :]
+        for word, spot, extra in zip(words, spots, added)
+    )
+
+
+def justified(text, size, width, name="RuaqArabic-Medium"):
+    """Lines for a justified block: every line but a paragraph's last is filled."""
+    return [
+        {
+            "text": line if last else kashida(line, size, width * 0.985, name),
+            "last": last,
+        }
+        for line, last in wrap_lines(text, size, width * 0.98, name)
+    ]
 
 
 def summary_value(item, key, language="ar"):
@@ -223,18 +306,38 @@ def cell_lines(text, width):
     )
 
 
+def spread(needs, space, cap):
+    """Row heights sharing a table's space evenly: every row is at least as tall
+    as its content needs, no row taller than cap, the total within space."""
+    low, high = min(needs), max(cap, min(needs))
+    for _ in range(40):
+        level = (low + high) / 2
+        if sum(max(n, level) for n in needs) <= space:
+            low = level
+        else:
+            high = level
+    return [max(n, low) for n in needs]
+
+
 def summary_pages(items, language="ar"):
     """Summary tables with every value shown whole, at the reference size.
 
-    A value too long for its column wraps inside its cell and only that row
-    grows; rows that fit keep the reference geometry. A page takes rows while
-    the table stays above the footer, and at most the reference's ten.
+    A value too long for its column wraps inside its cell and its row grows.
+    A page takes as many properties as fit down to the footer (reference rows
+    of 26 pt), and its rows then share the table's height evenly.
     """
-    pages, rows, bottoms, lines = [], [], [], []
+    space = SUMMARY_LIMIT - SUMMARY_TOP
+    pages, rows, needs, lines = [], [], [], []
 
-    def reference(position):
-        top = SUMMARY_BOTTOMS[position - 1] if position else SUMMARY_TOP
-        return SUMMARY_BOTTOMS[position] - top
+    def close():
+        heights = spread(needs, space, SUMMARY_MAX_ROW)
+        bottoms, y = [], SUMMARY_TOP
+        for height in heights:
+            y += height
+            bottoms.append(round(y, 2))
+        pages.append(
+            {"kind": "summary", "rows": rows, "bottoms": bottoms, "lines": lines}
+        )
 
     for item in items:
         counts = {
@@ -244,23 +347,56 @@ def summary_pages(items, language="ar"):
             )
             for i, key in enumerate(SUMMARY_FIELDS)
         }
-        needed = max(counts.values()) * SUMMARY_LINE + 6
-        if rows and (
-            len(rows) == SUMMARY_ROWS
-            or bottoms[-1] + max(reference(len(rows)), needed) > SUMMARY_LIMIT
-        ):
-            pages.append(
-                {"kind": "summary", "rows": rows, "bottoms": bottoms, "lines": lines}
-            )
-            rows, bottoms, lines = [], [], []
-        top = bottoms[-1] if bottoms else SUMMARY_TOP
+        need = max(SUMMARY_MIN_ROW, max(counts.values()) * SUMMARY_LINE + 6)
+        if rows and sum(needs) + need > space + 0.01:
+            close()
+            rows, needs, lines = [], [], []
         rows.append(item)
-        bottoms.append(round(top + max(reference(len(rows) - 1), needed), 2))
+        needs.append(need)
         lines.append(counts)
     if rows:
+        close()
+    return pages
+
+
+def rental_pages(item, rentals, language="ar"):
+    """Rental tables whose values stay inside their cells: a long value wraps
+    and its row grows; the page ends when the table and its note are full."""
+    from .formatting import number
+
+    pages, rows, bottoms, lines = [], [], [], []
+
+    def close():
         pages.append(
-            {"kind": "summary", "rows": rows, "bottoms": bottoms, "lines": lines}
+            {
+                "kind": "rentals",
+                "item": item,
+                "rows": rows,
+                "bottoms": bottoms,
+                "lines": lines,
+            }
         )
+
+    for row in rentals:
+        counts = {}
+        for i, key in enumerate(RENTAL_FIELDS):
+            value = row.get(key)
+            if key == "annual_rent_value":
+                value = number(value, language or "ar", True)
+            counts[key] = cell_lines(
+                str(value or "-"), RENTAL_COLS[i] - RENTAL_COLS[i + 1] - 4
+            )
+        height = max(RENTAL_ROW, max(counts.values()) * SUMMARY_LINE + 6)
+        top = bottoms[-1] if bottoms else RENTAL_TOP
+        if rows and (len(rows) == RENTAL_ROWS or top + height > RENTAL_LIMIT):
+            close()
+            rows, bottoms, lines = [], [], []
+            top = RENTAL_TOP
+        rows.append(row)
+        bottoms.append(round(top + height, 2))
+        lines.append(counts)
+    if rows:
+        close()
     return pages
 
 
@@ -319,6 +455,27 @@ def fill_box(entries, size, width, capacity):
     return shown, []
 
 
+INFO_MIN = 6.5  # smallest size of the additional-information box
+
+
+def fit_box(entries, size, width, capacity):
+    """The whole content in its box, set smaller when there is more of it.
+
+    Returns (shown, rest, size): the reference size while everything fits, then
+    smaller down to INFO_MIN (lines tighten in proportion); only content that
+    does not fit even then continues on an additional page.
+    """
+    height = capacity * 1.4 * size
+    current = size
+    while True:
+        shown, rest = fill_box(
+            entries, current, width, int(height // (1.4 * current) + 1e-6)
+        )
+        if not rest or current <= INFO_MIN:
+            return shown, rest, current
+        current = max(INFO_MIN, round(current - 0.5, 2))
+
+
 def paginate(entries, size, width, capacity):
     pages = []
     while entries:
@@ -345,7 +502,8 @@ def compose(project, items):
             "kind": "agent",
             "text": description,
             "size": size,
-            "line_height": round(27 * size / AGENT_TEXT[0], 2),
+            "line_height": round(AGENT_LINE * size / AGENT_TEXT[0], 2),
+            "lines": justified(description, size, AGENT_TEXT[1]),
         }
     )
     auction_page = {"kind": "auction"}
@@ -385,7 +543,9 @@ def compose(project, items):
             if first or remainder
             else []
         )
-        shown, rest = fill_box(info_entries(item, include_info), *INFO_BOX[layout])
+        shown, rest, info_size = fit_box(
+            info_entries(item, include_info), *INFO_BOX[layout]
+        )
         close = electronic and bool(
             prop.get("auction_close_date") or prop.get("auction_close_time")
         )
@@ -399,6 +559,7 @@ def compose(project, items):
                 "separate_boundaries": separate_boundaries,
                 "description": description[0] if description else "",
                 "info": shown,
+                "info_size": info_size,
                 "additional_information": "".join(
                     e["text"] for e in shown if set(e) == {"text"}
                 ),
@@ -470,12 +631,8 @@ def compose(project, items):
             for r in prop.get("rental_contracts", [])
             if any(v not in (None, "") for v in r.values())
         ]
-        for rows in (
-            chunks(rentals, RENTAL_ROWS)
-            if prop.get("include_rentals_page", True)
-            else []
-        ):
-            pages.append({"kind": "rentals", "item": item, "rows": rows})
+        if prop.get("include_rentals_page", True):
+            pages += rental_pages(item, rentals, auction.get("document_language"))
     pages.append({"kind": "terms", "auction_type": auction["auction_type"]})
     if electronic:
         pages.append({"kind": "participation"})

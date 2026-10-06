@@ -342,7 +342,7 @@ def render(db, output):
     check_layout(document, content)
     from .booklet.art import original_pdf_artwork
 
-    pdf = original_pdf_artwork(document.write_pdf(), content)
+    pdf = original_pdf_artwork(document.write_pdf(), content, document)
     preflight = inspect_pdf(pdf, content)
     if preflight:
         output.content = {**output.content, "preflight": preflight}

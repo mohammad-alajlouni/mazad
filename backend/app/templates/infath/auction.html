@@ -1,7 +1,7 @@
 {#- Reference page 4. Schedule rows fill the reference slots in order. -#}
 {{ art('plain') }}{{ footer() }}
 {#- Fixed auction icon on white: the gradient version, as on reference page 4. -#}
-<img class="logo" style="{{ box(441, 207, 51, 64) }}" src="{{ asset('booklet-art/auction-icon-gradient.png') }}">
+{{ vec('auction-icon-gradient', 441, 207, 51, 64) }}
 {% set name = auction.auction_name %}{% set prefix = bt('auction') %}
 {% set name = name[prefix|length:]|trim if name.startswith(prefix) else name %}
 {% set size = fit.box_size('auction_name', name) %}
@@ -15,7 +15,7 @@
 {% if auction.auction_type != 'physical' %}{% set _ = rows.append(('platform', auction.electronic_platform_name or bt('platform_name'))) %}{% endif %}
 {% set slots = [(424.6, 404), (465.8, 444), (505.7, 485), (551.3, 527)] %}
 {% for icon, text in rows %}{% set base, top = slots[loop.index0] %}
-<img class="icon" style="{{ box(461, top, 32, 32 if icon != 'calendar' else 33) }}" src="{{ asset('reference-' ~ icon ~ '.png') }}">
+{{ vec('auction-' ~ icon, 461, top, 32, {'time': 31, 'calendar': 33, 'location': 31, 'platform': 33}[icon]) }}
 {% set size = fit.box_size(icon == 'location' and 'physical_location' or 'electronic_platform_name', text) if icon in ('location', 'platform') else 13.48 %}
 <div class="t r w5" style="{{ T(437.9, base, size, width=330) }};color:#3abdba" data-fit="auction-schedule-{{ icon }}" data-max-height="26pt">{{ text|nums }}</div>
 {% endfor %}

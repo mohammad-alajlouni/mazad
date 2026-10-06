@@ -90,7 +90,7 @@ def fact_size(prop, key, layout, language="ar"):
 # Single-line boxes outside the property page: (width, size, minimum, family, weight).
 BOXES = {
     "auction_name": (315, 23.09, 14, "r", 700),
-    "agent_name": (390, 19.78, 13, "r", 700),
+    "agent_name": (317, 17.44, 12, "r", 500),  # guide p.12: Ruaq Medium
     "physical_location": (330, 13.48, 9.5, "r", 500),
     "electronic_platform_name": (330, 13.48, 9.5, "r", 500),
     "participation_name": (200, 12.59, 8.5, "r", 400),
@@ -125,15 +125,17 @@ def booklet_issues(auction, agent, items, language="ar"):
     description = (agent.get("description") or "").strip()
     if description and not agent_size(description)[1]:
         # Characters that still fit on the single agent page at the smallest size.
-        from .composer import AGENT_BOX, AGENT_MIN, AGENT_TEXT, fit_length
+        from .composer import AGENT_BOX, AGENT_LINE, AGENT_MIN, AGENT_TEXT, fit_length
 
-        lines = int(AGENT_BOX // (27 * AGENT_MIN / AGENT_TEXT[0]))
+        lines = int(AGENT_BOX // (AGENT_LINE * AGENT_MIN / AGENT_TEXT[0]))
         issues.append(
             {
                 "section": "agent",
                 "field": "description",
                 "item": None,
-                "limit": fit_length(description, AGENT_MIN, AGENT_TEXT[1], lines)[0],
+                "limit": fit_length(
+                    description, AGENT_MIN, AGENT_TEXT[1], lines, "RuaqArabic-Medium"
+                )[0],
             }
         )
     extra = (agent.get("contact_information") or "").strip()

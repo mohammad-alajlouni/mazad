@@ -1,13 +1,13 @@
 {#- Reference page 20. The fourth step names this auction. -#}
 {{ art('participation') }}{{ footer(true, false) }}
-<img class="icon" style="{{ box(400, 95, 74, 107) }}" src="{{ asset('booklet-art/participation-title.png') }}">
+{{ vec('participation-title', 400, 95, 74, 107) }}
 {% set title = bt('participation').split(' ', 2) if ar else [bt('participation')] %}
 {% if ar %}
 <div class="t r w7" style="{{ T(454.5, 140.7, 35.38) }};color:#057c8e">خطوات المشاركة</div>
 <div class="t r w7" style="{{ T(454.5, 182.5, 35.38) }};color:#057c8e">في المزاد الإلكتروني</div>
 {% else %}<div class="t p r w7" style="{{ T(454.5, 140.7, 30, lh=42, width=330) }};color:#057c8e">{{ bt('participation') }}</div>{% endif %}
 {% for n, x, base, box_ in [(1, 480.9, 327.0, (472, 309, 18, 25)), (2, 362.5, 327.0, (354, 309, 18, 25)), (3, 208.6, 325.0, (200, 307, 18, 25)), (4, 395.0, 497.1, (388, 481, 16, 23)), (5, 252.3, 497.1, (244, 481, 17, 23))] %}
-<img class="icon" style="{{ box(*box_) }}" src="{{ asset('booklet-art/step-' ~ n ~ '.png') }}">
+{{ vec('step-' ~ n, *box_) }}
 <div class="t l w5 white" style="{{ T(x, base, 15.93 if n < 4 else 14.79, 'l', align='center', width=20) }}">{{ n }}</div>
 {% endfor %}
 {% set platform = auction.electronic_platform_name or bt('platform_fallback') %}

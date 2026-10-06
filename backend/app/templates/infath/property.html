@@ -52,8 +52,8 @@
 <div class="t r w5 white" style="{{ T(G.tab_b[0], G.tab_b[1], 10.09, align='center', width=64) }}">{{ bt('boundary_descriptions') }}</div>
 <div class="t r w5 white" style="{{ T(G.tab_l[0], G.tab_l[1], 10.09, align='center', width=64) }}">{{ bt('boundary_lengths') }}</div>
 {% else %}
-<div class="t r w5 white rot" style="{{ T(211.75, 482.9, 10.09, align='center', width=64) }}">{{ bt('boundary_descriptions') }}</div>
-<div class="t r w5 white rot" style="{{ T(211.75, 575.8, 10.09, align='center', width=64) }}">{{ bt('boundary_lengths') }}</div>
+<div class="t r w5 white rot" style="{{ T(210.0, 482.9, 10.09, align='center', width=64) }}">{{ bt('boundary_descriptions') }}</div>
+<div class="t r w5 white rot" style="{{ T(210.0, 575.8, 10.09, align='center', width=64) }}">{{ bt('boundary_lengths') }}</div>
 {% endif %}
 {% set b = prop.boundaries or {} %}
 {% for side in ['north', 'south', 'east', 'west'] %}
@@ -68,22 +68,24 @@
 <div class="t r w5 white" style="{{ T(G.info_tab[0], G.info_tab[1], 10.12) }}">{{ bt('additional_information') }}</div>
 {% set edge = number_right + 3 %}
 <div class="t" style="right:{{ 595.276 - edge }}pt;top:{{ first - 14 }}pt;width:{{ text_width + edge - heading_right + 14 }}pt" data-fit="property-extra" data-max-height="{{ 14 * lines + 12 }}pt">
+{#- Set smaller when there is more content (composer), justified like the guide. -#}
+{% set fs = page.info_size or 10 %}{% set flh = 1.4 * fs %}
 {% for entry in page.info %}
-{% if entry.heading %}<p class="r w3 body" style="position:relative;font-size:10pt;line-height:14pt;white-space:normal;text-align:right;padding-right:{{ edge - heading_right }}pt">{{ bt(entry.heading) }} :</p>
-{% elif entry.number %}<div style="position:relative"><div class="r w3" style="position:absolute;top:0;right:{{ edge - number_right }}pt;font-size:10pt;line-height:14pt;color:#000">-{{ entry.number }}</div><p class="r w3 body" style="font-size:10pt;line-height:14pt;white-space:normal;text-align:right;padding-right:{{ edge - text_right }}pt">{{ entry.text }}</p></div>
-{% else %}<p class="p r w3 body" style="position:relative;font-size:10pt;line-height:14pt;white-space:pre-wrap;text-align:right;padding-right:{{ edge - text_right }}pt">{{ entry.text|trim }}</p>{% endif %}
+{% if entry.heading %}<p class="r w3 body" style="position:relative;font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:normal;text-align:right;padding-right:{{ edge - heading_right }}pt">{{ bt(entry.heading) }} :</p>
+{% elif entry.number %}<div style="position:relative"><div class="r w3" style="position:absolute;top:0;right:{{ edge - number_right }}pt;font-size:{{ fs }}pt;line-height:{{ flh }}pt;color:#000">-{{ entry.number }}</div><p class="r w3 body" style="font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:normal;text-align:justify;text-align-last:right;padding-right:{{ edge - text_right }}pt">{{ entry.text }}</p></div>
+{% else %}<p class="r w3 body" style="position:relative;font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:pre-line;overflow-wrap:anywhere;text-align:justify;text-align-last:right;padding-right:{{ edge - text_right }}pt">{{ entry.text|trim }}</p>{% endif %}
 {% endfor %}</div>
 {#- Links: QR codes in the print edition, buttons in the digital edition. -#}
 {% if page.edition == 'digital' %}
 {% set x0, y0, step, scale = G.buttons %}
 {% for link in item.qr_links[:4] %}{% set top = y0 + step * loop.index0 %}
-<a class="hit" href="{{ link.url }}" style="{{ box(x0, top, 98.88 * scale, 17.49) }}"></a><img class="icon" style="{{ box(x0, top, 98.88 * scale, 17.49) }}" src="{{ shape_in(shapes().button, '#117888') }}">
+<a class="hit" href="{{ link.url }}" style="{{ box(x0, top, 98.88 * scale, 17.49) }}"></a>{{ plate(x0, top, 98.88 * scale, 17.49) }}
 <img class="icon" style="{{ box(x0 + 98.88 * scale + 6.2, top + 4.4, 5.04, 6.1) }}" src="{{ shape_in('M5.04 0L0 3.05L5.04 6.1Z', '#cdebf1') }}">
 <div class="t r w5 white" style="{{ T(x0 + 49.44 * scale, top + 10.9, 9.75 if bt(link.label)|length < 18 else 8, align='center', width=98 * scale) }}">{{ bt(link.label) }}</div>
 {% endfor %}
 {% else %}
 {% for link in item.qr_links[:4] %}{% set col = G.qr[loop.index0 % 2] %}{% set dy = 59.6 * (loop.index0 // 2) %}
-<a class="hit" href="{{ link.url }}" style="{{ box(col[0] - 40.5, 633.0 + dy, 81, 54) }}"></a><img class="icon" style="{{ box(col[0] - 40.5, 633.0 + dy, 81, 15) }}" src="{{ asset('booklet-art/link-label.png') }}">
+<a class="hit" href="{{ link.url }}" style="{{ box(col[0] - 40.5, 633.0 + dy, 81, 54) }}"></a>{{ plate(col[0] - 40.5, 633.0 + dy, 81, 15) }}
 <img class="icon" style="{{ box(col[2], 637.1 + dy, 4.1, 4.9) }}" src="{{ shape_in('M4.1 0L0 2.45L4.1 4.9Z', '#cdebf1') }}">
 <div class="t r w5 white" style="{{ T(col[0], 642.0 + dy, 6.71, align='center', width=81) }}">{{ bt(link.label) }}</div>
 <img class="qr-code" style="{{ box(col[1] - 18, 650.9 + dy, 36, 36) }}" src="{{ link.image }}">

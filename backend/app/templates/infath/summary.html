@@ -1,19 +1,21 @@
-{#- Reference page 5: teal or navy to match the cover; the table closes at its last row. -#}
+{#- Guide V2 p.14: title and table at the guide's height; teal or navy to match
+    the cover. The table fills its area: row bottoms come from the composer. -#}
 {% set navy = booklet.theme == 'navy' %}{% set band = '#00365d' if navy else '#37bfbd' %}
-{#- Row bottoms come from the composer: a row grows only when a value wraps. -#}
-{% set bottoms = page.bottoms or [327.7, 353.8, 379.8, 405.8, 434.4, 460.4, 486.4, 512.4, 541.0, 567.0][:page.rows|length] %}
-{% set last = bottoms[-1] %}
+{% set dy = -103.5 %}{% set table_top = 297.7 + dy %}
+{% set bottoms = page.bottoms %}{% set last = bottoms[-1] %}
 {% set cols = [509.2, 455.1, 413.1, 350.6, 308.6, 265.9, 225.9, 152.6, 37.6] %}
-{{ art('summary') }}
-<img class="art" src="{{ page_shape(shapes().summary_band, band) }}">
-<img class="art" src="{{ page_shape(summary_column(last + 7.05), band) }}">
-<img class="art" src="{{ table_lines(cols[1:-1], 297.7, last, bottoms, 37.6, 509.2, '#01a3a1', 0.216, 0.246) }}">
+{{ art('plain') }}
+{#- Title rules either side of the heading (two short, two long). -#}
+<img class="art" src="{{ page_shape(['M229.6 58.5H219.7', 'M229.6 64.4H186.1', 'M371.2 58.5H381.1', 'M371.2 64.4H414.7'], 'none', '#127887', 1) }}">
+<img class="art" src="{{ page_shape(shapes().summary_band, band, dy=dy) }}">
+<img class="art" src="{{ page_shape(summary_column(last + 7.05, 293.62 + dy), band) }}">
+<img class="art" src="{{ table_lines(cols[1:-1], table_top, last, bottoms, 37.6, 509.2, '#01a3a1', 0.216, 0.246) }}">
 {{ footer() }}
-<div class="t r w7" style="{{ T(300.25, 149.0, 26.43, align='center', width=300) }};color:{{ '#00365d' if navy else '#00a4a2' }}">{{ bt('summary') }}</div>
+<div class="t r w7" style="{{ T(300.4, 67.1, 21.24, align='center', width=260) }};color:#127887">{{ bt('summary') }}</div>
 {% for key in summary_fields %}{% set centre = (cols[loop.index0] + cols[loop.index]) / 2 %}
-<div class="t r w5 white" style="{{ T(centre, 271.9, 6.48, align='center', width=cols[loop.index0] - cols[loop.index]) }}">{{ bt('area_short' if key == 'area' else key) }}</div>
+<div class="t r w5 white" style="{{ T(centre, 271.9 + dy, 6.48, align='center', width=cols[loop.index0] - cols[loop.index]) }}">{{ bt('area_short' if key == 'area' else key) }}</div>
 {% endfor %}
-{% for item in page.rows %}{% set row = loop.index0 %}{% set top = 297.7 if loop.first else bottoms[row - 1] %}{% set middle = (top + bottoms[row]) / 2 %}{% set base = middle + 3.2 %}
+{% for item in page.rows %}{% set row = loop.index0 %}{% set top = table_top if loop.first else bottoms[row - 1] %}{% set middle = (top + bottoms[row]) / 2 %}{% set base = middle + 3.2 %}
 <div class="t lr white" style="{{ T(540.3, base + 0.4, 12.99, 'l', align='center', width=38) }}">{{ '%02d' % item.number }}</div>
 {% for key in summary_fields %}{% set prop = item.property_data %}
 {% set value = fmt.number(prop.get(key), output_language, key == 'participation_amount') if key in ('area', 'participation_amount') else prop.get(key) %}

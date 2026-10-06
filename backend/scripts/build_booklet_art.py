@@ -236,7 +236,8 @@ layer("information", {"draw": [(15, {"seqs": {2, 3}}), (15, Q)]})
 layer("boundaries", {"draw": [(16, {"seqs": set(range(15, 23))}), (16, Q)]})
 layer("plain", {"draw": [(17, Q)]})
 layer("summary", {"draw": [(5, {"seqs": {64, 65, 66, 67}}), (5, Q)]})
-layer("rentals", {"draw": [(18, {"seqs": {2, 3, 4, 5, 34, 62}}), (18, Q)]})
+# (the note frame, drawing 62, travels with the note: see build_vector_art.py)
+layer("rentals", {"draw": [(18, {"seqs": {2, 3, 4, 5, 34}}), (18, Q)]})
 layer("agent", {"draw": [(3, {"seqs": {8, 9}})]})
 layer(
     "participation",

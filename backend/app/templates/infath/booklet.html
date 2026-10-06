@@ -17,8 +17,18 @@ top:{{ '%.2f' % (base - L / 2 - size * (0.366 if fam == 'r' else 0.255)) }}pt;fo
 <div class="t {{ 'l' if has_digits(value) else 'r' }} {{ cls }}" style="{{ T(x, base, size, 'l' if has_digits(value) else 'r', align, width) }}">{{ value|nums }}</div>
 {%- endmacro %}
 {% macro box(x0, y0, w, h) -%}left:{{ x0 }}pt;top:{{ y0 }}pt;width:{{ w }}pt;height:{{ h }}pt{%- endmacro %}
+{#- Fixed artwork with gradients (icons, tiles, covers): the export places the
+    original vector file in this box; the browser preview shows its picture. -#}
+{% macro vec(name, x0, y0, w, h) -%}
+{% if preview %}<img class="icon" style="{{ box(x0, y0, w, h) }}" src="{{ asset('booklet-art/vector/' ~ name ~ '.png') }}">
+{%- else %}<div class="vec" data-vector="{{ name }}" style="{{ box(x0, y0, w, h) }}"></div>{% endif %}
+{%- endmacro %}
+{#- Link buttons and QR labels: square-cornered, the guide's gradient (p.15-16). -#}
+{% macro plate(x0, y0, w, h) -%}
+<div class="plate" style="{{ box(x0, y0, w, h) }}"></div>
+{%- endmacro %}
 {% macro art(name) %}<img class="art" src="{{ asset('booklet-art/' ~ name ~ '.svg') }}">{% endmacro %}
-{% macro footer(reverse=false, agent_logo=true) %}<img class="bar" src="{{ asset('booklet-art/footer-bar' ~ ('-reverse' if reverse else '') ~ '.png') }}">{% if agent_logo and project.agent_logo %}{% set A = logo_fit(project.agent_logo, 80, 22.3) %}<img class="logo" style="{{ box(12.3, 803.05 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}{% endmacro %}
+{% macro footer(reverse=false, agent_logo=true) %}{{ vec('footer-bar' ~ ('-reverse' if reverse else ''), 0, 822, 595.276, 19.89) }}{% if agent_logo and project.agent_logo %}{% set A = logo_fit(project.agent_logo, 80, 22.3) %}<img class="logo" style="{{ box(12.3, 803.05 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}{% endmacro %}
 {% macro qrs(links) %}<div class="qrs">{% for link in links %}<div class="qr"><a href="{{ link.url }}"><span>{{ bt(link.label) }}</span><img src="{{ link.image }}"></a></div>{% endfor %}</div>{% endmacro %}
 {% for page in booklet.pages %}
 {% if page.kind == 'cover' %}{% include 'infath/cover.html' %}

@@ -449,7 +449,8 @@ def test_summary_pagination_overflow_and_english(admin):
     )
     assert result.status_code == 200, result.text
     o = result.json()[0]
-    assert [x["kind"] for x in o["page_manifest"]].count("summary") == 2
+    # Seventeen properties share one summary table (it fills the page: 20 rows).
+    assert [x["kind"] for x in o["page_manifest"]].count("summary") == 1
     with pymupdf.open(stream=pdf(admin, o), filetype="pdf") as doc:
         text = "".join(page.get_text() for page in doc)
         for marker in [

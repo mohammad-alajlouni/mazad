@@ -9,11 +9,13 @@
 {% set name = name[prefix|length:]|trim if name.startswith(prefix) else name %}
 {% set lines = 1 + (1 if name|length > 16 else 0) %}
 <section class="full cover-{{ n }}">
-<img class="full-image" src="{{ asset('reference-cover-' ~ n ~ '.png') }}">
+{#- The cover artwork is the original Illustrator vector file in the export. -#}
+{% if preview %}<img class="full-image" src="{{ asset('reference-cover-' ~ n ~ '.png') }}">
+{% else %}<div class="vec" data-vector="cover-{{ n }}" style="{{ box(0, 0, 595.276, 841.89) }}"></div>{% endif %}
 {#- Covers 1 and 6 carry their own photograph: the cover is chosen, not uploaded. -#}
 {#- The auction icon is fixed (guide V2 p.3-6): silver on every cover, 50.6 x 63.5 pt.
     Only the auction name beside it changes. -#}
-<img class="logo" style="{{ box(g.logo_right - 50.6, g.logo_top, 50.6, 63.5) }}" src="{{ asset('booklet-art/auction-icon-silver.png') }}">
+{{ vec('auction-icon-silver', g.logo_right - 50.6, g.logo_top, 50.6, 63.5) }}
 {#- Covers with the title at the foot grow upwards; the others grow downwards. -#}
 {% set first = g.first_base - (30 * (lines - 1) if photo_cover else 0) %}
 <div class="t r w7 white" style="{{ T(g.title_right, first, 25, lh=30) }}">{{ prefix }}</div>

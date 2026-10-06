@@ -3,14 +3,21 @@
 {% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, 220, 51.7) %}<img class="logo" style="{{ box(300 - A.width / 2, 197.15 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
 <div class="t r w5" style="{{ T(299.75, 302.2, 20.37, align='center', width=300) }};color:#243c52">{{ bt('held_at') }}</div>
 {% set items = [] %}
-{% if auction.auction_type != 'physical' %}{% set _ = items.append(('platform', auction.electronic_platform_name or bt('platform_name'))) %}{% endif %}
-{% if auction.auction_type != 'electronic' %}{% set _ = items.append(('location', auction.physical_location or bt('location'))) %}{% endif %}
-{% set _ = items.append(('calendar', fmt.day_range(auction, output_language) or '—')) %}
+{#- Guide p.25, right to left - electronic: date, platform, time; in person:
+    location, date, time; hybrid: platform, location, date, time. -#}
+{% set platform = ('platform', auction.electronic_platform_name or bt('platform_name')) %}
+{% set calendar = ('calendar', fmt.day_range(auction, output_language) or '—') %}
+{% if auction.auction_type == 'electronic' %}{% set _ = items.extend([calendar, platform]) %}
+{% else %}
+{% if auction.auction_type == 'hybrid' %}{% set _ = items.append(platform) %}{% endif %}
+{% set _ = items.append(('location', auction.physical_location or bt('location'))) %}
+{% set _ = items.append(calendar) %}
+{% endif %}
 {% if auction.start_time or auction.end_time %}{% set _ = items.append(('time', fmt.time_range(auction, output_language))) %}{% endif %}
 {#- Four reference slots; fewer items share the same row, evenly spaced. -#}
 {% set slots = {4: [511.5, 400.0, 267.5, 133.0], 3: [470.0, 300.0, 133.0], 2: [400.0, 200.0], 1: [300.0]}[items|length] %}
 {% for icon, text in items %}{% set x = slots[loop.index0] %}
-<img class="icon" style="{{ box(x - 13.5, 348, 27, 27) }}" src="{{ asset('booklet-art/contact-' ~ icon ~ '.png') }}">
+{% set w = 24 if icon == 'location' else 27 %}{{ vec('contact-' ~ icon, x - w / 2, 348, w, 27) }}
 {#- Names (location, platform) wrap on two lines; date and time stay on one, as in the reference. -#}
 {% if icon in ('location', 'platform') %}{% set size = fit.box_size('contact_item', text) %}
 <div class="t p r w5" style="{{ T(x, 392.8, size, lh=size * 1.3, align='center', width=118) }};color:#159d9d;white-space:normal" data-fit="contact-{{ icon }}" data-max-height="{{ size * 2.6 + 4 }}pt">{{ text|nums }}</div>
@@ -18,14 +25,15 @@
 {% endfor %}
 <div class="t r w5" style="{{ T(300.3, 469.5, 20.37, align='center', width=300) }};color:#11375c">{{ bt('contact') }}</div>
 {% set phone = auction.auction_contact_number or agent.phone %}
-{% if agent.whatsapp %}<img class="icon" style="{{ box(420, 514, 18, 19) }}" src="{{ asset('booklet-art/contact-whatsapp.png') }}">
+{% if agent.whatsapp %}{{ vec('contact-whatsapp', 420, 514, 18, 19) }}
 <div class="t l w5" style="{{ T(398.9, 530.0, 14.61, 'l', width=130) }};color:#159d9d" dir="ltr">{{ agent.whatsapp }}</div>{% endif %}
-{% if phone %}{% set right = 253.8 if agent.whatsapp else 326.3 %}<img class="icon" style="{{ box(right + 11.2, 516, 18, 19) }}" src="{{ asset('booklet-art/contact-phone.png') }}">
+{% if phone %}{% set right = 253.8 if agent.whatsapp else 326.3 %}{{ vec('contact-phone', right + 11.2, 516, 18, 19) }}
 <div class="t l w5" style="{{ T(right, 530.0, 14.61, 'l', width=130) }};color:#159d9d" dir="ltr">{{ phone }}</div>{% endif %}
 {#- The agent's additional contact text (account settings), under the numbers. -#}
 {% if agent.contact_information and agent.contact_information.strip() %}<div class="t p r w5" style="{{ T(300, 556.5, 10, lh=14, align='center', width=360) }};color:#159d9d;white-space:pre-line" data-fit="contact-extra" data-max-height="28pt">{{ agent.contact_information|trim|nums }}</div>{% endif %}
-{% set target = (booklet.auction_qrs|selectattr('label', 'equalto', 'electronic_platform_url' if auction.auction_type == 'electronic' else 'auction_location_url')|list) or booklet.auction_qrs %}
-{% if target %}{% set link = target[0] %}
+{#- The QR leads to the auction hall: electronic auctions have none (guide p.25). -#}
+{% set target = booklet.auction_qrs|selectattr('label', 'equalto', 'auction_location_url')|list %}
+{% if target and auction.auction_type != 'electronic' %}{% set link = target[0] %}
 <a class="hit" href="{{ link.url }}" style="{{ box(231.4, 595.8, 137, 45.5) }}"></a><img class="qr-code" style="{{ box(231.4, 595.8, 45.5, 45.5) }}" src="{{ link.image }}">
 <div class="t r w7" style="{{ T(368.1, 606.7, 13.3, width=150) }};color:#001647">{{ bt('auction_platform' if link.label == 'electronic_platform_url' else 'auction_hall') }}</div>
 {% for line in bt('scan_to_reach').split('\n') %}<div class="t r w5" style="{{ T(368.1, 626.9 + 12.4 * loop.index0, 8.4, width=150) }};color:#001647">{{ line }}</div>{% endfor %}

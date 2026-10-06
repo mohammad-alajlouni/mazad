@@ -1,13 +1,17 @@
-{#- Reference page 3. -#}
+{#- Guide V2 p.12: one column whose right edge (466 pt) carries the logo, the
+    agent's name (Ruaq Medium 17.44) and the justified description. -#}
 {{ art('agent') }}
-{% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, 180, 40) %}<img class="logo" style="{{ box(506.5 - A.width, 212.9 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
-<div class="t r w7" style="{{ T(505.1, 304.3, fit.box_size('agent_name', agent.name), width=390) }};color:#12395f" data-fit="agent-name" data-max-height="40pt">{{ agent.name }}</div>
-{#- One agent page (guide p.12): a longer description is set smaller, never continued. -#}
-{% set size = page.size or 17.02 %}{% set lh = page.line_height or 27 %}
-<div class="t p j r w3 body" style="{{ T(503.2, 320.27 + lh / 2 + 0.366 * size, size, lh=lh, width=387.6) }}" data-fit="agent-description" data-max-height="216pt">{{ page.text|trim }}</div>
-{#- Each value sits left of its icon; long values are set smaller, never clipped. -#}
-{% for key, icon_left, value, width in [('x', 471, agent.social_accounts, 74), ('phone', 369, agent.phone, 74), ('web', 266, agent.website, 170)] %}
-{% if value %}{% set size = [10.21, width / ((value|length) * 0.6)]|min %}
-<img class="icon" style="{{ box(icon_left, 581, 25, 25) }}" src="{{ asset('booklet-art/agent-' ~ key ~ '.png') }}">
-<div class="t l w5" style="{{ T(icon_left - 2.4, 601.5, size, 'l', width=width) }};color:#14385f" data-fit="agent-contact-{{ key }}" data-max-height="20pt" dir="ltr">{{ value }}</div>{% endif %}
+{% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, 145.2, 67) %}<img class="logo" style="{{ box(465.8 - A.width, 242.3 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
+<div class="t r w5" style="{{ T(465.8, 305.1, fit.box_size('agent_name', agent.name), width=317) }};color:#00385f" data-fit="agent-name" data-max-height="36pt">{{ agent.name }}</div>
+{#- One agent page: a longer description is set smaller, never continued. -#}
+{% set size = page.size or 16.02 %}{% set lh = page.line_height or 28.5 %}
+<div class="t p j r w5" style="{{ T(466.0, 333.5 + lh / 2 + 0.366 * size, size, lh=lh, width=317) }};color:#00385f" data-fit="agent-description" data-max-height="285pt">
+{%- if page.lines %}{% for line in page.lines %}<span class="jl{{ ' last' if line.last else '' }}">{{ line.text or '\u00a0' }}</span>{% endfor %}
+{%- else %}{{ page.text|trim }}{% endif %}</div>
+{#- Each value ends beside its tile (guide: baseline on the tile's foot); long
+    values are set smaller, never clipped. -#}
+{% for key, tile_left, value, width in [('x', 447.5, agent.social_accounts, 70), ('phone', 344.5, agent.phone, 70), ('web', 241.5, agent.website, 92)] %}
+{% if value %}{% set size = [10.23, width / ((value|length) * 0.6)]|min %}
+{{ vec('agent-' ~ key, tile_left, 622.2, 23.8, 23.8) }}
+<div class="t l w5" style="{{ T(tile_left - 6.5, 646.0, size, 'l', width=width) }};color:#00385f" data-fit="agent-contact-{{ key }}" data-max-height="20pt" dir="ltr">{{ value }}</div>{% endif %}
 {% endfor %}

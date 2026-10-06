@@ -209,11 +209,12 @@ def test_tables_close_at_the_last_record_on_every_page():
     booklet = compose(
         project_with(),
         [item_with(rental_contracts=[{"unit_number": str(n)} for n in range(20)])]
-        + [item_with() for _ in range(10)],
+        + [item_with() for _ in range(21)],
     )
     summaries = [len(p["rows"]) for p in booklet["pages"] if p["kind"] == "summary"]
     rentals = [len(p["rows"]) for p in booklet["pages"] if p["kind"] == "rentals"]
-    assert summaries == [10, 1] and rentals == [19, 1]
+    # The summary table fills its area: twenty reference rows down to the footer.
+    assert summaries == [20, 2] and rentals == [19, 1]
 
 
 def test_boundaries_use_measured_width_of_the_reference_line():
@@ -368,13 +369,24 @@ def cover_images(cover, auction_logo, agent_logo):
         "output_language": "ar",
         "booklet": booklet,
     }
+    from app.generation.booklet.art import vector_boxes
+
     html = render_html(content, "infath/booklet.html")
-    page = pymupdf.open("pdf", HTML(string=html, url_fetcher=safe_fetch).write_pdf())[0]
-    return [
+    document = HTML(string=html, url_fetcher=safe_fetch).render()
+    # The auction icon is vector artwork placed in a reserved box; the agent's
+    # logo is the uploaded picture.
+    icon = next(
+        pymupdf.Rect(box[1:])
+        for box in vector_boxes(document)[0]
+        if box[0] == "auction-icon-silver"
+    )
+    page = pymupdf.open("pdf", document.write_pdf())[0]
+    logo = next(
         pymupdf.Rect(i["bbox"])
         for i in page.get_image_info()
         if i["bbox"][2] - i["bbox"][0] < 300
-    ]
+    )
+    return [icon, logo]
 
 
 @pytest.mark.parametrize(
@@ -480,7 +492,7 @@ def test_pages_follow_the_guide_order_with_one_agent_page():
     assert kinds.index("property") < kinds.index("rentals") < kinds.index("terms")
     assert kinds[-3:] == ["terms", "participation", "contact"]
     agent = next(p for p in compose(project, [item])["pages"] if p["kind"] == "agent")
-    assert agent["size"] < 17.02  # set smaller instead of repeating the page
+    assert agent["size"] < 16.02  # set smaller instead of repeating the page
 
 
 def test_agent_description_beyond_one_page_is_reported_for_account_settings():
@@ -520,9 +532,14 @@ def test_recording_notice_only_where_the_auction_has_a_hall(kind, shown):
 
 
 def test_long_summary_values_wrap_in_their_cell_without_shrinking():
-    """A long district or plan number stays whole inside its column; only its
-    row grows, and rows that fit keep the reference geometry."""
-    from app.generation.booklet.composer import SUMMARY_BOTTOMS, SUMMARY_LIMIT
+    """A long district or plan number stays whole inside its column and its row
+    is at least as tall as the wrapped text needs."""
+    from app.generation.booklet.composer import (
+        SUMMARY_LIMIT,
+        SUMMARY_LINE,
+        SUMMARY_MIN_ROW,
+        SUMMARY_TOP,
+    )
 
     short = item_with(property_type="فيلا", city="ابها", district="العزيزية")
     long = item_with(
@@ -531,20 +548,40 @@ def test_long_summary_values_wrap_in_their_cell_without_shrinking():
         district="مخطط لطيفة بنت سلطان بن عبدالعزيز",
         plan_number="1433 / 234 / ع / 17",
     )
-    pages = [
-        p
-        for p in compose(project_with("physical"), [short, long, short])["pages"]
-        if p["kind"] == "summary"
-    ]
-    page = pages[0]
-    assert page["bottoms"][0] == SUMMARY_BOTTOMS[0]  # a row that fits is unchanged
-    assert page["lines"][1]["district"] >= 2 and page["lines"][1]["city"] >= 2
-    assert page["bottoms"][1] - page["bottoms"][0] > 26.1  # only the long row grows
-    many = compose(project_with("physical"), [long] * 25)["pages"]
+    many = compose(project_with("physical"), [long] * 45)["pages"]
     tables = [p for p in many if p["kind"] == "summary"]
-    assert sum(len(p["rows"]) for p in tables) == 25
-    assert all(p["bottoms"][-1] <= SUMMARY_LIMIT for p in tables)
-    assert all(len(p["rows"]) <= 10 for p in tables)
+    assert sum(len(p["rows"]) for p in tables) == 45 and len(tables) > 1
+    for page in tables:
+        tops = [SUMMARY_TOP] + page["bottoms"][:-1]
+        assert page["bottoms"][-1] <= SUMMARY_LIMIT + 0.01
+        for top, bottom, counts in zip(tops, page["bottoms"], page["lines"]):
+            assert counts["district"] >= 2 and counts["city"] >= 2
+            needed = max(counts.values()) * SUMMARY_LINE + 6
+            assert bottom - top >= max(SUMMARY_MIN_ROW, needed) - 0.01
+    assert short["property_data"]["district"] == "العزيزية"
+
+
+def test_summary_table_fills_its_area_with_evenly_shared_rows():
+    """Guide p.14: the table starts at the guide's height and runs down to the
+    footer; rows share the space (no taller than in an eight-row table)."""
+    from app.generation.booklet.composer import (
+        SUMMARY_LIMIT,
+        SUMMARY_MAX_ROW,
+        SUMMARY_TOP,
+    )
+
+    def table(count):
+        pages = compose(project_with("physical"), [item_with() for _ in range(count)])
+        return next(p for p in pages["pages"] if p["kind"] == "summary")["bottoms"]
+
+    assert SUMMARY_TOP < 200  # raised from the open booklet's 297.7 to the guide's
+    for count in (8, 14, 20):  # a full page: the last row ends at the footer limit
+        bottoms = table(count)
+        assert abs(bottoms[-1] - SUMMARY_LIMIT) < 0.1
+        heights = [b - a for a, b in zip([SUMMARY_TOP] + bottoms, bottoms)]
+        assert max(heights) - min(heights) < 0.1
+    few = table(2)  # a short list keeps sensible rows instead of two giant ones
+    assert abs(few[0] - SUMMARY_TOP - SUMMARY_MAX_ROW) < 0.1
 
 
 def test_typed_plan_numbers_keep_the_order_shown_in_the_form():
@@ -576,3 +613,138 @@ def test_typed_plan_numbers_keep_the_order_shown_in_the_form():
         # Read as the form reads it: line by line, each line right to left.
         drawn = [w[4] for w in sorted(words, key=lambda w: (round(w[3]), -w[0]))]
         assert drawn == ["118", "1400", "2"], (kind, drawn)
+
+
+def exported(project, items):
+    """A booklet rendered as export renders it: HTML, then the vector artwork."""
+    import pymupdf
+    from weasyprint import HTML
+
+    from app.auction_schemas import AuctionData
+    from app.generation.booklet.art import original_pdf_artwork, vector_boxes
+    from app.generation.engine import render_html, safe_fetch
+
+    project["auction"] = AuctionData.model_validate(project["auction"]).model_dump(
+        mode="json"
+    )
+    project.setdefault("agent_logo", "")
+    booklet = compose(project, items)
+    content = {
+        "project": project,
+        "items": items,
+        "booklet": booklet,
+        "output_language": "ar",
+    }
+    document = HTML(string=render_html(content), url_fetcher=safe_fetch).render()
+    pdf = original_pdf_artwork(document.write_pdf(), content, document)
+    return booklet, vector_boxes(document), pymupdf.open("pdf", pdf)
+
+
+def test_fixed_artwork_is_exported_as_vectors_not_pictures():
+    """Covers, icons and the footer bar are the original vector files: the
+    exported pages carry no raster copy of them (review: pixelated artwork)."""
+    project = project_with(
+        "hybrid", auction_start_date="2026-07-27", start_time="10:00"
+    )
+    project["selling_agent"] = {"name": "وكيل", "phone": "0550000000"}
+    booklet, boxes, pdf = exported(project, [])
+    kinds = [p["kind"] for p in booklet["pages"]]
+    placed = {kind: {box[0] for box in boxes[n]} for n, kind in enumerate(kinds)}
+    assert {"cover-2", "auction-icon-silver"} <= placed["cover"]
+    assert {"auction-icon-gradient", "auction-time", "footer-bar"} <= placed["auction"]
+    assert "agent-phone" in placed["agent"]
+    assert {f"step-{n}" for n in range(1, 6)} <= placed["participation"]
+    cover, auction = pdf[kinds.index("cover")], pdf[kinds.index("auction")]
+    # No logo, photograph or QR code in this booklet: nothing in it is a picture.
+    assert [
+        x
+        for x in range(1, pdf.xref_length())
+        if "/Subtype /Image" in pdf.xref_object(x)
+        or "/Subtype/Image" in pdf.xref_object(x)
+    ] == []
+    # The artwork is really there, as paths: the cover's ground and the icons.
+    assert len(cover.get_drawings()) > 5 and len(auction.get_drawings()) > 20
+
+
+@pytest.mark.parametrize(
+    "kind, order, has_qr",
+    [
+        ("electronic", ["calendar", "platform", "time"], False),
+        ("physical", ["location", "calendar", "time"], True),
+        ("hybrid", ["platform", "location", "calendar", "time"], True),
+    ],
+)
+def test_contact_page_follows_the_guide_for_each_auction_type(kind, order, has_qr):
+    """Guide p.25: icon order right to left per type; only auctions with a
+    hall carry its QR code."""
+    project = project_with(
+        kind,
+        auction_date="2026-07-27",
+        auction_start_date="2026-07-27",
+        start_time="10:00",
+        physical_location="القاعة",
+        electronic_platform_name="المنصة",
+        electronic_platform_url="https://example.com/p",
+        auction_location_url="https://example.com/hall",
+    )
+    project["selling_agent"] = {"name": "وكيل", "phone": "0550000000"}
+    from app.generation.engine import render_html
+
+    booklet, boxes, _ = exported(project, [])
+    n = [p["kind"] for p in booklet["pages"]].index("contact")
+    icons = sorted(
+        (b for b in boxes[n] if b[0].startswith("contact-") and b[2] < 400),
+        key=lambda b: -b[1],
+    )
+    assert [b[0].removeprefix("contact-") for b in icons] == order
+    html = render_html(
+        {
+            "project": project,
+            "items": [],
+            "booklet": {**booklet, "pages": [booklet["pages"][n]]},
+            "output_language": "ar",
+        }
+    )
+    assert ('class="qr-code"' in html) is has_qr
+
+
+def test_additional_information_is_set_smaller_before_it_leaves_its_box():
+    """Review: more content shrinks the text to stay in the box; it only
+    continues on another page when it cannot fit at the smallest size."""
+    text = "ملاحظة عن العقار تستحق الذكر في الكتيب. " * 22
+    item = item_with(property_type="فيلا", additional_information=text)
+    pages = compose(project_with("physical"), [item])["pages"]
+    page = next(p for p in pages if p["kind"] == "property")
+    assert 6.5 <= page["info_size"] < 10
+    assert [p["kind"] for p in pages].count("information") == 0
+    short = compose(
+        project_with("physical"),
+        [item_with(property_type="فيلا", additional_information="ملاحظة قصيرة")],
+    )
+    assert next(p for p in short["pages"] if p["kind"] == "property")["info_size"] == 10
+
+
+def test_rental_values_wrap_in_their_cells_and_the_note_follows_the_table():
+    """Review: no text runs into the next cell, and the fixed note sits right
+    under the last row however many contracts there are."""
+    contracts = [
+        {
+            "unit_number": "جميع أجزاء العقار",
+            "property_type": "استراحة ومستودعات",
+            "contract_status": "منتهي وتحت التجديد",
+            "contract_duration": "سنتين و 10 شهور",
+        }
+    ] * 3
+    project = project_with("physical", auction_date="2026-07-27")
+    item = {
+        **item_with(property_type="فيلا", rental_contracts=contracts),
+        "id": "i",
+        "title": "عقار",
+    }
+    booklet, boxes, _ = exported(project, [item])
+    n = [p["kind"] for p in booklet["pages"]].index("rentals")
+    page = booklet["pages"][n]
+    assert all(counts["unit_number"] >= 2 for counts in page["lines"])
+    assert page["bottoms"][0] - 152.8 > 26.3  # the row grew for its wrapped cells
+    note = next(b for b in boxes[n] if b[0] == "rentals-note")
+    assert abs(note[2] - (page["bottoms"][-1] + 12)) < 0.2
