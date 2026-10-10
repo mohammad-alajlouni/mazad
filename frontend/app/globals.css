@@ -1767,6 +1767,14 @@ html[dir="rtl"] .nav-previous .lucide-arrow-left { transform: scaleX(-1); }
 .cover-photo-box p { margin: 4px 0 10px; font-size: 13px; }
 .cover-photo-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .cover-photo-actions button { display: inline-flex; align-items: center; gap: 8px; }
+.agent-note { display: grid; gap: 14px; justify-items: start; margin-top: 4px; }
+.agent-note .notice { width: 100%; margin: 0; }
+.agent-note > button, .profile-return button { display: inline-flex; align-items: center; gap: 8px; }
+.kept-page { display: contents; }
+.kept-page[hidden] { display: none; }
+.profile-return { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 18px; padding: 12px 16px; border: 1px solid #cfe6da; border-radius: 14px; background: #f4fbf7; }
+.profile-return span { color: var(--muted); font-size: 13px; }
+html[dir="rtl"] .profile-return .lucide-arrow-left { transform: scaleX(-1); }
 .page-part h4 { font-size: 13px; font-weight: 600; color: #1d2939; margin: 0 0 8px; }
 
 /* Requirements and notices */

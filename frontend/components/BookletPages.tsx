@@ -9,6 +9,7 @@ import {
   Globe,
   ImagePlus,
   Layers,
+  UserRound,
 } from "lucide-react";
 import { api, send, Detail, Run } from "./api";
 import { Fields } from "./AuctionWorkspace";
@@ -541,26 +542,10 @@ export function BookletPages({
               </div>
             </>
           )}
+          {/* The agent's details live in the account: nothing is repeated
+              here, only what is still missing and the way to its place. */}
           {item.agent && (
-            <div className="agent-card">
-              {logo && (
-                <img
-                  src={`/api/images/${logo.id}?size=preview`}
-                  alt={p("agentLogo")}
-                />
-              )}
-              <dl>
-                {["name", "description", "social_accounts", "phone", "website"]
-                  .filter((key) => agent[key])
-                  .map((key) => (
-                    <div key={key}>
-                      <dt>{t.has(key) ? t(key) : key}</dt>
-                      <dd dir={key === "description" ? undefined : "auto"}>
-                        {String(agent[key])}
-                      </dd>
-                    </div>
-                  ))}
-              </dl>
+            <div className="agent-note">
               {agentIssues.length > 0 && (
                 <div className="notice error" role="alert">
                   <strong>{p("agentMissing")}</strong>
@@ -587,6 +572,7 @@ export function BookletPages({
                   window.dispatchEvent(new Event("open-account-profile"))
                 }
               >
+                <UserRound size={16} />
                 {p("agentEdit")}
               </button>
             </div>

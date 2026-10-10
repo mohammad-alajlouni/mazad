@@ -545,6 +545,9 @@
     "image_contain": "Show entire image, preserving proportions"
   },
   "flow": {
+    "backToBooklet": "Back to the booklet",
+    "backToProject": "Back to the project",
+    "progressKept": "Your progress is kept as you left it.",
     "home": "Auction projects",
     "homeHelp": "Enter auction details, properties and images once. Your account supplies the selling agent details automatically for booklets, banners and social posts.",
     "create": "Create project",
@@ -930,9 +933,9 @@
     "introduction": "About Infath",
     "introductionHelp": "A fixed page from the guide; its content never changes. Nothing to enter.",
     "agent": "Selling agent",
-    "agentHelp": "One page: logo, name, profile, X account, phone and website from your account settings. A long profile is set smaller to stay on its page.",
-    "agentEdit": "Edit the selling agent in my account",
-    "agentMissing": "Complete these in your account settings:",
+    "agentHelp": "This page is filled automatically from the selling agent details in your profile (logo, name, profile text, X account, phone and website) and shows in the live preview. To change them, edit them in their own place in your profile, then come back to the booklet: your progress stays as you left it.",
+    "agentEdit": "Go to my profile",
+    "agentMissing": "Complete these in your profile:",
     "agentLogo": "Selling-agent logo (from your account)",
     "agentLogoHelp": "Shown in white at the foot of the cover, at its fixed size and position.",
     "noLogo": "No logo uploaded yet",

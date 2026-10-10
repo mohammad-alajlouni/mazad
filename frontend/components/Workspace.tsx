@@ -14,8 +14,9 @@ import ProjectWorkspace from "./ProjectWorkspace";
 import SharedProjectWorkspace, {
   ProjectSection,
 } from "./SharedProjectWorkspace";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
+  ArrowLeft,
   LayoutDashboard,
   FolderOpen,
   Plus,
@@ -94,15 +95,40 @@ export default function Workspace() {
       setBusy(false);
     }
   };
+  // Account settings opened from a project are laid over it: the project
+  // stays as it was left (step, page, unsaved values) and is one click back.
+  const [profileOver, setProfileOver] = useState(false);
+  const leftAt = useRef(0);
+  const showProfile = useRef(() => {});
+  showProfile.current = () => {
+    setMobile(false);
+    if (page === "project" && detail && !review) {
+      leftAt.current = window.scrollY;
+      setProfileOver(true);
+      window.scrollTo(0, 0);
+      return;
+    }
+    setProfileOver(false);
+    setPage("profile");
+    setReview(null);
+  };
+  const backToProject = () => {
+    setProfileOver(false);
+    // The project's forms hand their unsaved values to the live preview again.
+    setTimeout(() => {
+      window.scrollTo(0, leftAt.current);
+      document
+        .querySelector("form[data-preview-form]")
+        ?.dispatchEvent(new Event("preview-form", { bubbles: true }));
+    });
+  };
+  const inProfile = page === "profile" || profileOver;
   useEffect(() => {
     const expired = () => {
       setUser(null);
       setReview(null);
     };
-    const openProfile = () => {
-      setPage("profile");
-      setReview(null);
-    };
+    const openProfile = () => showProfile.current();
     window.addEventListener("open-account-profile", openProfile);
     window.addEventListener("session-expired", expired);
     api<Account>("/auth/me")
@@ -125,6 +151,7 @@ export default function Workspace() {
     }
   }, [notice]);
   const openProject = async (id: string, section: ProjectSection = "data") => {
+    setProfileOver(false);
     setProjectSection(section);
     const next = await api<Detail>("/projects/" + id);
     setDetail(next);
@@ -176,6 +203,11 @@ export default function Workspace() {
       void createProject();
       return;
     }
+    if (next === "profile") {
+      showProfile.current();
+      return;
+    }
+    setProfileOver(false);
     setPage(next);
     setReview(null);
     setMobile(false);
@@ -337,7 +369,7 @@ export default function Workspace() {
             <strong>{tr("ui.starts_with_good_data")}</strong>
           </div>
           <button
-            className={page === "profile" ? "active" : ""}
+            className={inProfile ? "active" : ""}
             onClick={() => navigate("profile")}
           >
             <SettingsIcon size={18} />
@@ -400,7 +432,7 @@ export default function Workspace() {
             {tr("ui.workspace")}
             <span>/</span>{" "}
             <strong>
-              {page === "profile"
+              {inProfile
                 ? tr("accountProfile.title")
                 : page === "users"
                   ? tr("flow.users")
@@ -448,251 +480,282 @@ export default function Workspace() {
             </div>
           )}
           {busy && <div className="loading-line" />}
-          {page === "profile" ? (
-            <AccountProfile run={run} busy={busy} onSaved={saveProfile} />
-          ) : review ? (
-            <OutputReview
-              key={review.id}
-              output={review}
-              run={run}
-              onChange={(o) => {
-                setReview(o);
-                void reloadProject();
-              }}
-              onClose={() => setReview(null)}
-            />
-          ) : (
-            <>
-              <div className="section-heading">
-                <div>
-                  <p className="eyebrow">
-                    {page === "dashboard"
-                      ? tr("ui.project_automation_upper")
-                      : page === "project"
-                        ? detail?.project.code
-                        : tr("ui.your_workspace_upper")}
-                  </p>
-                  <h1>{heading[page][0]}</h1>
-                  <p>{heading[page][1]}</p>
-                </div>
-                {["dashboard", "projects"].includes(page) && (
-                  <button
-                    className="primary"
-                    onClick={() => navigate("create")}
-                  >
-                    <Plus size={17} />
-                    {tr("ui.create_project")}
-                  </button>
+          {profileOver && (
+            <div className="profile-return">
+              <button
+                type="button"
+                className="secondary"
+                onClick={backToProject}
+              >
+                <ArrowLeft size={16} />
+                {tr(
+                  ["banners", "social"].includes(
+                    detail?.project.workspace_type || "",
+                  )
+                    ? "flow.backToProject"
+                    : "flow.backToBooklet",
                 )}
-              </div>
-              {page === "dashboard" && dashboard && (
-                <DashboardView
-                  dashboard={dashboard}
-                  navigate={navigate}
+              </button>
+              <span>{tr("flow.progressKept")}</span>
+            </div>
+          )}
+          {inProfile && (
+            <AccountProfile run={run} busy={busy} onSaved={saveProfile} />
+          )}
+          {page !== "profile" && (
+            <div className="kept-page" hidden={profileOver}>
+              {review ? (
+                <OutputReview
+                  key={review.id}
+                  output={review}
                   run={run}
-                  openProject={openProject}
-                />
-              )}
-              {page === "projects" && (
-                <section className="panel">
-                  <div className="panel-heading flex-row">
-                    <h2>
-                      {tr("ui.all_projects")}{" "}
-                      <span className="count">
-                        {formatNumber(
-                          projects.filter(
-                            (p) =>
-                              !["banners", "social"].includes(
-                                p.workspace_type || "booklet",
-                              ),
-                          ).length,
-                        )}
-                      </span>
-                    </h2>
-                    <label className="search">
-                      <Search size={16} />
-                      <input
-                        aria-label={tr("ui.search_projects")}
-                        placeholder={tr("ui.search_projects_2")}
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                      />
-                    </label>
-                  </div>
-                  <ProjectList
-                    projects={projects.filter(
-                      (p) =>
-                        !["banners", "social"].includes(
-                          p.workspace_type || "booklet",
-                        ) &&
-                        (p.name + " " + p.code + " " + p.customer)
-                          .toLowerCase()
-                          .includes(query.toLowerCase()),
-                    )}
-                    onOpen={(id) => void run(() => openProject(id))}
-                  />
-                </section>
-              )}
-              {page === "social" && (
-                <section className="panel form-panel">
-                  <div className="flex-row">
-                    <h2>{tr("social.home")}</h2>
-                    <button
-                      className="secondary"
-                      onClick={() => navigate("social-create")}
-                    >
-                      {tr("projectFlow.independentSocial")}
-                    </button>
-                  </div>
-                  <p>{tr("projectFlow.pickSocial")}</p>
-                  <button
-                    className="primary"
-                    onClick={() => navigate("create")}
-                  >
-                    {tr("ui.create_project")}
-                  </button>
-                  <ProjectList
-                    projects={projects.filter(
-                      (p) => p.workspace_type === "project",
-                    )}
-                    onOpen={(id) => void run(() => openProject(id, "social"))}
-                  />
-                  <h3>{tr("projectFlow.independent")}</h3>
-                  <ProjectList
-                    projects={projects.filter(
-                      (p) => p.workspace_type === "social",
-                    )}
-                    onOpen={(id) => void run(() => openProject(id))}
-                  />
-                </section>
-              )}
-              {page === "social-create" && (
-                <BannerCreate
-                  mode="social"
-                  run={run}
-                  onDone={(id) => {
-                    void openProject(id);
-                    void refresh();
+                  onChange={(o) => {
+                    setReview(o);
+                    void reloadProject();
                   }}
+                  onClose={() => setReview(null)}
                 />
-              )}
-              {page === "banners" && (
-                <section className="panel form-panel">
-                  <div className="flex-row">
-                    <h2>{tr("banner.home")}</h2>
-                    <button
-                      className="secondary"
-                      onClick={() => navigate("banner-create")}
-                    >
-                      {tr("projectFlow.independentBanner")}
-                    </button>
-                  </div>
-                  <p>{tr("projectFlow.pickBanner")}</p>
-                  <button
-                    className="primary"
-                    onClick={() => navigate("create")}
-                  >
-                    {tr("ui.create_project")}
-                  </button>
-                  <ProjectList
-                    projects={projects.filter(
-                      (p) => p.workspace_type === "project",
-                    )}
-                    onOpen={(id) => void run(() => openProject(id, "banner"))}
-                  />
-                  <h3>{tr("projectFlow.independent")}</h3>
-                  <ProjectList
-                    projects={projects.filter(
-                      (p) => p.workspace_type === "banners",
-                    )}
-                    onOpen={(id) => void run(() => openProject(id))}
-                  />
-                </section>
-              )}
-              {page === "banner-create" && (
-                <BannerCreate
-                  run={run}
-                  onDone={(id) => {
-                    void openProject(id);
-                    void refresh();
-                  }}
-                />
-              )}
-              {page === "outputs" && (
+              ) : (
                 <>
-                  <div className="filter-row">
-                    <div className="tabs">
-                      {["ALL", "DRAFT", "APPROVED", "NEEDS_REGENERATION"].map(
-                        (f) => (
-                          <button
-                            key={f}
-                            className={filter === f ? "selected" : ""}
-                            onClick={() => setFilter(f)}
-                          >
-                            {title(f)}
-                          </button>
-                        ),
-                      )}
+                  <div className="section-heading">
+                    <div>
+                      <p className="eyebrow">
+                        {page === "dashboard"
+                          ? tr("ui.project_automation_upper")
+                          : page === "project"
+                            ? detail?.project.code
+                            : tr("ui.your_workspace_upper")}
+                      </p>
+                      <h1>{heading[page][0]}</h1>
+                      <p>{heading[page][1]}</p>
                     </div>
-                  </div>
-                  <OutputList
-                    outputs={outputs.filter(
-                      (o) => filter === "ALL" || o.status === filter,
+                    {["dashboard", "projects"].includes(page) && (
+                      <button
+                        className="primary"
+                        onClick={() => navigate("create")}
+                      >
+                        <Plus size={17} />
+                        {tr("ui.create_project")}
+                      </button>
                     )}
-                    onOpen={setReview}
-                  />
+                  </div>
+                  {page === "dashboard" && dashboard && (
+                    <DashboardView
+                      dashboard={dashboard}
+                      navigate={navigate}
+                      run={run}
+                      openProject={openProject}
+                    />
+                  )}
+                  {page === "projects" && (
+                    <section className="panel">
+                      <div className="panel-heading flex-row">
+                        <h2>
+                          {tr("ui.all_projects")}{" "}
+                          <span className="count">
+                            {formatNumber(
+                              projects.filter(
+                                (p) =>
+                                  !["banners", "social"].includes(
+                                    p.workspace_type || "booklet",
+                                  ),
+                              ).length,
+                            )}
+                          </span>
+                        </h2>
+                        <label className="search">
+                          <Search size={16} />
+                          <input
+                            aria-label={tr("ui.search_projects")}
+                            placeholder={tr("ui.search_projects_2")}
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                          />
+                        </label>
+                      </div>
+                      <ProjectList
+                        projects={projects.filter(
+                          (p) =>
+                            !["banners", "social"].includes(
+                              p.workspace_type || "booklet",
+                            ) &&
+                            (p.name + " " + p.code + " " + p.customer)
+                              .toLowerCase()
+                              .includes(query.toLowerCase()),
+                        )}
+                        onOpen={(id) => void run(() => openProject(id))}
+                      />
+                    </section>
+                  )}
+                  {page === "social" && (
+                    <section className="panel form-panel">
+                      <div className="flex-row">
+                        <h2>{tr("social.home")}</h2>
+                        <button
+                          className="secondary"
+                          onClick={() => navigate("social-create")}
+                        >
+                          {tr("projectFlow.independentSocial")}
+                        </button>
+                      </div>
+                      <p>{tr("projectFlow.pickSocial")}</p>
+                      <button
+                        className="primary"
+                        onClick={() => navigate("create")}
+                      >
+                        {tr("ui.create_project")}
+                      </button>
+                      <ProjectList
+                        projects={projects.filter(
+                          (p) => p.workspace_type === "project",
+                        )}
+                        onOpen={(id) =>
+                          void run(() => openProject(id, "social"))
+                        }
+                      />
+                      <h3>{tr("projectFlow.independent")}</h3>
+                      <ProjectList
+                        projects={projects.filter(
+                          (p) => p.workspace_type === "social",
+                        )}
+                        onOpen={(id) => void run(() => openProject(id))}
+                      />
+                    </section>
+                  )}
+                  {page === "social-create" && (
+                    <BannerCreate
+                      mode="social"
+                      run={run}
+                      onDone={(id) => {
+                        void openProject(id);
+                        void refresh();
+                      }}
+                    />
+                  )}
+                  {page === "banners" && (
+                    <section className="panel form-panel">
+                      <div className="flex-row">
+                        <h2>{tr("banner.home")}</h2>
+                        <button
+                          className="secondary"
+                          onClick={() => navigate("banner-create")}
+                        >
+                          {tr("projectFlow.independentBanner")}
+                        </button>
+                      </div>
+                      <p>{tr("projectFlow.pickBanner")}</p>
+                      <button
+                        className="primary"
+                        onClick={() => navigate("create")}
+                      >
+                        {tr("ui.create_project")}
+                      </button>
+                      <ProjectList
+                        projects={projects.filter(
+                          (p) => p.workspace_type === "project",
+                        )}
+                        onOpen={(id) =>
+                          void run(() => openProject(id, "banner"))
+                        }
+                      />
+                      <h3>{tr("projectFlow.independent")}</h3>
+                      <ProjectList
+                        projects={projects.filter(
+                          (p) => p.workspace_type === "banners",
+                        )}
+                        onOpen={(id) => void run(() => openProject(id))}
+                      />
+                    </section>
+                  )}
+                  {page === "banner-create" && (
+                    <BannerCreate
+                      run={run}
+                      onDone={(id) => {
+                        void openProject(id);
+                        void refresh();
+                      }}
+                    />
+                  )}
+                  {page === "outputs" && (
+                    <>
+                      <div className="filter-row">
+                        <div className="tabs">
+                          {[
+                            "ALL",
+                            "DRAFT",
+                            "APPROVED",
+                            "NEEDS_REGENERATION",
+                          ].map((f) => (
+                            <button
+                              key={f}
+                              className={filter === f ? "selected" : ""}
+                              onClick={() => setFilter(f)}
+                            >
+                              {title(f)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <OutputList
+                        outputs={outputs.filter(
+                          (o) => filter === "ALL" || o.status === filter,
+                        )}
+                        onOpen={setReview}
+                      />
+                    </>
+                  )}
+                  {page === "users" && user.role === "admin" && (
+                    <UserManagement run={run} busy={busy} />
+                  )}
+                  {page === "settings" && user.role === "admin" && config && (
+                    <Settings config={config} run={run} reload={refresh} />
+                  )}
+                  {page === "project" &&
+                    detail &&
+                    (detail.project.workspace_type === "project" ? (
+                      <SharedProjectWorkspace
+                        key={detail.project.id + projectSection}
+                        initialSection={projectSection}
+                        detail={detail}
+                        config={config}
+                        types={types}
+                        busy={busy}
+                        run={run}
+                        reloadProject={reloadProject}
+                        setReview={(output) => {
+                          setProjectSection("outputs");
+                          setReview(output);
+                        }}
+                      />
+                    ) : ["banners", "social"].includes(
+                        detail.project.workspace_type || "",
+                      ) ? (
+                      <BannerWorkspace
+                        mode={campaignMode}
+                        key={detail.project.id}
+                        detail={detail}
+                        busy={busy}
+                        run={run}
+                        reloadProject={reloadProject}
+                        setReview={setReview}
+                      />
+                    ) : (
+                      <ProjectWorkspace
+                        key={detail.project.id}
+                        detail={detail}
+                        config={config}
+                        types={types}
+                        busy={busy}
+                        run={run}
+                        tab={tab}
+                        setTab={setTab}
+                        reloadProject={reloadProject}
+                        setReview={setReview}
+                      />
+                    ))}
                 </>
               )}
-              {page === "users" && user.role === "admin" && (
-                <UserManagement run={run} busy={busy} />
-              )}
-              {page === "settings" && user.role === "admin" && config && (
-                <Settings config={config} run={run} reload={refresh} />
-              )}
-              {page === "project" &&
-                detail &&
-                (detail.project.workspace_type === "project" ? (
-                  <SharedProjectWorkspace
-                    key={detail.project.id + projectSection}
-                    initialSection={projectSection}
-                    detail={detail}
-                    config={config}
-                    types={types}
-                    busy={busy}
-                    run={run}
-                    reloadProject={reloadProject}
-                    setReview={(output) => {
-                      setProjectSection("outputs");
-                      setReview(output);
-                    }}
-                  />
-                ) : ["banners", "social"].includes(
-                    detail.project.workspace_type || "",
-                  ) ? (
-                  <BannerWorkspace
-                    mode={campaignMode}
-                    key={detail.project.id}
-                    detail={detail}
-                    busy={busy}
-                    run={run}
-                    reloadProject={reloadProject}
-                    setReview={setReview}
-                  />
-                ) : (
-                  <ProjectWorkspace
-                    key={detail.project.id}
-                    detail={detail}
-                    config={config}
-                    types={types}
-                    busy={busy}
-                    run={run}
-                    tab={tab}
-                    setTab={setTab}
-                    reloadProject={reloadProject}
-                    setReview={setReview}
-                  />
-                ))}
-            </>
+            </div>
           )}
           <footer className="workspace-footer">
             <span>{tr("ui.atlas_workspace_upper")}</span>
