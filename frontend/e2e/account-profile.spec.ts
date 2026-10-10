@@ -54,6 +54,25 @@ test("account onboarding supplies projects and can only be edited in account set
   await profile
     .locator('input[type="file"]')
     .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
+  // The logo editor: its frame is the logo's box, the logo starts whole in
+  // it, and it can be made larger and moved.
+  const editor = page.locator("dialog.image-editor");
+  await expect(editor).toBeVisible();
+  await expect(editor).toContainText("It starts whole");
+  const stage = (await editor.locator(".editor-stage").boundingBox())!;
+  expect(stage.width / stage.height).toBeCloseTo(145.2 / 67, 1);
+  const logo = editor.locator(".editor-stage img");
+  const whole = (await logo.boundingBox())!;
+  expect(whole.height).toBeLessThanOrEqual(stage.height + 1);
+  expect(whole.width).toBeLessThan(stage.width);
+  await editor.getByRole("button", { name: "Larger" }).click();
+  expect((await logo.boundingBox())!.width).toBeGreaterThan(whole.width);
+  await editor.getByRole("button", { name: "Reset" }).click();
+  await editor.getByRole("button", { name: "Use logo" }).click();
+  await expect(editor).toBeHidden();
+  await expect(profile.locator(".file-name")).toContainText(
+    "demo-generator.png",
+  );
   await profile.getByRole("button", { name: "Save and start" }).click();
   await expect(page.locator(".sidebar")).toBeAttached();
   await page.reload();

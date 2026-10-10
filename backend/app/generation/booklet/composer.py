@@ -85,6 +85,9 @@ NUMBER_INDENT = 11
 AGENT_TEXT = (16.02, 317.0, 10)
 AGENT_LINE = 28.5
 AGENT_BOX = 285  # points of height for the agent's description (10 lines)
+# The agent's logo on its page (guide p.12): the box it is fitted in, and the
+# frame the upload editor shows it in.
+AGENT_LOGO = (145.2, 67.0)
 # The agent's extra contact text sits under the numbers on the contact page.
 CONTACT_EXTRA = (10, 360, 2)
 AGENT_MIN = 11.0  # smallest size the description is set at before it must be shortened

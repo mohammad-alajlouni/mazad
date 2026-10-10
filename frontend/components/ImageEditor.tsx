@@ -13,7 +13,8 @@ import { Minus, Plus, RotateCcw } from "lucide-react";
 
 // A frame a photograph is shown in: its size fixes the proportions.
 export type Frame = { key: string; width: number; height: number };
-type Options = { frames: Frame[]; title: string };
+// A logo is shown whole to begin with and keeps its transparency.
+type Options = { frames: Frame[]; title: string; logo?: boolean };
 type Job = Options & {
   files: File[];
   at: number;
@@ -40,6 +41,18 @@ export function setInputFiles(input: HTMLInputElement, files: File[]) {
 
 const MAX_ZOOM = 4;
 const OUTPUT = 2400; // widest stored cut, in pixels
+const LOGO_OUTPUT = 1600;
+
+// Whether a picture has see-through parts (looked at in a small copy).
+function seeThrough(image: HTMLImageElement) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 64;
+  const context = canvas.getContext("2d", { willReadFrequently: true })!;
+  context.drawImage(image, 0, 0, 64, 64);
+  const pixels = context.getImageData(0, 0, 64, 64).data;
+  for (let i = 3; i < pixels.length; i += 4) if (pixels[i] < 250) return true;
+  return false;
+}
 
 export function ImageEditorProvider({
   children,
@@ -56,6 +69,7 @@ export function ImageEditorProvider({
   const [loaded, setLoaded] = useState<{
     source: string;
     size: [number, number];
+    clear: boolean;
   } | null>(null);
   const [frame, setFrame] = useState<Frame | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -135,16 +149,23 @@ export function ImageEditorProvider({
     if (!job || !file || !natural || !frame || !picture.current) return;
     // The frame at the picture's own resolution, no wider than OUTPUT.
     const width = Math.round(
-      Math.min(OUTPUT, Math.max(600, view[0] / (cover * zoom))),
+      Math.min(
+        job.logo ? LOGO_OUTPUT : OUTPUT,
+        Math.max(600, view[0] / (cover * zoom)),
+      ),
     );
     const k = width / view[0];
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = Math.round(width / aspect);
     const context = canvas.getContext("2d")!;
-    // A picture shown smaller than its frame stands on white.
-    context.fillStyle = "#fff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    // A picture shown smaller than its frame stands on white; a see-through
+    // logo keeps nothing behind it.
+    const clear = !!job.logo && !!loaded?.clear;
+    if (!clear) {
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
     context.imageSmoothingQuality = "high";
     context.drawImage(
       picture.current,
@@ -153,13 +174,17 @@ export function ImageEditorProvider({
       shown[0] * k,
       shown[1] * k,
     );
+    // Logos stay PNG (flat colour, transparency); photographs are JPEG.
+    const type = job.logo ? "image/png" : "image/jpeg";
     const blob = await new Promise<Blob | null>((done) =>
-      canvas.toBlob(done, "image/jpeg", 0.92),
+      canvas.toBlob(done, type, 0.92),
     );
     if (!blob) return;
-    const cut = new File([blob], file.name.replace(/\.[^.]*$/, "") + ".jpg", {
-      type: "image/jpeg",
-    });
+    const cut = new File(
+      [blob],
+      file.name.replace(/\.[^.]*$/, "") + (job.logo ? ".png" : ".jpg"),
+      { type },
+    );
     const done = [...job.done, cut];
     if (job.at + 1 < job.files.length) setJob({ ...job, at: job.at + 1, done });
     else finish(done);
@@ -188,7 +213,7 @@ export function ImageEditorProvider({
           <>
             <h2 id="image-editor-title">{job.title}</h2>
             <p className="muted">
-              {t("help")}
+              {t(job.logo ? "helpLogo" : "help")}
               {job.files.length > 1 &&
                 " " +
                   t("count", { number: job.at + 1, total: job.files.length })}
@@ -218,7 +243,7 @@ export function ImageEditorProvider({
             )}
             <div
               ref={stage}
-              className="editor-stage"
+              className={job.logo ? "editor-stage logo" : "editor-stage"}
               tabIndex={0}
               aria-label={t("stage")}
               style={{ width: view[0], height: view[1] }}
@@ -284,7 +309,12 @@ export function ImageEditorProvider({
                     image.naturalWidth,
                     image.naturalHeight,
                   ];
-                  setLoaded({ source, size });
+                  setLoaded({ source, size, clear: seeThrough(image) });
+                  // A logo starts whole inside its frame.
+                  if (job.logo) {
+                    const fit = [view[0] / size[0], view[1] / size[1]];
+                    setZoom(Math.min(...fit) / Math.max(...fit));
+                  }
                   // With a choice of frames, start in the picture's own shape.
                   if (job.frames.length > 1)
                     setFrame(
@@ -334,7 +364,7 @@ export function ImageEditorProvider({
                 type="button"
                 className="text-button"
                 onClick={() => {
-                  setZoom(1);
+                  setZoom(job.logo ? whole : 1);
                   setOffset([0, 0]);
                 }}
               >
@@ -356,7 +386,7 @@ export function ImageEditorProvider({
                 disabled={!natural}
                 onClick={() => void apply()}
               >
-                {t("apply")}
+                {t(job.logo ? "applyLogo" : "apply")}
               </button>
             </div>
           </>

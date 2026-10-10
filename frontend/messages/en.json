@@ -903,13 +903,15 @@
   },
   "imageEditor": {
     "help": "Drag the photograph to choose the part that shows, and make it larger or smaller with the slider. The frame keeps the size it has in print.",
+    "helpLogo": "Move the logo and make it larger or smaller until it sits in the frame as you want. It starts whole, and a transparent background is kept.",
     "count": "(photograph {number} of {total})",
     "shape": "Frame shape",
     "frame": {
       "landscape": "Wide",
       "portrait": "Upright",
       "additional": "Additional photograph",
-      "cover": "Cover"
+      "cover": "Cover",
+      "logo": "Logo"
     },
     "stage": "The photograph in its frame: arrow keys move it, + and - change its size",
     "smaller": "Smaller",
@@ -917,7 +919,8 @@
     "size": "Photograph size",
     "reset": "Reset",
     "cancel": "Cancel",
-    "apply": "Use photograph"
+    "apply": "Use photograph",
+    "applyLogo": "Use logo"
   },
   "imagesStep": {
     "help": "Upload each property's photographs in its box: the main image, then additional ones; they appear in the live preview at once. The auction icon and the cover are fixed by the identity and the chosen cover.",

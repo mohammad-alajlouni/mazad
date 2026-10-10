@@ -4,11 +4,14 @@ import { useTranslations } from "next-intl";
 import { api, Run } from "./api";
 import { Fields } from "./AuctionWorkspace";
 import FileInput from "./FileInput";
+import { setInputFiles, useImageEditor } from "./ImageEditor";
 
 type Profile = {
   values: Record<string, unknown>;
   has_logo: boolean;
   complete: boolean;
+  // The box the logo is shown in on its booklet page ([width, height]).
+  logo_frame?: [number, number];
 };
 export default function AccountProfile({
   run,
@@ -22,6 +25,7 @@ export default function AccountProfile({
   onSaved: () => Promise<void>;
 }) {
   const t = useTranslations("accountProfile");
+  const editImages = useImageEditor();
   const a = useTranslations("auction");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [failed, setFailed] = useState(false);
@@ -99,6 +103,19 @@ export default function AccountProfile({
               name="file"
               required={!profile.has_logo}
               accept="image/png,image/jpeg,image/webp"
+              // The logo is placed in its frame before it is stored.
+              onChange={async (event) => {
+                const input = event.target;
+                const picked = Array.from(input.files || []);
+                const frame = profile.logo_frame;
+                if (!picked.length || !frame) return;
+                const edited = await editImages(picked, {
+                  frames: [{ key: "logo", width: frame[0], height: frame[1] }],
+                  title: a("agent_logo"),
+                  logo: true,
+                });
+                setInputFiles(input, edited || []);
+              }}
             />
           </label>
           <details>

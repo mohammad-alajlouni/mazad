@@ -32,6 +32,8 @@ def test_profile_required_fields_and_private_logo(admin):
         "values": {},
         "has_logo": False,
         "complete": False,
+        # The logo's box on the agent page, for the upload editor.
+        "logo_frame": [145.2, 67.0],
     }
     assert admin.get("/api/account/profile/logo").status_code == 404
     assert save(admin, logo=False).status_code == 422

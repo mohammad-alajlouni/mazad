@@ -1,7 +1,7 @@
 {#- Guide V2 p.12: one column whose right edge (466 pt) carries the logo, the
     agent's name (Ruaq Medium 17.44) and the justified description. -#}
 {{ art('agent') }}
-{% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, 145.2, 67) %}<img class="logo" style="{{ box(465.8 - A.width, 242.3 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
+{% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, agent_logo_box[0], agent_logo_box[1]) %}<img class="logo" style="{{ box(465.8 - A.width, 242.3 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
 <div class="t r w5" style="{{ T(465.8, 305.1, fit.box_size('agent_name', agent.name), width=317) }};color:#00385f" data-fit="agent-name" data-max-height="36pt">{{ agent.name }}</div>
 {#- One agent page: a longer description is set smaller, never continued. -#}
 {% set size = page.size or 16.02 %}{% set lh = page.line_height or 28.5 %}

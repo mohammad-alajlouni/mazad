@@ -24,7 +24,15 @@ class AgentProfileInput(SellingAgentInput):
 def view(db, user):
     data = initial_profile(db, user)
     has_logo = bool(data.pop("logo_key", ""))
-    return {"values": data, "has_logo": has_logo, "complete": complete(user)}
+    from ..generation.booklet.composer import AGENT_LOGO
+
+    return {
+        "values": data,
+        "has_logo": has_logo,
+        "complete": complete(user),
+        # The box the logo is shown in on its booklet page, for the editor.
+        "logo_frame": list(AGENT_LOGO),
+    }
 
 
 @router.get("")

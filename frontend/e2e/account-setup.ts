@@ -17,6 +17,12 @@ export async function completeAccount(page: Page) {
     .setInputFiles(
       path.resolve(process.cwd(), "../samples/demo-generator.jpg"),
     );
+  // The logo is placed in its frame (shown whole) before it is stored.
+  await page
+    .locator("dialog.image-editor")
+    .getByRole("button", { name: /^(Use logo|استخدام الشعار)$/ })
+    .click();
+  await expect(page.locator("dialog.image-editor")).toBeHidden();
   await profile.locator("button.primary").click();
   await expect(page.locator(".sidebar")).toBeAttached();
 }

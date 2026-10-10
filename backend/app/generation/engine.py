@@ -434,7 +434,7 @@ def render_html(
         def identity_asset(name):
             return "/api/booklet-assets/identity/" + name
 
-    from .booklet.composer import FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
+    from .booklet.composer import AGENT_LOGO, FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
     from .booklet.labels import label
 
     from ..services.banners import LEGAL_ROOM, LEGAL_SMALL
@@ -473,6 +473,7 @@ def render_html(
         white_logo=white_logo,
         logo_fit=logo_fit,
         cover_photo_window=COVER_PHOTO.get,
+        agent_logo_box=AGENT_LOGO,
         legal_room=LEGAL_ROOM,
         legal_small=LEGAL_SMALL,
         shapes=shapes,
