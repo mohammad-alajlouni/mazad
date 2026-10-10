@@ -234,3 +234,80 @@ def test_banner_source_change_preserves_approved_version(admin):
     new = admin.post(f"/api/outputs/{o['id']}/regenerate")
     assert new.status_code == 200 and new.json()["id"] != o["id"]
     assert pdf(admin, approved) == old_bytes
+
+
+def board(size, legal, court):
+    """A banner of one size rendered with the given announcement texts:
+    (html, whether every bounded text stays in its box)."""
+    from fastapi import HTTPException
+    from weasyprint import HTML
+
+    from app.generation.engine import render_html, safe_fetch
+    from app.generation.preflight import check_layout
+    from app.services.banners import SIZES
+
+    content = {
+        "project": {
+            "auction": {
+                "auction_name": "مزاد آفاق",
+                "auction_type": "hybrid",
+                "auction_date": "2026-10-10",
+                "auction_start_date": "2026-10-10",
+                "auction_end_date": "2026-10-12",
+                "start_time": "16:00",
+                "end_time": "18:00",
+                "physical_location": "الرياض",
+                "electronic_platform_name": "منصة",
+                "license_number": "420000053",
+                "auction_contact_number": "0555000000",
+                "legal_announcement_text": legal,
+                "court_decision_text": court,
+                "booklet_url": "https://example.com/b",
+            },
+            "selling_agent": {"name": "وكيل"},
+            "agent_logo": "",
+        },
+        "items": [{"title": "عقار", "property_data": {"property_type": "أرض"}}],
+        "banner": {**SIZES[size], "size": size, "scale": "1:10"},
+        "output_language": "ar",
+        "branding": {},
+    }
+    html = render_html(content, "infath/board.html")
+    try:
+        check_layout(HTML(string=html, url_fetcher=safe_fetch).render(), content)
+    except HTTPException:
+        return html, False
+    return html, True
+
+
+def words(length, source):
+    text = ""
+    while len(text) < length:
+        text += (" " if text else "") + source[len(text.split()) % len(source)]
+    return text[:length].rstrip()
+
+
+def test_every_banner_size_holds_the_longest_announcement_and_court_decision():
+    """A court decision is usually long: beside a full announcement every
+    banner size holds the longest one the forms accept. Long text is set only
+    a little smaller (90%); a usual one keeps the full size."""
+    import re
+
+    from app.services.banners import COURT_LIMIT, LEGAL_SMALL, SIZES
+
+    assert COURT_LIMIT == 200 and LEGAL_SMALL[0] >= 0.9
+    sources = [
+        "وبقرار من محكمة التنفيذ بالرياض رقم 4471234567 وتاريخ 1447/03/15 القاضي ببيع العقارات المملوكة للمدين بالمزاد العلني".split(),
+        "وبقرار من محكمة التنفيذ ومحكمة الأحوال الشخصية بمدينة الرياض الصادر بتاريخ الخامس عشر من شهر ربيع الأول".split(),
+    ]
+
+    def size_of(html):
+        return float(re.findall(r"\.legal\{font-size:([\d.]+)pt", html)[-1])
+
+    for size in SIZES:
+        usual, fits = board(size, words(75, sources[1]), words(40, sources[0]))
+        assert fits, size
+        for source in sources:
+            longest, fits = board(size, words(220, source), words(COURT_LIMIT, source))
+            assert fits, (size, source[:3])
+            assert size_of(longest) == pytest.approx(size_of(usual) * 0.9, rel=0.001)

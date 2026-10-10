@@ -218,21 +218,204 @@ def test_tables_close_at_the_last_record_on_every_page():
 
 
 def test_boundaries_use_measured_width_of_the_reference_line():
-    fits = {"north_description": "شارع بعرض ثلاثين متراً", "north_length": "30 م"}
-    long = {"north_description": "شارع بعرض ثلاثين متراً من الجهة الشمالية الشرقية"}
-    assert not property_pages(compose(project_with(), [item_with(boundaries=fits)]))[0][
-        "separate_boundaries"
-    ]
-    assert property_pages(compose(project_with(), [item_with(boundaries=long)]))[0][
-        "separate_boundaries"
-    ]
+    def page(boundaries, **prop):
+        item = item_with(boundaries=boundaries, **prop)
+        return property_pages(compose(project_with(), [item]))[0]
+
+    # A short boundary is one line at the reference size.
+    fits = page({"north_description": "شارع بعرض 30م", "north_length": "30 م"})
+    assert not fits["separate_boundaries"]
+    assert fits["boundaries"]["size"] == 9.6
+    assert fits["boundaries"]["lines"]["north"] == ["شارع بعرض 30م"]
+    assert fits["boundaries"]["lines"]["south"] == ["-"]
+    # A little longer: still one line, set slightly smaller.
+    snug = page({"north_description": "يحدها من الشمال ارض ااا"})
+    assert 8.0 <= snug["boundaries"]["size"] < 9.6
+    assert snug["boundaries"]["lines"]["north"] == ["يحدها من الشمال ارض ااا"]
+    # Longer again: two lines in the same row, whole, instead of a separate page.
+    text = "شارع بعرض ثلاثين متراً من الجهة الشمالية الشرقية"
+    long = page({"north_description": text})
+    assert not long["separate_boundaries"]
+    assert long["boundaries"]["size"] == 7.5
+    assert len(long["boundaries"]["lines"]["north"]) == 2
+    assert " ".join(long["boundaries"]["lines"]["north"]) == text
+    # Too long even for two lines: the boundaries continue on their own page.
+    far = page({"north_description": text * 3})
+    assert far["separate_boundaries"] and far["boundaries"] is None
     # Portrait pages have the wider reference value column.
-    medium = {"north_description": "قطعة رقم 6110 + قطعة 6112"}
-    assert not property_pages(
-        compose(
-            project_with(), [item_with(booklet_layout="portrait", boundaries=medium)]
+    medium = page(
+        {"north_description": "قطعة رقم 6110 + قطعة 6112"}, booklet_layout="portrait"
+    )
+    assert medium["boundaries"]["size"] == 9.6
+    # A long length is set smaller on its line; an impossible one leaves the page.
+    length = page({"north_length": "107,032.55 متر طولي تقريباً"})
+    assert 7.5 <= length["boundaries"]["length_size"] < 10.06
+    assert page({"north_length": "م" * 80})["separate_boundaries"]
+
+
+def test_boundaries_are_printed_inside_their_column_on_both_layouts():
+    """However they are set (one line, smaller, two lines) the boundaries stay
+    between the page edge and their labels."""
+    boundaries = {
+        "north_description": "يحدها من الشمال ارض فضاء",
+        "south_description": "شارع الملك سعود بعرض 60م ثم ممر مشاة",
+        "east_description": "قطعة رقم 161 وقطعة رقم 162",
+        "west_description": "شارع بعرض 30م",
+        "north_length": "107,032م",
+        "south_length": "108,468م",
+    }
+    for layout, (right, width) in {
+        "landscape": (143.5, 100),
+        "portrait": (486.7, 130),
+    }.items():
+        item = {
+            **item_with(
+                property_type="عمارة", boundaries=boundaries, booklet_layout=layout
+            ),
+            "title": "عقار",
+        }
+        booklet, _, pdf = exported(project_with("physical"), [item])
+        n = [p["kind"] for p in booklet["pages"]].index("property")
+        plan = booklet["pages"][n]
+        assert plan["boundaries"]["size"] == 7.5
+        assert len(plan["boundaries"]["lines"]["south"]) == 2
+        text = pdf[n].get_text()
+        for word in ("فضاء", "مشاة", "162", "107,032"):
+            assert word in text, (layout, word)
+        # The south boundary's two lines: both inside the value column.
+        found = [
+            (x0, x1)
+            for x0, _, x1, _, word, *_ in pdf[n].get_text("words")
+            if word in ("مشاة", "سعود", "الملك")
+        ]
+        assert found, layout
+        for x0, x1 in found:
+            assert right - width - 1 <= x0 and x1 <= right + 1, (layout, x0, x1)
+
+
+def test_announcement_grows_then_shrinks_to_keep_the_court_decision_whole():
+    """Guide p.13 sets three lines. A longer court decision keeps the same
+    setting and pushes the schedule down; a very long text is set smaller in
+    that space, and only what still cannot fit continues on a later page."""
+    from app.generation.booklet.composer import (
+        ANNOUNCEMENT_LINE,
+        ANNOUNCEMENT_LINES,
+        announcement_fit,
+    )
+
+    legal = "تعلن الشركة عن البيع بالمزاد العلني\nوبإشراف مركز الإسناد والتصفية «إنفاذ»"
+
+    def auction(court):
+        project = project_with(
+            "physical", legal_announcement_text=legal, court_decision_text=court
         )
-    )[0]["separate_boundaries"]
+        pages = compose(project, [])["pages"]
+        return next(p for p in pages if p["kind"] == "auction"), pages
+
+    short, _ = auction("وبقرار من محكمة التنفيذ")
+    assert short["announcement_size"] == 19 and short["shift"] == 0
+    assert len(short["announcement_lines"]) == 3
+    court = "وبقرار من محكمة التنفيذ ومحكمة الأحوال الشخصية بالرياض رقم 4471234567"
+    longer, pages = auction(court)
+    assert longer["announcement_size"] == 19
+    assert len(longer["announcement_lines"]) in (4, 5)
+    assert longer["shift"] == (len(longer["announcement_lines"]) - 3) * 29
+    assert "".join(longer["announcement_lines"]).replace(" ", "") == (
+        legal + court
+    ).replace("\n", "").replace(" ", "")
+    assert not [p for p in pages if p["kind"] == "information"]
+    # The longest texts the forms accept (220 and 120 characters) stay whole.
+    size, height, lines, rest = announcement_fit(
+        ("إعلان نظامي طويل " * 20)[:220] + "\n" + ("وبقرار من المحكمة " * 10)[:120]
+    )
+    assert size < 19 and not rest
+    assert len(lines) * height <= ANNOUNCEMENT_LINES * ANNOUNCEMENT_LINE + 0.01
+    # Beyond that the remainder continues on an information page, as before.
+    _, pages = auction("وبقرار من محكمة التنفيذ " * 60)
+    assert [p for p in pages if p["kind"] == "information"]
+
+
+def test_schedule_moves_down_with_a_longer_announcement():
+    court = "وبقرار من محكمة التنفيذ ومحكمة الأحوال الشخصية بالرياض رقم 4471234567"
+
+    def top(court_text):
+        project = project_with(
+            "physical",
+            auction_name="مزاد",
+            auction_date="2026-07-27",
+            start_time="10:00",
+            physical_location="LOCATION_MARK",
+            legal_announcement_text="تعلن الشركة عن البيع\nوبإشراف مركز الإسناد",
+            court_decision_text=court_text,
+        )
+        booklet, _, pdf = exported(project, [])
+        n = [p["kind"] for p in booklet["pages"]].index("auction")
+        word = next(w for w in pdf[n].get_text("words") if w[4] == "LOCATION_MARK")
+        return booklet["pages"][n]["shift"], word[1]
+
+    (plain_shift, plain), (long_shift, moved) = top("وبقرار من المحكمة"), top(court)
+    assert plain_shift == 0 and long_shift >= 29
+    assert abs((moved - plain) - long_shift) < 0.5
+
+
+def test_a_property_prints_up_to_four_deeds_and_the_summary_lists_them():
+    """The first deed and up to three more, one under another on the property
+    page (the facts beneath move down) and all in the summary's deed cell."""
+    import pydantic
+
+    numbers = ["947603471790", "310115041563", "430107012766", "520118033311"]
+    with pytest.raises(pydantic.ValidationError):
+        PropertyData.model_validate({"extra_deed_numbers": numbers})  # four more
+    kept = PropertyData.model_validate({"extra_deed_numbers": ["", " 12 ", ""]})
+    assert kept.extra_deed_numbers == ["12"]
+    for layout in ("landscape", "portrait"):
+
+        def base(count, key):
+            item = {
+                **item_with(
+                    property_type="عمارة",
+                    deed_number=numbers[0],
+                    extra_deed_numbers=numbers[1:count],
+                    plan_number="PLAN_MARK",
+                    execution_request_number="EXEC_MARK",
+                    booklet_layout=layout,
+                ),
+                "title": "عقار",
+            }
+            booklet, _, pdf = exported(project_with("physical"), [item])
+            kinds = [p["kind"] for p in booklet["pages"]]
+            page = pdf[kinds.index("property")]
+            text = page.get_text()
+            assert all(n in text for n in numbers[:count]), (layout, count)
+            assert not any(n in text for n in numbers[count:])
+            # Several deeds are each named; a single one keeps the plain label.
+            from app.generation.booklet.labels import label
+
+            # (The first is skipped: PDF text extraction reorders its lam-alef.)
+            for n in range(2, 5):
+                named = label(f"deed_number_{n}", "ar").split()[-1]
+                assert (named in text) is (count > 1 and n <= count), (count, n)
+            summary = booklet["pages"][kinds.index("summary")]
+            assert summary["lines"][0]["deed_number"] == numbers[:count]
+            return next(w[1] for w in page.get_text("words") if w[4] == key)
+
+        # One deed: the reference positions. Four: the facts below move down.
+        assert base(4, "PLAN_MARK") - base(1, "PLAN_MARK") == pytest.approx(
+            31.5, abs=0.3
+        )
+        moved = base(4, "EXEC_MARK") - base(1, "EXEC_MARK")
+        assert moved == pytest.approx(0 if layout == "landscape" else 19.9, abs=0.3)
+
+
+def test_a_further_deed_too_long_for_its_box_is_reported_with_the_property():
+    from app.generation.booklet.fit import booklet_issues
+
+    item = {
+        **item_with(deed_number="1", extra_deed_numbers=["2", "9" * 60]),
+        "title": "عقار",
+    }
+    issues = booklet_issues({}, {}, [item])
+    assert [(i["field"], i["item"]) for i in issues] == [("deed_number", "عقار")]
 
 
 def test_dates_times_and_amounts_follow_the_reference():

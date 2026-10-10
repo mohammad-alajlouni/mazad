@@ -74,8 +74,15 @@ export default function PropertyManager({
     first?.focus({ preventScroll: true });
   }, [formKey, index]);
 
+  // What the editor shows now, read after the list has reloaded.
+  const latest = useRef(editing);
+  latest.current = editing;
   const saved = async (action: SaveAction, item: Item) => {
+    const before = latest.current;
     await reload();
+    // The author already opened another property while the list reloaded:
+    // that form stays as it is.
+    if (latest.current !== before) return;
     if (action === "close") {
       setTemplate(undefined);
       setEditing(null);

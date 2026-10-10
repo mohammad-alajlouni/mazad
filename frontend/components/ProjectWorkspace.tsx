@@ -192,7 +192,13 @@ export default function ProjectWorkspace({
     for (const field of root.current.querySelectorAll<
       HTMLInputElement | HTMLTextAreaElement
     >("input[name], textarea[name]")) {
-      const limit = limits[field.name.replace(/^property\./, "")];
+      // Every deed of a property has the first one's limit.
+      const limit =
+        limits[
+          field.name
+            .replace(/^property\./, "")
+            .replace(/^extra_deed_numbers$/, "deed_number")
+        ];
       if (limit) field.maxLength = limit;
     }
   });

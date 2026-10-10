@@ -17,7 +17,7 @@ def test_limits_of_every_output_reach_the_form_rules(admin):
     limits = workflow(admin, p)["rules"]["limits"]
     # Posts are the tightest for these fields, banners for the others.
     assert limits["auction_name"] == 48 and limits["deed_number"] == 28
-    assert limits["plan_number"] == 32 and limits["court_decision_text"] == 120
+    assert limits["plan_number"] == 32 and limits["court_decision_text"] == 200
 
 
 def test_values_too_wide_for_the_booklet_are_reported_in_their_step(admin):

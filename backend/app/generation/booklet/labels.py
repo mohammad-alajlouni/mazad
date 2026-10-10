@@ -15,6 +15,11 @@ LABELS = {
     "area": ("المساحة م²", "Area m²"),
     "area_short": ("المساحة م٢", "Area m²"),
     "deed_number": ("رقم الصك", "Deed number"),
+    # A property on several deeds names each one.
+    "deed_number_1": ("رقم الصك الأول", "First deed"),
+    "deed_number_2": ("رقم الصك الثاني", "Second deed"),
+    "deed_number_3": ("رقم الصك الثالث", "Third deed"),
+    "deed_number_4": ("رقم الصك الرابع", "Fourth deed"),
     "plan_number": ("رقم المخطط", "Plan number"),
     "plot_number": ("رقم القطعة", "Plot number"),
     "execution_request_number": ("رقم طلب التنفيذ", "Execution request number"),

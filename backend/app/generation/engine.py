@@ -437,6 +437,7 @@ def render_html(
     from .booklet.composer import FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
     from .booklet.labels import label
 
+    from ..services.banners import LEGAL_ROOM, LEGAL_SMALL
     from .social_art import photo_frame
     from .booklet import fit, formatting
     from .booklet.art import (
@@ -472,6 +473,8 @@ def render_html(
         white_logo=white_logo,
         logo_fit=logo_fit,
         cover_photo_window=COVER_PHOTO.get,
+        legal_room=LEGAL_ROOM,
+        legal_small=LEGAL_SMALL,
         shapes=shapes,
         fmt=formatting,
         fit=fit,

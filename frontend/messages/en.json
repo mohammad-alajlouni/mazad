@@ -398,6 +398,9 @@
     "Account_profile_updated": "Account profile updated"
   },
   "auction": {
+    "deed_number_n": "Deed number {number}",
+    "add_deed": "Add another deed",
+    "remove_deed": "Remove deed",
     "summary": "Property summary",
     "property_type": "Property type",
     "city": "City",

@@ -1,6 +1,6 @@
 """The field contract and saved-stage readiness for auction publication flows."""
 
-from .banners import review_banners
+from .banners import COURT_LIMIT, review_banners
 from .social import review_social
 from ..generation.booklet.validation import validate_project
 
@@ -130,7 +130,7 @@ def workflow(db, project):
             "license_number": 24,
             "auction_contact_number": 18,
             "legal_announcement_text": 220,
-            "court_decision_text": 120,
+            "court_decision_text": COURT_LIMIT,
             "physical_location": 70,
             "electronic_platform_name": 40,
         }.items():

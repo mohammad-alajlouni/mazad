@@ -44,7 +44,22 @@
 {% set size = fit.fact_size(prop, key, page.layout, output_language) %}
 <div data-fit="property-field-{{ key }}" data-max-height="18pt" class="t {{ 'l' if has_digits(value) else 'r' }} w5 value" style="{{ T(value_right, base, size, 'l' if has_digits(value) else 'r', width=fit.fact_width(page.layout, key)) }};{{ 'color:#14385f' if key == 'execution_request_number' else '' }}">{{ (value or '-')|nums }}</div>
 {% endmacro %}
-{% for key, base in G.fields %}{{ fact(key, base, G.label_right, G.value_right, 0) }}{% endfor %}
+{#- Up to four deeds, one under another (guide p.15 sets several numbers of a
+    field this way, smaller); the fields beneath move down to make room. -#}
+{% set deeds = ([prop.deed_number] if prop.deed_number else []) + (prop.extra_deed_numbers or [])|list %}
+{% set more = [deeds|length - 1, 0]|max %}{% set pitch = 10.5 %}
+{% set ns = namespace(after=false) %}
+{% for key, base in G.fields %}
+{#- Portrait: the gap before the second group of facts takes part of the room. -#}
+{% set drop = (more * pitch if not (portrait and loop.index0 > 3) else [more * pitch - 11.6, 0]|max) if ns.after else 0 %}
+{% if key == 'deed_number' and more %}
+{#- Each deed is named (first, second...) beside its number. -#}
+{% for deed in deeds %}<div class="t r w5 label" style="{{ T(G.label_right, base + pitch * loop.index0, 8.5 if ar else 7.5) }}">{{ bt('deed_number_' ~ loop.index) }}</div>
+<div data-fit="property-field-deed_number" data-max-height="18pt" class="t l w5 value" style="{{ T(G.value_right, base + pitch * loop.index0, fit.deed_size(deed, page.layout), 'l', width=fit.fact_width(page.layout, key)) }}">{{ deed|nums }}</div>
+{% endfor %}
+{% else %}{{ fact(key, base + drop, G.label_right, G.value_right, 0) }}{% endif %}
+{% if key == 'deed_number' %}{% set ns.after = true %}{% endif %}
+{% endfor %}
 {% for key, base in G.get('fields2', []) %}{{ fact(key, base, 384.5, 306.1, 0) }}{% endfor %}
 {#- Boundaries and lengths beside their tabs. -#}
 {% set labels_right, values_right, bases, width = G.sides %}
@@ -58,9 +73,13 @@
 {% set b = prop.boundaries or {} %}
 {% for side in ['north', 'south', 'east', 'west'] %}
 <div class="t r w5 label" style="{{ T(labels_right, bases[loop.index0], 10.06) }}">{{ bt(side) }}</div>
-{% if not page.separate_boundaries %}<div class="t l w5 value" data-fit="boundary-{{ side }}" data-max-height="18pt" style="{{ T(values_right, bases[loop.index0], 9.6, 'l', width=width) }}">{{ (b.get(side ~ '_description') or '-')|nums }}</div>{% endif %}
+{#- One line each, or two smaller lines in the same row (composer's fit). -#}
+{% set beside = page.boundaries or {'size': 9.6, 'length_size': 10.06, 'lines': {}} %}
+{% if not page.separate_boundaries %}{% set rows = beside.lines.get(side) or [b.get(side ~ '_description') or '-'] %}{% set at = loop.index0 %}
+{% for row in rows %}<div class="t l w5 value" data-fit="boundary-{{ side }}" data-max-height="18pt" style="{{ T(values_right, bases[at] + (loop.index0 - (rows|length - 1) / 2) * 8.8, beside.size, 'l', width=width) }}">{{ row|nums }}</div>
+{% endfor %}{% endif %}
 <div class="t r w5 label" style="{{ T(labels_right, G.lengths[loop.index0], 10.06) }}">{{ bt(side) }}</div>
-{% if not page.separate_boundaries %}<div class="t l w5 value" style="{{ T(values_right, G.lengths[loop.index0], 10.06, 'l', width=width) }}">{{ (b.get(side ~ '_length') or '-')|nums }}</div>{% endif %}
+{% if not page.separate_boundaries %}<div class="t l w5 value" style="{{ T(values_right, G.lengths[loop.index0], beside.length_size, 'l', width=width) }}">{{ (b.get(side ~ '_length') or '-')|nums }}</div>{% endif %}
 {% endfor %}
 {% if page.separate_boundaries %}<div class="t p r w3 body" style="{{ T(values_right, bases[0], 9, lh=13, width=width) }};white-space:normal">{{ bt('boundaries_continued') }}</div>{% endif %}
 {#- Additional information box: features, notes and free text as in page 9. -#}

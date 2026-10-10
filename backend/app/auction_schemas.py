@@ -152,6 +152,8 @@ class PropertyData(Structured):
     usage: str = Field(default="", max_length=100)
     area: Decimal | None = Field(default=None, ge=0, max_digits=18, decimal_places=4)
     deed_number: str = Field(default="", max_length=100)
+    # A property may stand on up to four deeds: the first above, the rest here.
+    extra_deed_numbers: list[str] = Field(default_factory=list, max_length=3)
     plan_number: str = Field(default="", max_length=100)
     plot_number: str = Field(default="", max_length=100)
     execution_request_number: str = Field(default="", max_length=100)
@@ -179,6 +181,17 @@ class PropertyData(Structured):
             for row in value
             if any(v not in (None, "") for v in row.model_dump().values())
         ]
+
+    @field_validator("extra_deed_numbers", mode="before")
+    @classmethod
+    def entered_deeds(cls, value):
+        # An added but empty deed row is not a deed.
+        if not isinstance(value, list):
+            return value
+        kept = [str(v).strip() for v in value if str(v or "").strip()]
+        if any(len(v) > 100 for v in kept):
+            raise ValueError("Deed number exceeds 100 characters")
+        return kept
 
     @field_validator("features")
     @classmethod

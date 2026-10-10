@@ -7,7 +7,13 @@
 {% set size = fit.box_size('auction_name', name) %}
 <div class="t r w7" style="{{ T(424.0, 229.6, 23.09) }};color:#11375c">{{ prefix }}</div>
 <div class="t r w7" style="{{ T(424.0, 261.5, size, width=315) }};color:#11375c;overflow:hidden" data-fit="auction-title" data-max-height="{{ size * 1.874 }}pt">{{ name }}</div>
-<div class="t p r w3" style="{{ T(495.4, 314.4, 19, lh=29, width=373) }};color:#000" data-fit="auction-copy" data-max-height="87pt">{{ page.announcement|trim }}</div>
+{#- The announcement and court decision: the composer's lines. Three at the
+    reference setting; a longer text grows downwards (the schedule follows) and
+    a very long one is set smaller in the same space. -#}
+{% set copy = page.announcement_lines if page.announcement_lines is defined else (page.announcement or '').split('\n') %}
+{% set cs = page.announcement_size or 19 %}{% set cl = page.announcement_line or 29 %}{% set down = page.shift or 0 %}
+{% for line in copy %}<div class="t r w3" style="{{ T(495.4, 314.4 - (19 - cs) * 0.6 + cl * loop.index0, cs, lh=cl, width=373) }};color:#000">{{ line }}</div>
+{% endfor %}
 {% set rows = [] %}
 {% if auction.start_time or auction.end_time %}{% set _ = rows.append(('time', fmt.time_range(auction, output_language))) %}{% endif %}
 {% set _ = rows.append(('calendar', fmt.day_range(auction, output_language) or '—')) %}
@@ -15,9 +21,10 @@
 {% if auction.auction_type != 'physical' %}{% set _ = rows.append(('platform', auction.electronic_platform_name or bt('platform_name'))) %}{% endif %}
 {% set slots = [(424.6, 404), (465.8, 444), (505.7, 485), (551.3, 527)] %}
 {% for icon, text in rows %}{% set base, top = slots[loop.index0] %}
+{% set base = base + down %}{% set top = top + down %}
 {{ vec('auction-' ~ icon, 461, top, 32, {'time': 31, 'calendar': 33, 'location': 31, 'platform': 33}[icon]) }}
 {% set size = fit.box_size(icon == 'location' and 'physical_location' or 'electronic_platform_name', text) if icon in ('location', 'platform') else 13.48 %}
 <div class="t r w5" style="{{ T(437.9, base, size, width=330) }};color:#3abdba" data-fit="auction-schedule-{{ icon }}" data-max-height="26pt">{{ text|nums }}</div>
 {% endfor %}
 {#- Filming happens in the auction hall: in-person and hybrid auctions only. -#}
-{% if auction.auction_type != 'electronic' %}<div class="t r w3" style="{{ T(498.4, 584.3, 10, width=400) }};color:#000">{{ bt('recording_notice') }}</div>{% endif %}
+{% if auction.auction_type != 'electronic' %}<div class="t r w3" style="{{ T(498.4, 584.3 + down, 10, width=400) }};color:#000">{{ bt('recording_notice') }}</div>{% endif %}

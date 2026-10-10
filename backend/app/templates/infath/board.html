@@ -20,7 +20,12 @@
 
 /* Absolute blocks keep print geometry independent of RTL flex implementations. */
 .headline{font-size:{{ (88 if square else 53 if not wide else 36)*unit*(1 if ar else 0.58) }}pt;line-height:1.18;text-align:{{ 'right' if ar else 'center' }}}
-.legal{font-size:{{ (8 if square else 8 if not wide else 5.8)*unit }}pt}
+{#- The announcement and court decision share one box. A long text is set a
+    little smaller on closer lines, in a box that reaches a little higher
+    (its foot stays where it is), so a longer court decision fits. -#}
+{% set copy = (a.legal_announcement_text or '') ~ ' ' ~ (a.court_decision_text or '') %}
+{% set long = copy|length > legal_room[b.layout] %}
+.legal{font-size:{{ (8 if square else 8 if not wide else 5.8)*unit*(legal_small[0] if long else 1) }}pt{% if long %};line-height:{{ legal_small[1] }}{% endif %}}
 .qr-block{display:block;right:auto;left:{{ 42 if square else 3 }}%;width:{{ 29 if square else 28 if not wide else 15 }}%;height:{{ 25*unit }}mm;font-size:{{ (19 if square else 21 if not wide else 8)*unit }}pt;direction:ltr}
 .qr-block a{position:absolute;left:0;top:0;display:block}
 .qr-block span{position:absolute;left:{{ 29*unit if square else 38*unit if not wide else 18*unit }}mm;top:0;white-space:nowrap}
@@ -36,7 +41,7 @@
 .fact .label{font-size:{{ (7 if square else 8 if not wide else 6)*unit }}pt}.fact .value{font-size:{{ (7 if square else 8 if not wide else 6)*unit }}pt}
 
 .headline{height:{{ 65 if square else 68 }}%}
-.legal{height:{{ 10 if square else 13 }}%;width:{{ 66 if square else 60 if wide else 46 }}%}
+.legal{height:{{ (10 if square else 13) * (legal_small[2] if long else 1) }}%;width:{{ 66 if square else 60 if wide else 46 }}%}
 .identity-icon{display:inline-block;width:1em;height:1em;object-fit:contain;vertical-align:middle;background:white;margin-inline-end:.3em}
 </style></head><body>
 {% macro schedule() %}

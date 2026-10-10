@@ -87,6 +87,14 @@ def fact_size(prop, key, layout, language="ar"):
     )
 
 
+def deed_size(text, layout):
+    """One of several deed numbers of a property, set a little smaller so the
+    lines sit closer (as the guide sets several numbers in one field)."""
+    return fit_size(
+        text, fact_width(layout, "deed_number"), 8.5, FACT_MINIMUM, "l", 500
+    )
+
+
 # Single-line boxes outside the property page: (width, size, minimum, family, weight).
 BOXES = {
     "auction_name": (315, 23.09, 14, "r", 700),
@@ -192,6 +200,18 @@ def booklet_issues(auction, agent, items, language="ar"):
                 fact_width(layout, key),
                 FACT_MINIMUM,
                 family(text),
+                500,
+                item.get("title"),
+            )
+        # Each further deed has the same box as the first.
+        for text in prop.get("extra_deed_numbers") or []:
+            check(
+                "items",
+                "deed_number",
+                str(text),
+                fact_width(layout, "deed_number"),
+                FACT_MINIMUM,
+                "l",
                 500,
                 item.get("title"),
             )

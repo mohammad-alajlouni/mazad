@@ -398,6 +398,9 @@
     "Account_profile_updated": "تحديث ملف الحساب"
   },
   "auction": {
+    "deed_number_n": "رقم الصك {number, select, 1 {الأول} 2 {الثاني} 3 {الثالث} other {الرابع}}",
+    "add_deed": "إضافة صك آخر",
+    "remove_deed": "حذف الصك",
     "summary": "بيان العقارات",
     "property_type": "نوع العقار",
     "city": "المدينة",

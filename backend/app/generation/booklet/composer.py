@@ -42,7 +42,7 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 9
+LAYOUT_VERSION = 10
 # Rows that the reference tables hold before continuing on another page.
 # Summary table (guide p.14). Column edges (right to left) come from the open
 # reference booklet; the title and table sit where the guide places them, and
@@ -88,11 +88,20 @@ AGENT_BOX = 285  # points of height for the agent's description (10 lines)
 # The agent's extra contact text sits under the numbers on the contact page.
 CONTACT_EXTRA = (10, 360, 2)
 AGENT_MIN = 11.0  # smallest size the description is set at before it must be shortened
-# Right-aligned (not justified): lines use the full measured width.
+# The announcement and court decision (guide p.13): three 29 pt lines at 19 pt,
+# right-aligned. A longer text keeps that setting and grows to six lines (the
+# schedule under it moves down); longer still, it is set smaller in that space.
 ANNOUNCEMENT = (19, 373, 3)
+ANNOUNCEMENT_LINE = 29.0
+ANNOUNCEMENT_LINES = 6
+ANNOUNCEMENT_MIN = 13.0
 BOUNDARY_PAGE = (15, 444, 4)  # the fifth line carries the length
 # Width in points beside each direction label on the property page.
 BOUNDARY_WIDTH = {"landscape": 100, "portrait": 130}
+# Boundaries beside their labels: one line each at 9.6 pt, set smaller down to
+# 8 pt; longer ones take two lines at 7.5 pt inside the same row.
+BOUNDARY_SIZE, BOUNDARY_ONE_LINE, BOUNDARY_TWO_LINES = 9.6, 8.0, 7.5
+LENGTH_SIZE, LENGTH_MIN = 10.06, 7.5
 IDENTITY = Path(__file__).resolve().parents[2] / "templates/infath/assets/identity"
 
 
@@ -294,6 +303,9 @@ def summary_value(item, key, language="ar"):
     value = item["property_data"].get(key)
     if key in ("area", "participation_amount"):
         value = number(value, language, key == "participation_amount")
+    if key == "deed_number":
+        # Every deed of the property, each on its own line in the cell.
+        value = " ".join(deeds(item["property_data"]))
     return str(value or "-")
 
 
@@ -447,14 +459,86 @@ def rental_pages(item, rentals, language="ar"):
     return pages
 
 
-def boundaries_need_page(boundaries, layout="landscape"):
-    # Each direction has one line beside its label on the property page.
-    return any(
-        "\n" in boundaries.get(side + key, "")
-        or text_width(boundaries.get(side + key, "")) > BOUNDARY_WIDTH[layout]
-        for side in ("north", "south", "east", "west")
-        for key in ("_description", "_length")
+SIDES = ("north", "south", "east", "west")
+
+
+def boundary_fit(boundaries, layout="landscape"):
+    """How the boundaries are set beside their labels on the property page.
+
+    All four descriptions share one setting: a line each at the reference
+    size or a little smaller, or two lines each at 7.5 pt in the same rows.
+    Returns {"size", "lines": {side: [..]}, "length_size"}, or None when they
+    do not fit even so and continue on a page of their own.
+    """
+    width = BOUNDARY_WIDTH[layout] * 0.97
+    texts = {s: (boundaries.get(s + "_description") or "").strip() for s in SIDES}
+    lengths = [(boundaries.get(s + "_length") or "").strip() for s in SIDES]
+    if any("\n" in value for value in lengths):
+        return None
+    longest = max(text_width(value, LENGTH_SIZE) for value in lengths)
+    length_size = (
+        LENGTH_SIZE if longest <= width else round(LENGTH_SIZE * width / longest, 2)
     )
+    if length_size < LENGTH_MIN:
+        return None
+    widest = max(text_width(value, BOUNDARY_SIZE) for value in texts.values())
+    plain = not any("\n" in value for value in texts.values())
+    if plain and widest * BOUNDARY_ONE_LINE / BOUNDARY_SIZE <= width:
+        size = (
+            BOUNDARY_SIZE
+            if widest <= width
+            else round(BOUNDARY_SIZE * width / widest, 2)
+        )
+        lines = {side: [value or "-"] for side, value in texts.items()}
+        return {"size": size, "lines": lines, "length_size": length_size}
+    lines = {}
+    for side, value in texts.items():
+        rows = [
+            row
+            for row, _ in wrap_lines(
+                value, BOUNDARY_TWO_LINES, width, "LamaSans-Medium"
+            )
+            if row
+        ]
+        if len(rows) > 2 or any(
+            text_width(row, BOUNDARY_TWO_LINES) > width for row in rows
+        ):
+            return None
+        lines[side] = rows or ["-"]
+    return {"size": BOUNDARY_TWO_LINES, "lines": lines, "length_size": length_size}
+
+
+def boundaries_need_page(boundaries, layout="landscape"):
+    return boundary_fit(boundaries, layout) is None
+
+
+def announcement_fit(text):
+    """The announcement as the lines it prints on the auction page.
+
+    Returns (size, line height, lines, rest): the reference setting while the
+    text fits six lines, smaller (down to 13 pt) to keep a longer one in the
+    same space, and whatever still does not fit as the rest for a later page.
+    """
+    size, width, _ = ANNOUNCEMENT
+    space = ANNOUNCEMENT_LINES * ANNOUNCEMENT_LINE
+    while True:
+        height = round(ANNOUNCEMENT_LINE * size / ANNOUNCEMENT[0], 2)
+        rows = wrap_lines(text, size, width, "RuaqArabic-Light") if text else []
+        if len(rows) * height <= space + 0.01 or size <= ANNOUNCEMENT_MIN:
+            break
+        size = max(ANNOUNCEMENT_MIN, round(size - 0.5, 2))
+    count = int((space + 0.01) // height)
+    rest = "".join(row + ("\n" if last else " ") for row, last in rows[count:])
+    return size, height, [row for row, _ in rows[:count]], rest.strip()
+
+
+def deeds(prop):
+    """A property's deed numbers: the first and up to three more."""
+    return [
+        str(value).strip()
+        for value in [prop.get("deed_number"), *(prop.get("extra_deed_numbers") or [])]
+        if str(value or "").strip()
+    ]
 
 
 def info_entries(item, include_lists):
@@ -563,8 +647,18 @@ def compose(project, items):
         )
         if t and t.strip()
     )
-    first, rest = split_text(announcement, *ANNOUNCEMENT, margin=1.0)
-    auction_page["announcement"] = first
+    size, height, lines, rest = announcement_fit(announcement)
+    auction_page.update(
+        announcement="\n".join(lines),
+        announcement_lines=lines,
+        announcement_size=size,
+        announcement_line=height,
+        # The schedule below keeps its distance from a block taller than the
+        # reference's three lines.
+        shift=round(
+            max(0.0, len(lines) * height - ANNOUNCEMENT[2] * ANNOUNCEMENT_LINE), 2
+        ),
+    )
     for text in measured_chunks(rest, *INFO_PAGE):
         pages.append(
             {"kind": "information", "heading": "legal_announcement_text", "text": text}
@@ -575,7 +669,8 @@ def compose(project, items):
         prop = item["property_data"]
         layout = property_layout(item)
         boundaries = prop.get("boundaries", {})
-        separate_boundaries = boundaries_need_page(boundaries, layout)
+        beside = boundary_fit(boundaries, layout)
+        separate_boundaries = beside is None
         include_info = prop.get("include_information_page", True)
         links = [k for k in LINK_ORDER if prop.get(k)] + sorted(
             k for k in prop if k.endswith("_link") and prop[k] and k not in LINK_ORDER
@@ -604,6 +699,7 @@ def compose(project, items):
                 "variant": layout + ("-close" if close else ""),
                 "edition": edition,
                 "separate_boundaries": separate_boundaries,
+                "boundaries": beside,
                 "description": description[0] if description else "",
                 "info": shown,
                 "info_size": info_size,

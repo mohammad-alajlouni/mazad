@@ -13,6 +13,15 @@ SIZES = {
     "2x2": {"layout": "square", "width_mm": 200, "height_mm": 200},
 }
 
+# The banner's announcement box (announcement and court decision together):
+# characters it holds at the full size, per layout, and the slightly smaller
+# setting a longer text is set in: size factor, line height, and how much
+# taller the box becomes (upwards, towards the headline).
+LEGAL_ROOM = {"square": 700, "panoramic": 355, "landscape": 290}
+LEGAL_SMALL = (0.9, 1.3, 1.3)
+# Longest court decision every banner size holds beside a full announcement.
+COURT_LIMIT = 200
+
 
 def review_banners(db, project):
     config = BannerConfig.model_validate(project.banner_config or {})
@@ -54,7 +63,7 @@ def review_banners(db, project):
         "license_number": 24,
         "auction_contact_number": 18,
         "legal_announcement_text": 220,
-        "court_decision_text": 120,
+        "court_decision_text": COURT_LIMIT,
         "physical_location": 70,
         "electronic_platform_name": 40,
     }.items():

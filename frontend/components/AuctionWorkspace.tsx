@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { api, send, Detail, Item, Run } from "./api";
 import { BookletPages } from "./BookletPages";
@@ -64,6 +65,94 @@ const rentalFields = [
   "next_due_date",
   "annual_rent_value",
 ];
+// A field of the grid. One with further inputs of its own (the deeds) keeps
+// them in its cell, outside the label so their buttons are not its control.
+function FieldCell({
+  more,
+  children,
+}: {
+  more: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  if (!more) return <label>{children}</label>;
+  return (
+    <div className="field-with-more">
+      <label>{children}</label>
+      {more}
+    </div>
+  );
+}
+// Up to three more deeds after the first: added one at a time, each named.
+function MoreDeeds({
+  initial,
+  onCount,
+}: {
+  initial: string[];
+  onCount: (count: number) => void;
+}) {
+  const t = useTranslations("auction");
+  const [rows, setRows] = useState(
+    initial.map((value, key) => ({ key, value })),
+  );
+  const [next, setNext] = useState(initial.length);
+  const change = (list: typeof rows) => {
+    setRows(list);
+    onCount(list.length);
+  };
+  // Taking a deed away is no typed change: tell the live preview to read the
+  // form again.
+  const marker = useRef<HTMLSpanElement>(null);
+  const shown = useRef(rows.length);
+  useEffect(() => {
+    if (shown.current === rows.length) return;
+    shown.current = rows.length;
+    marker.current
+      ?.closest("form")
+      ?.dispatchEvent(new Event("preview-form", { bubbles: true }));
+  }, [rows.length]);
+  return (
+    <>
+      <span ref={marker} hidden />
+      {rows.map((row, at) => (
+        <label key={row.key} className="more-deed">
+          <span className="label-text">
+            {t("deed_number_n", { number: at + 2 })}
+          </span>
+          <span className="more-deed-row">
+            <input
+              name="property.extra_deed_numbers"
+              aria-label={t("deed_number_n", { number: at + 2 })}
+              defaultValue={row.value}
+              autoFocus={!row.value}
+            />
+            <button
+              type="button"
+              className="icon-button danger"
+              title={t("remove_deed")}
+              aria-label={t("remove_deed") + " " + (at + 2)}
+              onClick={() => change(rows.filter((r) => r.key !== row.key))}
+            >
+              <X size={15} />
+            </button>
+          </span>
+        </label>
+      ))}
+      {rows.length < 3 && (
+        <button
+          type="button"
+          className="text-button add-deed"
+          onClick={() => {
+            change([...rows, { key: next, value: "" }]);
+            setNext(next + 1);
+          }}
+        >
+          <Plus size={14} />
+          {t("add_deed")}
+        </button>
+      )}
+    </>
+  );
+}
 export function Fields({
   fields,
   prefix = "",
@@ -78,6 +167,14 @@ export function Fields({
   const t = useTranslations("auction");
   const v = useTranslations("validationFlow");
   const [invalid, setInvalid] = useState<Record<string, boolean>>({});
+  const [deeds, setDeeds] = useState(
+    ((values.extra_deed_numbers || []) as string[]).length,
+  );
+  // Several deeds: each is named, the first included.
+  const labelOf = (key: string) =>
+    prefix + key === "property.deed_number" && deeds > 0
+      ? t("deed_number_n", { number: 1 })
+      : t(key);
   return (
     <div
       className="form-grid"
@@ -98,9 +195,19 @@ export function Fields({
       }}
     >
       {fields.map((key) => (
-        <label key={key}>
+        <FieldCell
+          key={key}
+          more={
+            prefix + key === "property.deed_number" ? (
+              <MoreDeeds
+                initial={(values.extra_deed_numbers || []) as string[]}
+                onCount={setDeeds}
+              />
+            ) : null
+          }
+        >
           <span className="label-text">
-            {t(key)}
+            {labelOf(key)}
             {requiredFields.includes(key) && <b aria-hidden="true"> *</b>}
           </span>
           {key.endsWith("_text") ||
@@ -114,7 +221,7 @@ export function Fields({
             <textarea
               rows={4}
               name={prefix + key}
-              aria-label={t(key)}
+              aria-label={labelOf(key)}
               required={requiredFields.includes(key)}
               onBlur={(e) => {
                 if (
@@ -131,7 +238,7 @@ export function Fields({
           ) : (
             <input
               name={prefix + key}
-              aria-label={t(key)}
+              aria-label={labelOf(key)}
               required={requiredFields.includes(key)}
               onBlur={(e) => {
                 if (
@@ -170,7 +277,7 @@ export function Fields({
           {invalid[prefix + key] && (
             <small className="field-error">{v("required")}</small>
           )}
-        </label>
+        </FieldCell>
       ))}
     </div>
   );
@@ -187,6 +294,11 @@ export function readProperty(form: FormData) {
       (rentals[index] ||= {})[field] = String(v);
     }
   }
+  // Further deeds of the property (up to three after the first).
+  values.extra_deed_numbers = form
+    .getAll("property.extra_deed_numbers")
+    .map((v) => String(v).trim())
+    .filter(Boolean);
   values.features = String(form.get("property.features") || "")
     .split("\n")
     .filter((v) => v.trim());
