@@ -85,27 +85,32 @@ test("missing requirements are listed per step and lead to their fields", async 
   const district = page.locator('[name="property.district"]');
   await expect(district).toBeFocused();
   await district.fill("النرجس");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByRole("status")).toBeVisible();
 
-  // The images step asks only for property photographs; the link reaches its box.
-  await steps.nth(2).click();
-  await expect(checklist).toContainText("عقار الاختبار");
+  // The property also needs its photograph: there is no separate images
+  // step, the link opens the property at its photograph box.
+  await expect(steps).toHaveCount(4);
+  await expect(checklist).toContainText("Main property image");
   await expect(checklist).not.toContainText("Auction logo");
-  await expect(steps.nth(2).locator(".step-missing")).toBeVisible();
-  await checklist.getByRole("button", { name: /عقار الاختبار/ }).click();
-  const mainBox = page.locator(`[data-slot="main:${item.id}"]`);
+  await expect(steps.nth(1).locator(".step-missing")).toBeVisible();
+  const card = page.locator(".property-cards li").filter({
+    hasText: "عقار الاختبار",
+  });
+  await expect(card.locator(".property-thumb.empty")).toBeVisible();
+  await checklist.getByRole("button", { name: /Main property image/ }).click();
+  const mainBox = page.locator('.property-form [data-slot="main"]');
   await expect(mainBox).toBeFocused();
-  // The fixed auction icon is already on the cover in the live preview.
   const frame = page.frameLocator(
     '.live-preview-paper iframe[aria-hidden="false"]',
   );
-  await expect(frame.locator('img[src*="auction-icon-silver"]')).toHaveCount(1);
   await mainBox
     .locator('input[type="file"]')
     .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-  await mainBox.getByRole("button", { name: "Upload" }).click();
-  await expect(mainBox).toContainText("Added");
+  // The picked photograph shows on the property's page before it is saved.
+  await expect(mainBox).toContainText("Saved with the property");
+  await expect(frame.locator('image[href^="data:image/"]')).toHaveCount(1);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(card.locator("img.property-thumb")).toBeVisible();
+  expect(item.id).toBeTruthy();
   await expect(page.locator(".step-checklist")).toContainText(
     "This step is complete",
   );

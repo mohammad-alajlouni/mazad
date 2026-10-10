@@ -1,5 +1,5 @@
 import { completeAccount } from "./account-setup";
-import { completeBookletBasics, newProject } from "./required-setup";
+import { addPhoto, completeBookletBasics, newProject } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -20,19 +20,6 @@ const local = fs.existsSync(envFile)
   : {};
 const email = process.env.ADMIN_EMAIL || local.ADMIN_EMAIL;
 const password = process.env.ADMIN_PASSWORD || local.ADMIN_PASSWORD;
-
-// Uploads go into the box for their role (auction logo, cover, main image...).
-async function uploadTo(
-  page: import("@playwright/test").Page,
-  box: string,
-  file: string | string[],
-) {
-  const slot = page.locator(".image-slot").filter({ hasText: box });
-  await slot.locator('input[type="file"]').setInputFiles(file);
-  await slot.getByRole("button", { name: /^(Upload|Replace)$/ }).click();
-  // The box shows the photograph once the upload has been stored.
-  await expect(slot.locator("img")).toBeVisible();
-}
 
 test("administrator completes manual and Excel input, uploads image, reviews and exports", async ({
   page,
@@ -101,10 +88,12 @@ test("administrator completes manual and Excel input, uploads image, reviews and
       .locator(".property-cards strong")
       .getByText("أرض · حي تجريبي 1", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: /Images and attachments/ }).click();
-  await uploadTo(
+  await expect(
+    page.getByRole("button", { name: /Images and attachments/ }),
+  ).toHaveCount(0);
+  await addPhoto(
     page,
-    "Main image: وحدة طاقة تجريبية",
+    "وحدة طاقة تجريبية",
     path.join(root, "samples/demo-generator.jpg"),
   );
   await page.getByRole("button", { name: /Review and generate/ }).click();

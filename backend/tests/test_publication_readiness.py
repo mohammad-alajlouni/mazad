@@ -152,9 +152,11 @@ def test_image_roles_can_be_corrected_and_stay_single(admin):
 def test_issues_identify_the_property_to_open(admin):
     p = create_auction(admin)
     item = add(admin, p, property_input())
-    images = workflow(admin, p)["stages"]["images"]["missing"]
-    main = next(i for i in images if i["field"] == "main_image")
+    # A property's photograph is part of entering that property.
+    stages = workflow(admin, p)["stages"]
+    main = next(i for i in stages["items"]["missing"] if i["field"] == "main_image")
     assert main["item_id"] == item
+    assert stages["images"] == {"valid": True, "missing": []}
 
 
 def test_closing_page_fields_are_entered_after_the_properties(admin):

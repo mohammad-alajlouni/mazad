@@ -190,7 +190,10 @@ def preview(db, project, body):
         if category in ("agent_logo", "auction_logo", "cover"):
             p["cover_image" if category == "cover" else category] = source
         else:
-            item = next((i for i in items if i["id"] == body.image.item_id), None)
+            # A photograph picked in a property's own form belongs to that
+            # property, saved or still being entered.
+            owner = body.image.item_id or focused
+            item = next((i for i in items if i["id"] == owner), None)
             if not item:
                 raise HTTPException(404, "Item not found")
             photo = {"src": source, "orientation": orientation, "caption": ""}
@@ -265,7 +268,7 @@ def page_step(page):
     ):
         return "items"
     if kind == "images":
-        return "images"
+        return "items"  # photographs are entered with their property
     if kind in ("terms", "participation", "contact"):
         return "closing"
     return "auction"

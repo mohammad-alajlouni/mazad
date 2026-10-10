@@ -26,7 +26,7 @@ import {
 import { api, send, Detail, Item, Output, Run } from "./api";
 import { Config } from "./Settings";
 import { Badge, OutputList, title } from "./shared";
-import { ProjectForm, ExcelUpload, ImageUpload } from "./ProjectForms";
+import { ProjectForm, ExcelUpload } from "./ProjectForms";
 export default function ProjectWorkspace({
   detail,
   config,
@@ -78,15 +78,15 @@ export default function ProjectWorkspace({
     setDirty(false);
     setBlocked(null);
   }, [detail]);
-  // Steps follow the booklet: its first pages, the properties and their
-  // photographs, then the closing pages (terms, participation, contact).
-  // A shared project ends its data steps with generating everything at once.
+  // Steps follow the booklet: its first pages, the properties (each entered
+  // with its photographs), then the closing pages (terms, participation,
+  // contact). A shared project ends its data steps with generating everything.
   const steps =
     sharedMode === "data"
-      ? ["auction", "items", "images", "closing", "finish"]
+      ? ["auction", "items", "closing", "finish"]
       : sharedMode === "booklet"
         ? ["generate", "outputs"]
-        : ["auction", "items", "images", "closing", "generate", "outputs"];
+        : ["auction", "items", "closing", "generate", "outputs"];
   const stepNames: Record<string, string> = {
     auction: "auction",
     items: "properties",
@@ -157,7 +157,9 @@ export default function ProjectWorkspace({
       window.dispatchEvent(new Event("open-account-profile"));
       return;
     }
-    const target = issue.stage === "images" ? "images" : issue.stage;
+    // A property's photograph is entered in that property's own form.
+    if (issue.stage === "images") issue = { ...issue, stage: "items" };
+    const target = issue.stage;
     if (tab !== target) {
       if (dirty && !(await confirm(tr("flow.notSaved")))) return;
       setDirty(false);
@@ -176,16 +178,10 @@ export default function ProjectWorkspace({
       const item = detail.items.find((i) => i.id === issue.item_id);
       if (item) setItemEditor(item);
       setFocusTarget(
-        `[name="property.${issue.field}"], [name="boundary.${issue.field}"], [name="${issue.field}"]`,
+        issue.field === "main_image"
+          ? '.property-form [data-slot="main"]'
+          : `[name="property.${issue.field}"], [name="boundary.${issue.field}"], [name="${issue.field}"]`,
       );
-    } else if (issue.stage === "images") {
-      const slot =
-        issue.field === "campaign_image"
-          ? "cover"
-          : issue.field === "main_image"
-            ? `main:${issue.item_id}`
-            : issue.field;
-      setFocusTarget(`[data-slot="${slot}"]`);
     }
   };
   // Refuse input longer than the booklet, banner and posts can set, so no
@@ -352,7 +348,7 @@ export default function ProjectWorkspace({
               <div className="steps">
                 {[
                   ["01", tr("ui.add_your_data"), "items"],
-                  ["02", tr("ui.upload_real_images"), "images"],
+                  ["02", tr("ui.upload_real_images"), "items"],
                   ["03", tr("ui.generate_your_outputs"), "generate"],
                   ["04", tr("ui.review_and_approve"), "outputs"],
                 ].map(([n, label, t]) => (
@@ -402,13 +398,6 @@ export default function ProjectWorkspace({
           />
         )}
         {tab === "finish" && finish}
-        {tab === "images" && (
-          <ImageUpload
-            detail={detail}
-            run={run}
-            onDone={() => void reloadProject()}
-          />
-        )}
         {tab === "details" && (
           <ProjectForm
             key={detail.project.id}

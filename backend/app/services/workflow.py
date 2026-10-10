@@ -178,6 +178,9 @@ def workflow(db, project):
     def issue(section, field, item=None, limit=None):
         if paged and section == "auction" and field in CLOSING:
             section = "closing"
+        if paged and section == "images":
+            # Photographs are entered with their property, in the same form.
+            section = "items"
         value = {
             "field": field,
             "item": item,

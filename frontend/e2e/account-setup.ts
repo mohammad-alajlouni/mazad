@@ -1,9 +1,10 @@
 import { Page, expect } from "@playwright/test";
 import path from "node:path";
 export async function completeAccount(page: Page) {
-  await expect(
-    page.locator(".sidebar, .account-profile").first(),
-  ).toBeAttached();
+  // Signing in and loading the workspace can take a while on a busy machine.
+  await expect(page.locator(".sidebar, .account-profile").first()).toBeAttached(
+    { timeout: 20000 },
+  );
   const profile = page.locator(".profile-onboarding .account-profile");
   if (!(await profile.count())) return;
   await profile.locator('[name="name"]').fill("وكيل تجريبي");

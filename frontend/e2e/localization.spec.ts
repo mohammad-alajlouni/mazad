@@ -1,5 +1,5 @@
 import { completeAccount } from "./account-setup";
-import { completeBookletBasics, newProject } from "./required-setup";
+import { addPhoto, completeBookletBasics, newProject } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -180,19 +180,12 @@ for (const locale of ["en", "ar"] as const)
           .locator(".property-cards strong")
           .getByText("أرض · حي تجريبي 1", { exact: true }),
       ).toBeVisible();
-      await page
-        .getByRole("button", { name: new RegExp(t("flow.images")) })
-        .click();
-      // Each property has a main-image box; upload into the first one.
-      const mainBox = page.locator('[data-slot^="main:"]').first();
-      await mainBox
-        .locator('input[type="file"]')
-        .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-      await mainBox
-        .getByRole("button", { name: t("imagesStep.upload"), exact: true })
-        .click();
-      // The box shows the photograph once the upload has been stored.
-      await expect(mainBox.locator("img")).toBeVisible();
+      // A property's photograph is added in its own form.
+      await addPhoto(
+        page,
+        "أرض · حي تجريبي 1",
+        path.join(root, "samples/demo-generator.jpg"),
+      );
       await page
         .getByRole("button", { name: new RegExp(t("flow.review")) })
         .click();

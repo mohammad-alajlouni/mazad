@@ -72,6 +72,18 @@ export async function completeBookletBasics(page: Page) {
   await finishPages(page);
 }
 
+// A property's photographs are entered in its own form: open the property,
+// pick the photograph and save. The list then shows it on the property's card.
+export async function addPhoto(page: Page, title: string, file: string) {
+  const card = page.locator(".property-cards li").filter({ hasText: title });
+  await card.locator(".property-card").click();
+  await page
+    .locator('.property-form [data-slot="main"] input[type="file"]')
+    .setInputFiles(file);
+  await page.locator(".property-form .item-actions button.primary").click();
+  await expect(card.locator("img.property-thumb")).toBeVisible();
+}
+
 // A project created through the API and opened from "My projects". (In the
 // app "Create project" opens the wizard directly; tests that need a given
 // name or a booklet-only project start here.)
@@ -80,6 +92,7 @@ export async function newProject(
   name: string,
   type: "project" | "booklet" = "project",
   extra: Record<string, string> = {},
+  auction: Record<string, string> = {},
 ) {
   const response = await page.request.post("/api/projects", {
     data: {
@@ -92,6 +105,7 @@ export async function newProject(
         auction_type: "physical",
         selected_cover_template_id: "infath-2",
         document_language: "ar",
+        ...auction,
       },
     },
   });

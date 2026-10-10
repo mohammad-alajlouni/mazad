@@ -60,6 +60,9 @@ test("properties are entered one after another without leaving the form", async 
     area: "600",
   }))
     await form.locator(`[name="property.${field}"]`).fill(value);
+  // A property is saved with its main photograph, picked in the same form.
+  const photo = form.locator('[data-slot="main"] input[type="file"]');
+  await photo.setInputFiles(path.join(root, "samples/demo-generator.jpg"));
   await form
     .getByRole("button", { name: "Save and add a similar property" })
     .click();
@@ -80,10 +83,13 @@ test("properties are entered one after another without leaving the form", async 
   await form.locator('[name="property.deed_number"]').fill("222");
   await form.locator('[name="property.plot_number"]').fill("2");
   await form.locator('[name="property.area"]').fill("650");
+  // The similar property starts without a photograph of its own.
+  await photo.setInputFiles(path.join(root, "samples/demo-generator.jpg"));
   await form
     .getByRole("button", { name: "Save and add a new property" })
     .click();
   await expect(cards).toHaveCount(2);
+  await expect(cards.locator("img.property-thumb")).toHaveCount(2);
   await expect(form.getByRole("heading")).toContainText("Property 03");
   await expect(form.locator('[name="property.district"]')).toHaveValue("");
   // The save buttons stay in reach at the bottom of the screen.

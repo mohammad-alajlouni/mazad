@@ -246,7 +246,45 @@ def test_additional_photo_preview_focuses_the_page_containing_it(admin):
         },
     )
     assert response.status_code == 200, response.text
-    assert response.json()["pages"][response.json()["page"]]["kind"] == "images"
+    shown = response.json()["pages"][response.json()["page"]]
+    # Photographs are entered with their property: the page belongs to that step.
+    assert shown["kind"] == "images" and shown["step"] == "items"
+
+
+def test_photo_picked_in_a_new_property_form_shows_on_its_page(admin):
+    """A property still being entered has no id yet: the photograph picked in
+    its form is previewed on that draft property's page."""
+    p = create_auction(admin, workspace="booklet")
+    add(admin, p, property_input())
+    picture = "data:image/png;base64," + base64.b64encode(image_data()).decode()
+    draft = {"title": "عقار جديد", "property_data": {"property_type": "DRAFT_TYPE"}}
+    plain = admin.post(
+        f"/api/projects/{p}/booklet-preview", json={"stage": "items", "item": draft}
+    )
+    response = admin.post(
+        f"/api/projects/{p}/booklet-preview",
+        json={
+            "stage": "items",
+            "item": draft,
+            "image": {"src": picture, "category": "main"},
+        },
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["pages"][body["page"]]["kind"] == "property"
+    assert "DRAFT_TYPE" in body["html"]
+    # The picture is on the draft's page (it is not there without the image).
+    assert body["html"].count("data:image/") > plain.json()["html"].count("data:image/")
+    # Without a property to attach to, a property photograph is refused.
+    orphan = admin.post(
+        f"/api/projects/{p}/booklet-preview",
+        json={"stage": "items", "image": {"src": picture, "category": "main"}},
+    )
+    assert orphan.status_code == 404
+    assert admin.get(f"/api/projects/{p}").json()["images"] == [] or all(
+        i["category"] == "agent_logo"
+        for i in admin.get(f"/api/projects/{p}").json()["images"]
+    )
 
 
 def test_cover_photograph_is_previewed_and_replaced_only_on_photographic_covers(admin):

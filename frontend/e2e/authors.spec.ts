@@ -1,4 +1,4 @@
-import { fillPages, finishPages, newProject } from "./required-setup";
+import { addPhoto, fillPages, finishPages, newProject } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -72,7 +72,7 @@ test("Arabic default, administrator provisioning, private author booklet and app
     page
       .locator(".workflow-steps")
       .getByRole("button", { name: new RegExp(t(`flow.${key}`)) });
-  await expect(page.locator(".workflow-steps button")).toHaveCount(6);
+  await expect(page.locator(".workflow-steps button")).toHaveCount(5);
   await step("review").click();
   await expect(
     page.locator('.auction-workspace [name="auction_date"]'),
@@ -106,17 +106,11 @@ test("Arabic default, administrator provisioning, private author booklet and app
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBeTruthy();
-  await step("images").click();
-  // The main image goes into that property's own box.
-  const mainBox = page
-    .locator(".image-slot")
-    .filter({ hasText: "الصورة الرئيسية: أرض سكنية — اختبار" });
-  await mainBox
-    .locator('input[type="file"]')
-    .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
-  await mainBox.getByRole("button", { name: "رفع", exact: true }).click();
-  await expect(page.getByAltText(t("ui.uploaded_project_asset"))).toHaveCount(
-    2,
+  // The photograph is added in the property's own form.
+  await addPhoto(
+    page,
+    "أرض سكنية — اختبار",
+    path.join(root, "samples/demo-generator.jpg"),
   );
   await step("review").click();
   await expect(page.getByText(t("auction.ready"))).toBeVisible();

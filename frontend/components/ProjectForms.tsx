@@ -3,7 +3,8 @@ import { PropertyFields, readProperty } from "./AuctionWorkspace";
 import FileInput from "./FileInput";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Star, Trash2, Undo2 } from "lucide-react";
 import { api, send, Project, Item, Run, Detail } from "./api";
 
 export function ProjectForm({
@@ -134,9 +135,14 @@ export function ItemForm({
   hasNext = false,
   requiredFields,
   auctionType,
+  images = [],
+  photoRequired = false,
 }: {
   requiredFields?: string[];
   auctionType?: string;
+  // The property's stored photographs; whether its main one is required.
+  images?: Detail["images"];
+  photoRequired?: boolean;
   projectId: string;
   run: Run;
   onDone: () => void;
@@ -150,7 +156,45 @@ export function ItemForm({
   const tr = useTranslations();
   const pt = useTranslations("properties");
 
+  const im = useTranslations("imagesStep");
   const [jsonError, setJsonError] = useState("");
+  // Photographs are entered with the property and stored when it is saved:
+  // a new main one, more additional ones, and stored ones to drop or promote.
+  const [mainFile, setMainFile] = useState<File | null>(null);
+  const [moreFiles, setMoreFiles] = useState<File[]>([]);
+  const [dropped, setDropped] = useState<string[]>([]);
+  const [promoted, setPromoted] = useState<string | null>(null);
+  const main = images.find((i) => i.category === "main");
+  const more = images.filter((i) => i.category !== "main");
+  const picked = useMemo(
+    () => (mainFile ? URL.createObjectURL(mainFile) : ""),
+    [mainFile],
+  );
+  useEffect(() => () => URL.revokeObjectURL(picked), [picked]);
+  // Once a new property is stored, saving again updates it (a failed upload
+  // must not add the property twice).
+  const stored = useRef(existing?.id);
+  const storePhotos = async (item: string) => {
+    const upload = async (file: File, category: string) => {
+      const body = new FormData();
+      body.set("category", category);
+      body.set("item_id", item);
+      body.set("file", file);
+      await api(`/projects/${projectId}/images`, { method: "POST", body });
+    };
+    if (mainFile) {
+      await upload(mainFile, "main");
+      // The photograph it replaces is not kept as an additional one.
+      if (main) await api(`/images/${main.id}`, { method: "DELETE" });
+    } else if (promoted && !dropped.includes(promoted)) {
+      await api(`/images/${promoted}`, {
+        method: "PUT",
+        body: send({ category: "main", item_id: item }),
+      });
+    }
+    for (const file of moreFiles) await upload(file, "additional");
+    for (const id of dropped) await api(`/images/${id}`, { method: "DELETE" });
+  };
   return (
     <form
       data-stage-form
@@ -188,9 +232,9 @@ export function ItemForm({
         void run(
           async () => {
             const saved = await api<Item>(
-              `/projects/${projectId}/items${existing ? "/" + existing.id : ""}`,
+              `/projects/${projectId}/items${stored.current ? "/" + stored.current : ""}`,
               {
-                method: existing ? "PUT" : "POST",
+                method: stored.current ? "PUT" : "POST",
                 body: send({
                   ...data,
                   title,
@@ -200,6 +244,8 @@ export function ItemForm({
                 }),
               },
             );
+            stored.current = saved.id;
+            await storePhotos(saved.id);
             // The next form opens only once the list is reloaded, so a quick
             // click on another property cannot be undone by a late reload.
             if (onSaved) await onSaved(action, saved);
@@ -242,6 +288,136 @@ export function ItemForm({
           />
         </label>
       </PropertyFields>
+      <fieldset className="property-photos">
+        <legend>{pt("photos")}</legend>
+        <p className="muted">{pt("photosHelp")}</p>
+        <div className="image-slots">
+          <div
+            data-slot="main"
+            tabIndex={-1}
+            className={`image-slot ${main || mainFile || !photoRequired ? "done" : "missing"}`}
+          >
+            <div className="image-slot-heading">
+              <strong>{pt("photoMain")}</strong>
+              <span>
+                {mainFile
+                  ? pt("photoPending")
+                  : main
+                    ? im("added")
+                    : photoRequired
+                      ? im("required")
+                      : im("optional")}
+              </span>
+            </div>
+            {(picked || main) && (
+              <img
+                src={picked || `/api/images/${main!.id}?size=preview`}
+                alt={pt("photoMain")}
+              />
+            )}
+            <FileInput
+              aria-label={pt("photoMain")}
+              data-category="main"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              // Like the property's required details: it is saved with its
+              // photograph where the publications need one.
+              required={photoRequired && !main}
+              onInvalid={(e) =>
+                (e.target as HTMLInputElement).setCustomValidity(
+                  pt("photoNeeded"),
+                )
+              }
+              onChange={(e) => {
+                e.target.setCustomValidity("");
+                setMainFile(e.target.files?.[0] || null);
+              }}
+            />
+          </div>
+          <div data-slot="additional" tabIndex={-1} className="image-slot done">
+            <div className="image-slot-heading">
+              <strong>{pt("photoMore")}</strong>
+              <span>
+                {moreFiles.length
+                  ? pt("photoPending")
+                  : more.length
+                    ? im("added")
+                    : im("optional")}
+              </span>
+            </div>
+            {more.length > 0 && (
+              <ul className="photo-thumbs">
+                {more.map((i) => (
+                  <li
+                    key={i.id}
+                    className={
+                      dropped.includes(i.id)
+                        ? "dropped"
+                        : promoted === i.id
+                          ? "promoted"
+                          : ""
+                    }
+                  >
+                    <img
+                      src={`/api/images/${i.id}?size=preview`}
+                      alt={pt("photoMore")}
+                    />
+                    <span>
+                      <button
+                        type="button"
+                        className="icon-button"
+                        title={pt("photoMakeMain")}
+                        aria-label={pt("photoMakeMain")}
+                        aria-pressed={promoted === i.id}
+                        disabled={dropped.includes(i.id)}
+                        onClick={() =>
+                          setPromoted(promoted === i.id ? null : i.id)
+                        }
+                      >
+                        <Star size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-button danger"
+                        title={pt(
+                          dropped.includes(i.id) ? "photoKeep" : "photoRemove",
+                        )}
+                        aria-label={pt(
+                          dropped.includes(i.id) ? "photoKeep" : "photoRemove",
+                        )}
+                        onClick={() =>
+                          setDropped(
+                            dropped.includes(i.id)
+                              ? dropped.filter((id) => id !== i.id)
+                              : [...dropped, i.id],
+                          )
+                        }
+                      >
+                        {dropped.includes(i.id) ? (
+                          <Undo2 size={15} />
+                        ) : (
+                          <Trash2 size={15} />
+                        )}
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {(dropped.length > 0 || promoted) && (
+              <p className="muted">{pt("photoChanges")}</p>
+            )}
+            <FileInput
+              aria-label={pt("photoMore")}
+              data-category="additional"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(e) => setMoreFiles(Array.from(e.target.files || []))}
+            />
+          </div>
+        </div>
+      </fieldset>
       <details>
         <summary>{pt("advanced")}</summary>
         {[

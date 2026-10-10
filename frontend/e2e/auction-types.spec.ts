@@ -92,7 +92,7 @@ for (const kind of ["physical", "electronic", "hybrid"] as const) {
     ).toBeFalsy();
     await page
       .locator(".workflow-steps")
-      .getByRole("button", { name: /Images/ })
+      .getByRole("button", { name: /Closing pages/ })
       .click();
     await expect(page.locator('[name="property.property_type"]')).toBeVisible();
     if (kind === "hybrid") {

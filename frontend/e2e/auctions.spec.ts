@@ -20,17 +20,6 @@ const env = Object.fromEntries(
     }),
 );
 
-// Uploads go into the box for their role (auction logo, cover, main image...).
-async function uploadTo(
-  page: import("@playwright/test").Page,
-  box: string,
-  file: string | string[],
-) {
-  const slot = page.locator(".image-slot").filter({ hasText: box });
-  await slot.locator('input[type="file"]').setInputFiles(file);
-  await slot.getByRole("button", { name: /^(Upload|Replace)$/ }).click();
-}
-
 for (const flow of ["manual", "excel"])
   test(`official auction ${flow} browser flow`, async ({ page }) => {
     const errors: string[] = [];
@@ -117,6 +106,14 @@ for (const flow of ["manual", "excel"])
         await page.getByRole("button", { name: "Add rental contract" }).click();
         await page.getByLabel("Unit number").fill("1");
         await page.getByLabel("Annual rent").fill("12000");
+        // The first property's photographs go in with it, in the same form.
+        if (n === 1)
+          for (const role of ["main", "additional"])
+            await page
+              .locator(
+                `.property-form [data-slot="${role}"] input[type="file"]`,
+              )
+              .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
         const savedRequest = page.waitForResponse(
           (response) =>
             response.url().endsWith("/items") &&
@@ -138,19 +135,15 @@ for (const flow of ["manual", "excel"])
           page.getByText(`عقار المتصفح ${n}`, { exact: true }),
         ).toBeVisible();
       }
-      await page
-        .getByRole("button", { name: /Images and attachments/ })
-        .click();
-      await uploadTo(
-        page,
-        "Main image: عقار المتصفح 1",
-        path.join(root, "samples/demo-generator.jpg"),
+      // Both photographs were stored with the first property.
+      const first = page
+        .locator(".property-cards li")
+        .filter({ hasText: "عقار المتصفح 1" });
+      await expect(first.locator("img.property-thumb")).toBeVisible();
+      await first.locator(".property-card").click();
+      await expect(page.locator(".property-form .photo-thumbs li")).toHaveCount(
+        1,
       );
-      await expect(page.getByAltText("Uploaded project asset")).toBeVisible();
-      await uploadTo(page, "Additional images: عقار المتصفح 1", [
-        path.join(root, "samples/demo-generator.jpg"),
-      ]);
-      await expect(page.getByAltText("Uploaded project asset")).toHaveCount(3);
     } else {
       await page
         .getByRole("button", {

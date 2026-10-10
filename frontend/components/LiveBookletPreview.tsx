@@ -11,7 +11,7 @@ type Preview = {
 };
 // Booklet pages follow the data-entry steps; later steps stay locked until the
 // earlier ones are complete, so the preview never runs ahead of the form.
-const STEPS = ["auction", "items", "images", "closing", "generate"];
+const STEPS = ["auction", "items", "closing", "generate"];
 const PAGE_WIDTH = 794; // 595.276 pt in CSS pixels
 const PAGE_HEIGHT = 1123;
 function stepOf(stage: string) {
@@ -278,24 +278,38 @@ export default function LiveBookletPreview({
       }));
       setFocus("items");
     }
-    const file =
+    const picker =
       target.type === "file"
-        ? target.files?.[0]
-        : form.querySelector<HTMLInputElement>('input[type="file"]')
-            ?.files?.[0];
+        ? target
+        : form.querySelector<HTMLInputElement>('input[type="file"]');
+    const file = picker?.files?.[0];
     if (target.type === "file" && !file) {
       imageVersion.current++;
       setDraft((d) => ({ ...d, image: undefined }));
     }
-    if (file && (kind === "images" || kind === "agent")) {
+    if (file && (kind === "images" || kind === "agent" || kind === "item")) {
       const serial = ++imageVersion.current;
       try {
         const src = await smallImage(file);
         if (serial !== imageVersion.current) return;
+        // A property's form names the role on each of its photograph inputs;
+        // the photograph belongs to that property, saved or being entered.
         const category =
-          kind === "agent" ? "agent_logo" : String(data.get("category"));
-        const item = String(data.get("item_id") || "");
-        if (["main", "additional"].includes(category) && !item) return;
+          kind === "agent"
+            ? "agent_logo"
+            : kind === "item"
+              ? picker?.dataset.category || "main"
+              : String(data.get("category"));
+        const item =
+          kind === "item"
+            ? form.dataset.itemId || ""
+            : String(data.get("item_id") || "");
+        if (
+          kind !== "item" &&
+          ["main", "additional"].includes(category) &&
+          !item
+        )
+          return;
         setDraft((d) => ({
           ...d,
           image: { src, category, item_id: item || undefined },
@@ -305,7 +319,9 @@ export default function LiveBookletPreview({
             ? "agent"
             : category === "auction_logo"
               ? "auction"
-              : "images",
+              : kind === "item"
+                ? "items"
+                : "images",
         );
       } catch {
         setError(true);

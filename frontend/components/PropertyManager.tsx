@@ -1,7 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowUp, Copy, FileSpreadsheet, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowUp,
+  Copy,
+  FileSpreadsheet,
+  ImageOff,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { api, send, Detail, Item, Run } from "./api";
 import { useConfirm } from "./Confirmation";
 import { ItemForm, SaveAction } from "./ProjectForms";
@@ -133,6 +140,9 @@ export default function PropertyManager({
             {items.map((item, at) => {
               const gaps = missing(item);
               const prop = item.property_data || {};
+              const photo = detail.images.find(
+                (i) => i.item_id === item.id && i.category === "main",
+              );
               return (
                 <li
                   key={item.id}
@@ -150,6 +160,21 @@ export default function PropertyManager({
                     <span className="property-number">
                       {String(at + 1).padStart(2, "0")}
                     </span>
+                    {/* Its main photograph, or a sign that it has none yet. */}
+                    {photo ? (
+                      <img
+                        className="property-thumb"
+                        src={`/api/images/${photo.id}?size=preview`}
+                        alt=""
+                      />
+                    ) : (
+                      <span
+                        className="property-thumb empty"
+                        title={t("noPhoto")}
+                      >
+                        <ImageOff size={16} />
+                      </span>
+                    )}
                     <span className="property-text">
                       <strong>{item.title}</strong>
                       <small>
@@ -249,6 +274,12 @@ export default function PropertyManager({
               detail.project.auction?.auction_type || "physical",
             )}
             existing={current === "new" ? undefined : current}
+            images={
+              current === "new"
+                ? []
+                : detail.images.filter((i) => i.item_id === current.id)
+            }
+            photoRequired={detail.project.workspace_type === "project"}
             template={current === "new" ? template : undefined}
             number={current === "new" ? items.length + 1 : index + 1}
             hasNext={index >= 0 && index < items.length - 1}
