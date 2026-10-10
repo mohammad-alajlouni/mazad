@@ -7,6 +7,7 @@ import {
   Check,
   Clock3,
   Globe,
+  ImagePlus,
   Layers,
 } from "lucide-react";
 import { api, send, Detail, Run } from "./api";
@@ -84,6 +85,9 @@ function partsFor(section: "auction" | "closing", kind: string): Part[] {
     },
   ];
 }
+
+// The covers that carry a photograph: the author may give their own.
+const PHOTO_COVERS = ["infath-1", "infath-6"];
 
 function showPage(page: string) {
   window.dispatchEvent(
@@ -209,6 +213,38 @@ export function BookletPages({
     }, t("saved"));
   };
   const last = index >= parts.length - 1;
+  // The author's own photograph for a photographic cover, stored at once.
+  const photo = detail.images.find((i) => i.category === "cover" && !i.item_id);
+  const photoInput = useRef<HTMLInputElement>(null);
+  // The preview starts again from the saved project when it reloads: hand it
+  // this page's unsaved choices again (the cover may not be saved yet).
+  const photoSeen = useRef(photo?.id);
+  useEffect(() => {
+    if (photoSeen.current === photo?.id) return;
+    photoSeen.current = photo?.id;
+    const timer = setTimeout(() =>
+      form.current?.dispatchEvent(new Event("preview-form", { bubbles: true })),
+    );
+    return () => clearTimeout(timer);
+  }, [photo?.id]);
+  const uploadPhoto = (file?: File) => {
+    if (!file) return;
+    void run(async () => {
+      const body = new FormData();
+      body.set("category", "cover");
+      body.set("file", file);
+      await api(`/projects/${detail.project.id}/images`, {
+        method: "POST",
+        body,
+      });
+      await reload();
+    }, p("coverPhotoSaved"));
+  };
+  const removePhoto = () =>
+    void run(async () => {
+      await api(`/images/${photo!.id}`, { method: "DELETE" });
+      await reload();
+    }, p("coverPhotoRemoved"));
   const agent = detail.selling_agent || {};
   const logo = detail.images.find(
     (i) => i.id === agent.logo_image_id || i.category === "agent_logo",
@@ -313,6 +349,53 @@ export function BookletPages({
                   </label>
                 ))}
               </div>
+              {PHOTO_COVERS.includes(cover) && (
+                <div className="cover-photo-box">
+                  {photo && (
+                    <img
+                      src={`/api/images/${photo.id}?size=preview`}
+                      alt={p("coverPhoto")}
+                    />
+                  )}
+                  <div>
+                    <strong>{p("coverPhoto")}</strong>
+                    <p className="muted">
+                      {p(photo ? "coverPhotoOwn" : "coverPhotoHelp")}
+                    </p>
+                    <div className="cover-photo-actions">
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => photoInput.current?.click()}
+                      >
+                        <ImagePlus size={16} />
+                        {p(photo ? "coverPhotoReplace" : "coverPhotoChoose")}
+                      </button>
+                      {photo && (
+                        <button
+                          type="button"
+                          className="text-button danger"
+                          onClick={removePhoto}
+                        >
+                          {p("coverPhotoRemove")}
+                        </button>
+                      )}
+                    </div>
+                    {/* Not a form field: the photograph is stored on its own. */}
+                    <input
+                      ref={photoInput}
+                      type="file"
+                      hidden
+                      aria-label={p("coverPhoto")}
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(event) => {
+                        uploadPhoto(event.target.files?.[0]);
+                        event.target.value = "";
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </>
           )}
           {item.fields &&

@@ -1761,6 +1761,12 @@ html[dir="rtl"] .nav-previous .lucide-arrow-left { transform: scaleX(-1); }
 .cover-option.selected { border-color: var(--g); background: #f4fbf7; box-shadow: 0 0 0 3px #1f8a5b14; }
 .cover-option input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; }
 .cover-option img { border-radius: 8px; }
+.cover-photo-box { display: flex; gap: 16px; align-items: center; border: 1.5px dashed #c9d6d1; border-radius: 14px; padding: 14px 16px; margin-bottom: 20px; background: #fafcfb; }
+.cover-photo-box img { width: 108px; height: 72px; object-fit: cover; border-radius: 8px; flex: none; }
+.cover-photo-box strong { display: block; }
+.cover-photo-box p { margin: 4px 0 10px; font-size: 13px; }
+.cover-photo-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.cover-photo-actions button { display: inline-flex; align-items: center; gap: 8px; }
 .page-part h4 { font-size: 13px; font-weight: 600; color: #1d2939; margin: 0 0 8px; }
 
 /* Requirements and notices */

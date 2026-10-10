@@ -247,3 +247,56 @@ def test_additional_photo_preview_focuses_the_page_containing_it(admin):
     )
     assert response.status_code == 200, response.text
     assert response.json()["pages"][response.json()["page"]]["kind"] == "images"
+
+
+def test_cover_photograph_is_previewed_and_replaced_only_on_photographic_covers(admin):
+    """Covers 1 and 6 show the uploaded cover photograph under the cover's
+    frame; the other covers ignore it. A new upload replaces the old one."""
+    from test_auctions import generate, pdf
+
+    def cover_html(project):
+        r = admin.post(
+            f"/api/projects/{project}/booklet-preview", json={"stage": "cover"}
+        )
+        assert r.status_code == 200, r.text
+        return r.json()["html"].split("</section>")[0]
+
+    p = create_auction(admin, cover="infath-6", workspace="booklet")
+    assert "cover-6-frame.png" not in cover_html(p)
+    ids = []
+    for _ in range(2):
+        r = admin.post(
+            f"/api/projects/{p}/images",
+            files={"file": ("cover.png", image_data())},
+            data={"category": "cover"},
+        )
+        assert r.status_code == 200, r.text
+        ids.append(r.json()["id"])
+    images = admin.get(f"/api/projects/{p}").json()["images"]
+    assert [i["id"] for i in images if i["category"] != "agent_logo"] == [ids[1]]
+    html = cover_html(p)
+    assert "booklet-art/vector/cover-6-frame.png" in html
+    assert f"/api/images/{ids[1]}?size=preview" in html
+    assert "reference-cover-6.png" not in html
+    # The frame is served for the preview, with its transparency.
+    frame = admin.get("/api/booklet-assets/booklet-art/vector/cover-6-frame.png")
+    assert frame.status_code == 200 and frame.headers["content-type"] == "image/png"
+    # The exported cover carries the uploaded photograph (plain green here).
+    add(admin, p, property_input())
+    cover = pymupdf.open("pdf", pdf(admin, generate(admin, p)))[0]
+    pix = cover.get_pixmap()
+    red, green, blue = pix.pixel(300, 300)[:3]
+    assert abs(red - 91) < 12 and abs(green - 123) < 12 and abs(blue - 98) < 12
+    # Removing it brings the cover's own photograph back.
+    assert admin.delete(f"/api/images/{ids[1]}").status_code == 200
+    assert "reference-cover-6.png" in cover_html(p)
+    # A cover without a photograph ignores an uploaded one.
+    other = create_auction(admin, kind="physical", workspace="booklet")
+    r = admin.post(
+        f"/api/projects/{other}/images",
+        files={"file": ("cover.png", image_data())},
+        data={"category": "cover"},
+    )
+    assert r.status_code == 200
+    html = cover_html(other)
+    assert "frame.png" not in html and "reference-cover-2.png" in html

@@ -427,6 +427,7 @@ export function ImageUpload({
   const role = (i: { category?: string; item_id: string | null }) => {
     const item = detail.items.find((x) => x.id === i.item_id);
     if (i.category === "agent_logo") return im("agentLogo");
+    if (i.category === "cover") return im("cover");
     if (i.category === "main" && item)
       return im("mainOf", { item: item.title });
     return item ? im("additionalOf", { item: item.title }) : im("projectImage");
@@ -479,7 +480,9 @@ export function ImageUpload({
                       value={
                         i.category === "main" || i.category === "additional"
                           ? `${i.category}|${i.item_id || ""}`
-                          : "additional|"
+                          : i.category === "cover"
+                            ? "cover|"
+                            : "additional|"
                       }
                       onChange={(e) => {
                         const [category, item] = e.target.value.split("|");
@@ -492,6 +495,10 @@ export function ImageUpload({
                         }, im("updated"));
                       }}
                     >
+                      {/* The cover photograph is chosen with the cover itself. */}
+                      {i.category === "cover" && (
+                        <option value="cover|">{im("cover")}</option>
+                      )}
                       <option value="additional|">{im("projectImage")}</option>
                       {detail.items.map((item) => [
                         <option key={"m" + item.id} value={`main|${item.id}`}>

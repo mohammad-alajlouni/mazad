@@ -235,6 +235,89 @@ def vector_boxes(document):
     return pages
 
 
+# Covers 1 and 6 show a photograph. The author may give their own: it fills
+# this part of the page (points), under the cover's own shapes and gradients.
+COVER_PHOTO = {1: (0.0, 0.0, PAGE_W, PAGE_H), 6: (0.0, 0.0, PAGE_W, 590.0)}
+
+
+def cover_photo(src, window, width=1800):
+    """A photograph cut to a cover window, as JPEG bytes: it fills the window
+    (centred, the overflow trimmed) at up to about 220 dpi of the page width
+    (the covers' own photographs are 1152 pixels wide)."""
+    from PIL import Image, ImageOps
+
+    with Image.open(BytesIO(base64.b64decode(src.split(",", 1)[1]))) as image:
+        image = ImageOps.exif_transpose(image).convert("RGBA")
+    # A transparent picture stands on white, as it does on paper.
+    ground = Image.new("RGBA", image.size, "white")
+    image = Image.alpha_composite(ground, image).convert("RGB")
+    x0, y0, x1, y1 = window
+    ratio = (x1 - x0) / (y1 - y0)
+    w, h = image.size
+    if w / h > ratio:
+        cut = round(h * ratio)
+        image = image.crop(((w - cut) // 2, 0, (w - cut) // 2 + cut, h))
+    else:
+        cut = round(w / ratio)
+        image = image.crop((0, (h - cut) // 2, w, (h - cut) // 2 + cut))
+    if image.width > width:
+        image = image.resize((width, round(width / ratio)), Image.LANCZOS)
+    out = BytesIO()
+    image.save(out, format="JPEG", quality=88)
+    return out.getvalue()
+
+
+def cover_with_photo(number, src):
+    """Cover 1 or 6 with the author's photograph in place of its own.
+
+    Only the photograph changes: it is swapped inside the original vector
+    file, so every shape, gradient and logo stays where the design put it.
+    Returns the open document, or None when the picture cannot be used.
+    """
+    import pymupdf
+
+    window = COVER_PHOTO.get(number)
+    if not window or not str(src).startswith("data:image/"):
+        return None
+    try:
+        picture = cover_photo(src, window)
+    except (ValueError, OSError):
+        return None
+    document = pymupdf.open(
+        stream=(ASSETS / f"booklet-art/vector/cover-{number}.pdf").read_bytes(),
+        filetype="pdf",
+    )
+    page = document[0]
+    xref = page.get_contents()[0]
+    stream = document.xref_stream(xref).decode("latin1")
+    # The photograph is drawn larger than the page: place the new one exactly
+    # over its window instead.
+    placed = re.search(r"[-\d.]+ 0 0 [-\d.]+ [-\d.]+ [-\d.]+(?= cm /Im1 Do)", stream)
+    if not placed:
+        return None
+    x0, y0, x1, y1 = window
+    stream = (
+        stream[: placed.start()]
+        + f"{x1 - x0:.3f} 0 0 {y1 - y0:.3f} {x0:.3f} {PAGE_H - y1:.3f}"
+        + stream[placed.end() :]
+    )
+    document.update_stream(xref, stream.encode("latin1"))
+    # The picture object itself becomes the new JPEG (no second copy is kept).
+    from PIL import Image
+
+    with Image.open(BytesIO(picture)) as cut:
+        width, height = cut.size
+    image = page.get_images()[0][0]
+    document.update_object(
+        image,
+        f"<</Type/XObject/Subtype/Image/Width {width}/Height {height}"
+        "/ColorSpace/DeviceRGB/BitsPerComponent 8>>",
+    )
+    document.update_stream(image, picture, compress=False)
+    document.xref_set_key(image, "Filter", "/DCTDecode")  # stored as it is
+    return document
+
+
 def original_pdf_artwork(pdf, content, document=None):
     """Place the immutable original artwork on its pages, as vectors.
 
@@ -249,10 +332,15 @@ def original_pdf_artwork(pdf, content, document=None):
         return pdf
     stamps = vector_boxes(document) if document is not None else []
     sources = {}
+    photo = (content.get("project") or {}).get("cover_image")
 
     def source(name):
         if name not in sources:
-            sources[name] = pymupdf.open(ASSETS / name)
+            # A photographic cover carries the author's photograph, if any.
+            cover = re.fullmatch(r"booklet-art/vector/cover-(\d)\.pdf", name)
+            sources[name] = (
+                cover and photo and cover_with_photo(int(cover[1]), photo)
+            ) or pymupdf.open(ASSETS / name)
         return sources[name]
 
     with pymupdf.open(stream=pdf, filetype="pdf") as output:

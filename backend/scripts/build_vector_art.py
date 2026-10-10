@@ -253,12 +253,33 @@ for n in range(1, 7):
     ):  # photographic covers (re-encoding breaks pattern fills in the others)
         slim.rewrite_images(dpi_threshold=1000, dpi_target=999, quality=92)
     # The browser preview keeps the existing reference-cover-N.png.
-    save(
-        f"cover-{n}",
-        slim.tobytes(garbage=4, deflate=True),
-        compact=False,
-        preview=False,
-    )
+    data = slim.tobytes(garbage=4, deflate=True)
+    save(f"cover-{n}", data, compact=False, preview=False)
+    if n in (1, 6):
+        # These covers may carry the author's photograph (see art.COVER_PHOTO).
+        # The preview lays this frame over it: the cover without its own
+        # photograph and the page fill beneath it, transparent there.
+        frame = pymupdf.open(stream=data, filetype="pdf")
+        target = frame[0].get_contents()[0]
+        stream = frame.xref_stream(target).decode("latin1")
+        own = re.search(
+            r"q(?:/GS0 gs)? ?[-\d.]+ 0 0 [-\d.]+ [-\d.]+ [-\d.]+ cm /Im1 Do Q", stream
+        )
+        if not own:
+            raise SystemExit(f"cover-{n}: photograph not found")
+        beneath = re.sub(
+            r"[-\d.]+ [-\d.]+ [-\d.]+ [-\d.]+ re f ", "", stream[: own.start()]
+        )
+        frame.update_stream(target, (beneath + stream[own.end() :]).encode("latin1"))
+        scale = 1240 / W
+        png = (
+            frame[0]
+            .get_pixmap(matrix=pymupdf.Matrix(scale, scale), alpha=True)
+            .tobytes("png")
+        )
+        (OUT / f"cover-{n}-frame.png").write_bytes(png)
+        manifest["files"][f"cover-{n}-frame.png"] = hashlib.sha256(png).hexdigest()
+        print(f"cover-{n}-frame.png            {len(png) // 1024:5} KB")
 
 (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1))
 print(f"wrote {len(manifest['files'])} files to {OUT}")

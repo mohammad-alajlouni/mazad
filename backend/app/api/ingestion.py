@@ -62,7 +62,10 @@ async def upload_image(
                 ProjectImage.category == category,
             )
         ):
-            old.category = "additional"
+            if category == "cover":
+                db.delete(old)  # a replaced cover photograph has no other use
+            else:
+                old.category = "additional"
     image = ProjectImage(
         project_id=id,
         item_id=item_id,

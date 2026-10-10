@@ -666,6 +666,100 @@ def test_fixed_artwork_is_exported_as_vectors_not_pictures():
     assert len(cover.get_drawings()) > 5 and len(auction.get_drawings()) > 20
 
 
+def photograph(colour=(200, 40, 30), size=(1200, 800)):
+    """An uploaded picture, as the snapshot hands it to the templates."""
+    import base64
+    from io import BytesIO
+
+    from PIL import Image
+
+    data = BytesIO()
+    Image.new("RGB", size, colour).save(data, "JPEG")
+    return "data:image/jpeg;base64," + base64.b64encode(data.getvalue()).decode()
+
+
+def rendered(page):
+    import pymupdf
+    from PIL import Image
+
+    pix = page.get_pixmap(matrix=pymupdf.Matrix(1, 1))
+    return Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+
+
+@pytest.mark.parametrize("cover", [1, 6])
+def test_photographic_covers_take_the_authors_photograph(cover):
+    """Covers 1 and 6 show the author's photograph in place of their own;
+    everything else on the cover is the original artwork, where it was."""
+    from PIL import ImageChops
+
+    project = project_with(
+        "physical", selected_cover_template_id=f"infath-{cover}", auction_name="مزاد"
+    )
+    plain = exported(dict(project), [])[2][0]
+    own = exported({**project, "cover_image": photograph()}, [])[2][0]
+    # One picture on the cover in both: the photograph, now the author's (red).
+    assert len(own.get_images()) == len(plain.get_images()) == 1
+    assert own.get_images()[0][2:4] != plain.get_images()[0][2:4]
+    before, after = rendered(plain), rendered(own)
+    red, green, blue = after.getpixel((300, 300))
+    assert red > green + 60 and red > blue + 60, (red, green, blue)
+    assert before.getpixel((300, 300)) != (red, green, blue)
+    # The cover's own shapes are untouched: same paths, and the area outside
+    # the photograph (the navy ground of cover 6) is the same picture.
+    assert len(own.get_drawings()) == len(plain.get_drawings())
+    if cover == 6:
+        ground = (0, 600, 595, 842)
+        assert not ImageChops.difference(
+            before.crop(ground), after.crop(ground)
+        ).getbbox()
+
+    # The Infath logo is still drawn over the photograph (white, top right).
+    def white(image):
+        return sum(min(p) > 245 for p in image.crop((495, 20, 580, 85)).getdata())
+
+    assert white(before) > 100 and abs(white(after) - white(before)) < 30
+
+
+def test_other_covers_and_unreadable_pictures_keep_the_cover_as_designed():
+    from PIL import ImageChops
+
+    # A cover without a photograph ignores an uploaded one.
+    plain = project_with("physical", auction_name="مزاد")
+    pdf = exported({**plain, "cover_image": photograph()}, [])[2]
+    assert pdf[0].get_images() == []
+    # A picture that cannot be read leaves the photographic cover as it is.
+    photo = project_with(
+        "physical", selected_cover_template_id="infath-6", auction_name="مزاد"
+    )
+    before = rendered(exported(dict(photo), [])[2][0])
+    broken = {**photo, "cover_image": "data:image/jpeg;base64,AAAA"}
+    after = rendered(exported(broken, [])[2][0])
+    assert not ImageChops.difference(before, after).getbbox()
+
+
+def test_cover_photograph_fills_its_window_without_distortion():
+    """A picture of any shape is centred and trimmed to the window, never
+    stretched; small pictures are not enlarged."""
+    import base64
+    from io import BytesIO
+
+    from app.generation.booklet.art import COVER_PHOTO, cover_photo
+    from PIL import Image
+
+    for size in [(4000, 1000), (600, 2400), (5000, 5000)]:
+        for window in COVER_PHOTO.values():
+            cut = Image.open(BytesIO(cover_photo(photograph(size=size), window)))
+            ratio = (window[2] - window[0]) / (window[3] - window[1])
+            assert abs(cut.width / cut.height - ratio) < 0.01
+            assert cut.width <= min(1800, size[0])
+    # Transparent pictures stand on white.
+    data = BytesIO()
+    Image.new("RGBA", (800, 1200), (0, 0, 0, 0)).save(data, "PNG")
+    src = "data:image/png;base64," + base64.b64encode(data.getvalue()).decode()
+    cut = Image.open(BytesIO(cover_photo(src, COVER_PHOTO[1])))
+    assert min(cut.getpixel((10, 10))) > 240
+
+
 @pytest.mark.parametrize(
     "kind, order, has_qr",
     [

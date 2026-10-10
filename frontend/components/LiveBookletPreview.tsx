@@ -312,6 +312,16 @@ export default function LiveBookletPreview({
       }
     }
   }
+  // A form asks to be read again after the project reloaded under its unsaved
+  // values (for example once a cover photograph is stored).
+  useEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    const again = (event: Event) =>
+      void changed(event.target as HTMLInputElement);
+    element.addEventListener("preview-form", again);
+    return () => element.removeEventListener("preview-form", again);
+  }, []);
   return (
     <div
       className="live-booklet-layout"

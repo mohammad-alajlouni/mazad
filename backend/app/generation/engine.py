@@ -449,6 +449,7 @@ def render_html(
         summary_column,
         logo_fit,
         white_logo,
+        COVER_PHOTO,
     )
 
     return env.get_template(template_file).render(
@@ -470,6 +471,7 @@ def render_html(
         rentals_column=rentals_column,
         white_logo=white_logo,
         logo_fit=logo_fit,
+        cover_photo_window=COVER_PHOTO.get,
         shapes=shapes,
         fmt=formatting,
         fit=fit,

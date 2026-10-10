@@ -10,7 +10,13 @@
 {% set lines = 1 + (1 if name|length > 16 else 0) %}
 <section class="full cover-{{ n }}">
 {#- The cover artwork is the original Illustrator vector file in the export. -#}
-{% if preview %}<img class="full-image" src="{{ asset('reference-cover-' ~ n ~ '.png') }}">
+{#- Covers 1 and 6 may show the author's photograph instead of their own: the
+    export swaps it inside the vector file; the preview lays the cover's frame
+    (transparent where the photograph shows) over it. -#}
+{% set own = cover_photo_window(n) if project.cover_image else none %}
+{% if preview and own %}<img class="cover-photo" style="{{ box(own[0], own[1], own[2] - own[0], own[3] - own[1]) }}" src="{{ project.cover_image }}">
+<img class="full-image" src="{{ asset('booklet-art/vector/cover-' ~ n ~ '-frame.png') }}">
+{% elif preview %}<img class="full-image" src="{{ asset('reference-cover-' ~ n ~ '.png') }}">
 {% else %}<div class="vec" data-vector="cover-{{ n }}" style="{{ box(0, 0, 595.276, 841.89) }}"></div>{% endif %}
 {#- Covers 1 and 6 carry their own photograph: the cover is chosen, not uploaded. -#}
 {#- The auction icon is fixed (guide V2 p.3-6): silver on every cover, 50.6 x 63.5 pt.

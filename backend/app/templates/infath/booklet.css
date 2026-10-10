@@ -11,6 +11,7 @@ p,h1,h2,h3,dl,dd,figure{margin:0}a{color:inherit;text-decoration:none}
 .sheet,.full{position:relative;width:595.276pt;height:841.890pt;break-after:page;overflow:hidden}
 .sheet:last-child,.full:last-child{break-after:auto}
 .art,.full-image{position:absolute;left:0;top:0;width:595.276pt;height:841.890pt}
+.cover-photo{position:absolute;object-fit:cover}
 .bar{position:absolute;left:0;top:822pt;width:595.276pt;height:19.89pt}
 .footer-agent{position:absolute;left:12pt;top:790pt;width:80pt;height:25pt;object-fit:contain;object-position:left center}
 
