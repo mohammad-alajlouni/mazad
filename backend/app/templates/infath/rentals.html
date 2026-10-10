@@ -21,8 +21,8 @@
 {% for row in page.rows %}{% set n = loop.index0 %}{% set top = 152.8 if loop.first else bottoms[n - 1] %}{% set middle = (top + bottoms[n]) / 2 %}{% set base = middle + 3.2 %}
 <div class="t lr white" style="{{ T(547.7, base + 1.5, 13.01, 'l', align='center', width=38) }}">{{ '%02d' % loop.index }}</div>
 {% for key in rental_fields %}{% set value = fmt.number(row.get(key), output_language, true) if key == 'annual_rent_value' else row.get(key) %}
-{% set width = cols[loop.index0] - cols[loop.index] - 4 %}{% set count = page.lines[n][key] if page.lines else 1 %}
-{% if count > 1 %}{#- Too long for one line: wrapped inside its own cell, same size. -#}
-<div class="t {{ 'l' if has_digits(value) else 'r' }} w5 body" style="{{ box((cols[loop.index0] + cols[loop.index]) / 2 - width / 2, middle - count * 10.5 / 2 + 0.3, width, count * 10.5) }};font-size:{{ 8 if has_digits(value) else 8.13 }}pt;line-height:10.5pt;text-align:center;white-space:normal;overflow-wrap:anywhere">{{ value|nums }}</div>
+{% set width = cols[loop.index0] - cols[loop.index] - 4 %}{% set lines = page.lines[n][key] if page.lines else [] %}{% set count = lines|length %}
+{% if count > 1 %}{#- Too long for one line: the composer's lines, inside its own cell, same size. -#}
+<div class="t {{ 'l' if has_digits(value) else 'r' }} w5 body" style="{{ box((cols[loop.index0] + cols[loop.index]) / 2 - width / 2, middle - count * 10.5 / 2 + 0.3, width, count * 10.5) }};font-size:{{ 8 if has_digits(value) else 8.13 }}pt;line-height:10.5pt;text-align:center;white-space:nowrap">{% for line in lines %}{{ line|nums }}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
 {% else %}{{ V(value or '-', (cols[loop.index0] + cols[loop.index]) / 2, base, 8.13, 'center', width, 'w5 body') }}{% endif %}
 {% endfor %}{% endfor %}

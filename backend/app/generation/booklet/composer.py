@@ -42,7 +42,7 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 8
+LAYOUT_VERSION = 9
 # Rows that the reference tables hold before continuing on another page.
 # Summary table (guide p.14). Column edges (right to left) come from the open
 # reference booklet; the title and table sit where the guide places them, and
@@ -51,8 +51,8 @@ SUMMARY_COLS = (509.2, 455.1, 413.1, 350.6, 308.6, 265.9, 225.9, 152.6, 37.6)
 SUMMARY_SHIFT = -103.5  # from the open booklet's position up to the guide's
 SUMMARY_TOP = 297.7 + SUMMARY_SHIFT
 SUMMARY_LIMIT = 740.0  # the table ends above the footer
-SUMMARY_MIN_ROW = 26.0  # the reference row: at most 20 properties on a page
-SUMMARY_ROWS = int((SUMMARY_LIMIT - SUMMARY_TOP) // SUMMARY_MIN_ROW)
+SUMMARY_MIN_ROW = 26.0  # the reference row
+SUMMARY_ROWS = 20  # properties on a summary page; the next ones open a new page
 # With few properties a row grows no taller than in a full eight-row table
 # (the guide's), so a short list does not turn into oversized rows.
 SUMMARY_MAX_ROW = (SUMMARY_LIMIT - SUMMARY_TOP) / 8
@@ -297,13 +297,58 @@ def summary_value(item, key, language="ar"):
     return str(value or "-")
 
 
-def cell_lines(text, width):
-    """Lines a value takes in a table cell: words in Ruaq, figures in Lama."""
-    return max(
-        # 8% margin: the renderer breaks a line slightly before the measured edge.
-        fit_length(text, size, width, 10**6, name, 0.92)[1]
-        for name, size in (("RuaqArabic-Medium", 8.12), ("LamaSans-Medium", 8))
-    )
+# Table values: words in Ruaq, figures in Lama (the wider of the two counts).
+CELL_FONTS = (("RuaqArabic-Medium", 8.13), ("LamaSans-Medium", 8))
+
+
+def cell_width(text):
+    return max(text_width(text, size, name) for name, size in CELL_FONTS)
+
+
+def cell_text(text, width):
+    """A value as the lines it takes in a table cell, none wider than the cell.
+
+    Words wrap. A single run wider than the cell cannot wrap: it breaks after
+    its separators (1433/234/17), and a part still too wide (a long deed
+    number) is split into equal pieces. The page prints exactly these lines,
+    in the browser preview and in the export alike.
+    """
+    limit = width * 0.94  # measured widths differ slightly between renderers
+
+    def pieces(word):
+        """An over-wide run as parts that each fit on a line."""
+        found = []
+        for part in re.findall(r"[^/\\\-–٫،,.:]+[/\\\-–٫،,.:]*|[/\\\-–٫،,.:]+", word):
+            count = 1
+            while True:
+                size = -(-len(part) // count)
+                cut = [part[i : i + size] for i in range(0, len(part), size)]
+                if size == 1 or all(cell_width(c) <= limit for c in cut):
+                    break
+                count += 1
+            found += cut
+        return found
+
+    lines, line = [], ""
+    for word in str(text).split():
+        if cell_width(word) > limit:
+            if line:
+                lines.append(line)
+            line = ""
+            for piece in pieces(word):
+                if line and cell_width(line + piece) > limit:
+                    lines.append(line)
+                    line = piece
+                else:
+                    line += piece
+        elif line and cell_width(f"{line} {word}") > limit:
+            lines.append(line)
+            line = word
+        else:
+            line = f"{line} {word}" if line else word
+    if line:
+        lines.append(line)
+    return lines or ["-"]
 
 
 def spread(needs, space, cap):
@@ -323,8 +368,8 @@ def summary_pages(items, language="ar"):
     """Summary tables with every value shown whole, at the reference size.
 
     A value too long for its column wraps inside its cell and its row grows.
-    A page takes as many properties as fit down to the footer (reference rows
-    of 26 pt), and its rows then share the table's height evenly.
+    A page takes at most SUMMARY_ROWS properties (fewer when wrapped rows fill
+    it down to the footer first), and its rows share the table's height evenly.
     """
     space = SUMMARY_LIMIT - SUMMARY_TOP
     pages, rows, needs, lines = [], [], [], []
@@ -340,20 +385,21 @@ def summary_pages(items, language="ar"):
         )
 
     for item in items:
-        counts = {
-            key: cell_lines(
+        texts = {
+            key: cell_text(
                 summary_value(item, key, language),
                 SUMMARY_COLS[i] - SUMMARY_COLS[i + 1] - 4,
             )
             for i, key in enumerate(SUMMARY_FIELDS)
         }
-        need = max(SUMMARY_MIN_ROW, max(counts.values()) * SUMMARY_LINE + 6)
-        if rows and sum(needs) + need > space + 0.01:
+        longest = max(len(text) for text in texts.values())
+        need = max(SUMMARY_MIN_ROW, longest * SUMMARY_LINE + 6)
+        if rows and (len(rows) == SUMMARY_ROWS or sum(needs) + need > space + 0.01):
             close()
             rows, needs, lines = [], [], []
         rows.append(item)
         needs.append(need)
-        lines.append(counts)
+        lines.append(texts)
     if rows:
         close()
     return pages
@@ -378,15 +424,16 @@ def rental_pages(item, rentals, language="ar"):
         )
 
     for row in rentals:
-        counts = {}
+        texts = {}
         for i, key in enumerate(RENTAL_FIELDS):
             value = row.get(key)
             if key == "annual_rent_value":
                 value = number(value, language or "ar", True)
-            counts[key] = cell_lines(
+            texts[key] = cell_text(
                 str(value or "-"), RENTAL_COLS[i] - RENTAL_COLS[i + 1] - 4
             )
-        height = max(RENTAL_ROW, max(counts.values()) * SUMMARY_LINE + 6)
+        longest = max(len(text) for text in texts.values())
+        height = max(RENTAL_ROW, longest * SUMMARY_LINE + 6)
         top = bottoms[-1] if bottoms else RENTAL_TOP
         if rows and (len(rows) == RENTAL_ROWS or top + height > RENTAL_LIMIT):
             close()
@@ -394,7 +441,7 @@ def rental_pages(item, rentals, language="ar"):
             top = RENTAL_TOP
         rows.append(row)
         bottoms.append(round(top + height, 2))
-        lines.append(counts)
+        lines.append(texts)
     if rows:
         close()
     return pages

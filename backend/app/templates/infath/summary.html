@@ -19,8 +19,8 @@
 <div class="t lr white" style="{{ T(540.3, base + 0.4, 12.99, 'l', align='center', width=38) }}">{{ '%02d' % item.number }}</div>
 {% for key in summary_fields %}{% set prop = item.property_data %}
 {% set value = fmt.number(prop.get(key), output_language, key == 'participation_amount') if key in ('area', 'participation_amount') else prop.get(key) %}
-{% set width = cols[loop.index0] - cols[loop.index] - 4 %}{% set count = page.lines[row][key] if page.lines else 1 %}
-{% if count > 1 %}{#- Too long for one line: wrapped in its own cell, same size, centred. -#}
-<div class="t {{ 'l' if has_digits(value) else 'r' }} w5 body" style="{{ box((cols[loop.index0] + cols[loop.index]) / 2 - width / 2, middle - count * 10.5 / 2 + 0.3, width, count * 10.5) }};font-size:{{ 8 if has_digits(value) else 8.12 }}pt;line-height:10.5pt;text-align:center;white-space:normal;overflow-wrap:anywhere">{{ value|nums }}</div>
+{% set width = cols[loop.index0] - cols[loop.index] - 4 %}{% set lines = page.lines[row][key] if page.lines else [] %}{% set count = lines|length %}
+{% if count > 1 %}{#- Too long for one line: the composer's lines, in its own cell, same size, centred. -#}
+<div class="t {{ 'l' if has_digits(value) else 'r' }} w5 body" style="{{ box((cols[loop.index0] + cols[loop.index]) / 2 - width / 2, middle - count * 10.5 / 2 + 0.3, width, count * 10.5) }};font-size:{{ 8 if has_digits(value) else 8.12 }}pt;line-height:10.5pt;text-align:center;white-space:nowrap">{% for line in lines %}{{ line|nums }}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
 {% else %}{{ V(value or '-', (cols[loop.index0] + cols[loop.index]) / 2, base, 8.12 if not has_digits(value) else 8, 'center', width, 'w5 body') }}{% endif %}
 {% endfor %}{% endfor %}

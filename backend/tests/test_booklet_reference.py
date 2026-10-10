@@ -554,11 +554,109 @@ def test_long_summary_values_wrap_in_their_cell_without_shrinking():
     for page in tables:
         tops = [SUMMARY_TOP] + page["bottoms"][:-1]
         assert page["bottoms"][-1] <= SUMMARY_LIMIT + 0.01
-        for top, bottom, counts in zip(tops, page["bottoms"], page["lines"]):
-            assert counts["district"] >= 2 and counts["city"] >= 2
-            needed = max(counts.values()) * SUMMARY_LINE + 6
+        for top, bottom, texts in zip(tops, page["bottoms"], page["lines"]):
+            assert len(texts["district"]) >= 2 and len(texts["city"]) >= 2
+            # Nothing is dropped: the lines are the value itself.
+            assert " ".join(texts["district"]) == long["property_data"]["district"]
+            needed = max(len(text) for text in texts.values()) * SUMMARY_LINE + 6
             assert bottom - top >= max(SUMMARY_MIN_ROW, needed) - 0.01
     assert short["property_data"]["district"] == "العزيزية"
+
+
+@pytest.mark.parametrize(
+    "count, pages", [(20, [20]), (21, [20, 1]), (45, [20, 20, 5]), (3, [3])]
+)
+def test_summary_page_holds_at_most_twenty_properties(count, pages):
+    """Twenty properties to a summary page; the next ones open a new page and
+    keep their numbers."""
+    items = [item_with(property_type="فيلا", city="الرياض") for _ in range(count)]
+    booklet = compose(project_with("physical"), items)
+    tables = [p for p in booklet["pages"] if p["kind"] == "summary"]
+    assert [len(p["rows"]) for p in tables] == pages
+    numbers = [row["number"] for p in tables for row in p["rows"]]
+    assert numbers == list(range(1, count + 1))
+
+
+def test_a_value_wider_than_its_cell_is_split_into_lines_that_fit():
+    """A long deed number cannot wrap at a space: it is split evenly, whole."""
+    from app.generation.booklet.composer import (
+        SUMMARY_COLS,
+        SUMMARY_FIELDS,
+        cell_text,
+        cell_width,
+    )
+
+    column = SUMMARY_FIELDS.index("deed_number")
+    width = SUMMARY_COLS[column] - SUMMARY_COLS[column + 1] - 4
+    assert cell_text("310115041563", width) == ["310115041563"]
+    assert cell_text("9476034717900000", width) == ["94760347", "17900000"]
+    for value in ["9" * 40, "مخطط لطيفة بنت سلطان 1433/234/ع/17", "", "A" * 25 + " B"]:
+        lines = cell_text(value, width)
+        assert all(cell_width(line) <= width for line in lines), lines
+        assert "".join(lines).replace(" ", "") == (value or "-").replace(" ", "")
+
+
+def cell_characters(page, top, bottom, right):
+    """Characters printed in a table's body: (x0, y0, x1, y1, character)."""
+    return [
+        (*char["bbox"], char["c"])
+        for block in page.get_text("rawdict")["blocks"]
+        for line in block.get("lines", [])
+        for span in line["spans"]
+        for char in span["chars"]
+        if char["c"].strip()
+        and top < (char["bbox"][1] + char["bbox"][3]) / 2 < bottom
+        and char["bbox"][0] < right
+    ]
+
+
+def test_every_summary_value_is_printed_inside_its_own_cell():
+    """Review: a long deed number ran over the next column. In the exported
+    page every value, however long, lies between its column's rules and inside
+    its row."""
+    from app.generation.booklet.composer import (
+        SUMMARY_COLS,
+        SUMMARY_FIELDS,
+        SUMMARY_TOP,
+        summary_value,
+    )
+
+    long = item_with(
+        property_type="ارض مقام عليها هناجر ومستودعات",
+        city="خميس مشيط الجديدة",
+        district="مخطط لطيفة بنت سلطان بن عبدالعزيز",
+        area="123456789.75",
+        plan_number="1433/234/ع/17/8899001122",
+        plot_number="12345678901234",
+        deed_number="9476034717900000",
+        participation_amount="1250000000",
+    )
+    plain = item_with(property_type="عمارة", city="الرياض", deed_number="310115041563")
+    items = [long, plain, long]
+    booklet, _, pdf = exported(project_with("physical"), items)
+    n = [p["kind"] for p in booklet["pages"]].index("summary")
+    plan = booklet["pages"][n]
+    characters = cell_characters(
+        pdf[n], SUMMARY_TOP, plan["bottoms"][-1], SUMMARY_COLS[0]
+    )
+    rows = list(zip([SUMMARY_TOP] + plan["bottoms"][:-1], plan["bottoms"]))
+    cells = {}
+    for x0, y0, x1, y1, character in characters:
+        # No ink on or beside a column rule: each character is in one column.
+        column = next(
+            i
+            for i in range(len(SUMMARY_FIELDS))
+            if SUMMARY_COLS[i + 1] + 1 <= x0 and x1 <= SUMMARY_COLS[i] - 1
+        )
+        row = next(i for i, (a, b) in enumerate(rows) if a <= y0 + 1 and y1 - 1 <= b)
+        cells.setdefault((row, column), []).append(character)
+    # Each cell holds its own value, whole: compared by its figures.
+    for row, item in enumerate(items):
+        for column, key in enumerate(SUMMARY_FIELDS):
+            expected = sorted(c for c in summary_value(item, key) if c.isdigit())
+            found = sorted(c for c in cells.get((row, column), []) if c.isdigit())
+            assert found == expected, (row, key)
+        assert len(cells[(row, 0)]) > 3  # the property type is there too
 
 
 def test_summary_table_fills_its_area_with_evenly_shared_rows():
@@ -838,7 +936,7 @@ def test_rental_values_wrap_in_their_cells_and_the_note_follows_the_table():
     booklet, boxes, _ = exported(project, [item])
     n = [p["kind"] for p in booklet["pages"]].index("rentals")
     page = booklet["pages"][n]
-    assert all(counts["unit_number"] >= 2 for counts in page["lines"])
+    assert all(len(texts["unit_number"]) >= 2 for texts in page["lines"])
     assert page["bottoms"][0] - 152.8 > 26.3  # the row grew for its wrapped cells
     note = next(b for b in boxes[n] if b[0] == "rentals-note")
     assert abs(note[2] - (page["bottoms"][-1] + 12)) < 0.2
