@@ -1,5 +1,6 @@
 "use client";
 import { ConfirmationProvider } from "../components/Confirmation";
+import { ImageEditorProvider } from "../components/ImageEditor";
 import { createContext, useContext, useState, useEffect } from "react";
 import { NextIntlClientProvider, useTranslations } from "next-intl";
 import { messages, Locale } from "./messages";
@@ -44,7 +45,9 @@ export default function LocaleProvider({
         timeZone="Asia/Amman"
       >
         <ConfirmationProvider>
-          <LocalizedValidation>{children}</LocalizedValidation>
+          <ImageEditorProvider>
+            <LocalizedValidation>{children}</LocalizedValidation>
+          </ImageEditorProvider>
         </ConfirmationProvider>
       </NextIntlClientProvider>
     </Context.Provider>

@@ -1780,6 +1780,21 @@ html[dir="rtl"] .nav-previous .lucide-arrow-left { transform: scaleX(-1); }
 .photo-thumbs li.promoted .icon-button[aria-pressed="true"] { color: #c98a00; }
 .property-thumb { width: 44px; height: 34px; border-radius: 8px; object-fit: cover; flex: none; background: #f1f5f5; }
 .property-thumb.empty { display: grid; place-items: center; color: #b45309; background: #fff5e8; }
+.image-editor { margin: auto; border: 1px solid #dce4df; border-radius: 18px; padding: 24px; max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); overflow: auto; color: #233f38; }
+.image-editor::backdrop { background: #102c2880; }
+.image-editor h2 { margin: 0 0 6px; }
+.image-editor > p { margin: 0 0 14px; max-width: 560px; font-size: 13px; }
+.editor-stage { position: relative; direction: ltr; overflow: hidden; margin-inline: auto; border-radius: 10px; background: #fff; outline: 2px solid var(--g); outline-offset: 2px; cursor: grab; touch-action: none; user-select: none; }
+.editor-stage:active { cursor: grabbing; }
+.editor-stage:focus-visible { outline-width: 3px; }
+.editor-stage img { position: absolute; max-width: none; pointer-events: none; }
+.editor-zoom { display: flex; align-items: center; gap: 8px; margin: 16px 0 4px; }
+.editor-zoom input[type="range"] { flex: 1; min-width: 0; padding: 0; min-height: 0; accent-color: var(--g); }
+.editor-zoom .text-button { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.frame-choice { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 14px; border-radius: 12px; background: #f1f4f3; }
+.frame-choice button { border: 0; background: transparent; border-radius: 9px; padding: 6px 16px; cursor: pointer; font: inherit; color: #35524d; }
+.frame-choice button.selected { background: #fff; color: var(--g-dark); font-weight: 700; box-shadow: 0 1px 4px #0000001a; }
+.image-editor .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 .field-with-more { display: grid; gap: 8px; align-content: start; min-width: 0; }
 .more-deed-row { display: flex; align-items: center; gap: 6px; }
 .more-deed-row input { flex: 1; min-width: 0; }

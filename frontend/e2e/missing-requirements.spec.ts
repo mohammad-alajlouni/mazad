@@ -1,4 +1,4 @@
-import { newProject } from "./required-setup";
+import { newProject, usePhoto } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -105,6 +105,7 @@ test("missing requirements are listed per step and lead to their fields", async 
   await mainBox
     .locator('input[type="file"]')
     .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
+  await usePhoto(page);
   // The picked photograph shows on the property's page before it is saved.
   await expect(mainBox).toContainText("Saved with the property");
   await expect(frame.locator('image[href^="data:image/"]')).toHaveCount(1);

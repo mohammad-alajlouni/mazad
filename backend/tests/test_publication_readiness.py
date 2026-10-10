@@ -4,6 +4,7 @@ and the live preview stays fast (linked assets, no PDF round trip)."""
 import base64
 from io import BytesIO
 
+import pytest
 from PIL import Image
 from test_auctions import add, create_auction, property_input
 
@@ -168,3 +169,17 @@ def test_closing_page_fields_are_entered_after_the_properties(admin):
     assert "auction_contact_number" in closing
     assert not closing & auction
     assert "auction_contact_number" in flow["rules"]["closing_fields"]
+
+
+def test_rules_give_the_frame_of_every_uploaded_photograph(admin):
+    """The upload editor places each photograph in the frame it is printed in."""
+    frames = workflow(admin, create_auction(admin))["rules"]["image_frames"]
+    wide, upright = frames["main"]["landscape"], frames["main"]["portrait"]
+    assert wide[0] / wide[1] == pytest.approx(1.709, abs=0.01)
+    assert upright[0] / upright[1] == pytest.approx(0.584, abs=0.01)
+    assert frames["additional"][0] / frames["additional"][1] == pytest.approx(
+        2.747, abs=0.01
+    )
+    assert set(frames["cover"]) == {"infath-1", "infath-6"}
+    assert frames["cover"]["infath-1"] == [595.28, 841.89]
+    assert "عمارة" in frames["portrait_kinds"] and "أرض" in frames["landscape_kinds"]

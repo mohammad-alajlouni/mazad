@@ -1,5 +1,5 @@
 import { completeAccount } from "./account-setup";
-import { newProject } from "./required-setup";
+import { newProject, usePhoto } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -79,6 +79,7 @@ test("a property's photographs are entered and changed in its own form", async (
   await expect(page.locator(".property-cards li")).toHaveCount(0);
   await expect(slot("main")).toContainText("Required");
   await slot("main").locator('input[type="file"]').setInputFiles(photo);
+  await usePhoto(page);
   await expect(slot("main")).toContainText("Saved with the property");
   await expect(slot("main").locator("img")).toBeVisible();
   // The picked photograph is already on this property's page in the preview.
@@ -89,6 +90,7 @@ test("a property's photographs are entered and changed in its own form", async (
   await slot("additional")
     .locator('input[type="file"]')
     .setInputFiles([photo, photo]);
+  await usePhoto(page, 2);
   await form
     .getByRole("button", { name: "Save and close", exact: true })
     .click();
@@ -131,6 +133,7 @@ test("a property's photographs are entered and changed in its own form", async (
   // A new main photograph replaces the stored one instead of adding to it.
   await card.locator(".property-card").click();
   await slot("main").locator('input[type="file"]').setInputFiles(photo);
+  await usePhoto(page);
   await form.getByRole("button", { name: "Save", exact: true }).click();
   await expect
     .poll(async () => {

@@ -12,6 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { api, send, Detail, Run } from "./api";
+import { useImageEditor } from "./ImageEditor";
 import { Fields } from "./AuctionWorkspace";
 
 type Values = Record<string, unknown>;
@@ -228,7 +229,18 @@ export function BookletPages({
     );
     return () => clearTimeout(timer);
   }, [photo?.id]);
-  const uploadPhoto = (file?: File) => {
+  const editImages = useImageEditor();
+  const uploadPhoto = async (picked?: File) => {
+    if (!picked) return;
+    // The photograph is placed in the chosen cover's own window first.
+    const window = detail.workflow?.rules.image_frames?.cover[cover];
+    const edited = window
+      ? await editImages([picked], {
+          frames: [{ key: "cover", width: window[0], height: window[1] }],
+          title: p("coverPhoto"),
+        })
+      : [picked];
+    const file = edited?.[0];
     if (!file) return;
     void run(async () => {
       const body = new FormData();
@@ -390,7 +402,7 @@ export function BookletPages({
                       aria-label={p("coverPhoto")}
                       accept="image/jpeg,image/png,image/webp"
                       onChange={(event) => {
-                        uploadPhoto(event.target.files?.[0]);
+                        void uploadPhoto(event.target.files?.[0]);
                         event.target.value = "";
                       }}
                     />

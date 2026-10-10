@@ -1,4 +1,4 @@
-import { newProject } from "./required-setup";
+import { newProject, usePhoto } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -63,6 +63,7 @@ test("properties are entered one after another without leaving the form", async 
   // A property is saved with its main photograph, picked in the same form.
   const photo = form.locator('[data-slot="main"] input[type="file"]');
   await photo.setInputFiles(path.join(root, "samples/demo-generator.jpg"));
+  await usePhoto(page);
   await form
     .getByRole("button", { name: "Save and add a similar property" })
     .click();
@@ -85,6 +86,7 @@ test("properties are entered one after another without leaving the form", async 
   await form.locator('[name="property.area"]').fill("650");
   // The similar property starts without a photograph of its own.
   await photo.setInputFiles(path.join(root, "samples/demo-generator.jpg"));
+  await usePhoto(page);
   await form
     .getByRole("button", { name: "Save and add a new property" })
     .click();

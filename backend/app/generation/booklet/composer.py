@@ -126,21 +126,43 @@ def text_chunks(value, size=900, max_lines=24):
     return result
 
 
+# Property types whose page is set upright or wide when the layout is "auto".
+PORTRAIT_KINDS = ("برج", "أبراج", "ابراج", "عمارة", "عمائر", "tower", "building")
+LANDSCAPE_KINDS = ("فيلا", "فيللا", "مزرعة", "أرض", "ارض", "villa", "farm", "land")
+
+
+def image_frames():
+    """The frame each uploaded photograph is shown in, as [width, height] in
+    points, so the upload form can let the author place it in that frame."""
+    from .art import COVER_PHOTO, path_box, shapes
+
+    def size(box):
+        x0, y0, x1, y1 = box
+        return [round(x1 - x0, 2), round(y1 - y0, 2)]
+
+    return {
+        "main": {
+            "landscape": size(path_box(shapes()["photo_landscape"])),
+            "portrait": size(path_box(shapes()["photo_portrait"])),
+        },
+        "additional": size(path_box(shapes()["images"][0])),
+        "cover": {f"infath-{n}": size(box) for n, box in COVER_PHOTO.items()},
+        # How an "auto" layout is chosen from the property type; with neither
+        # word, the photograph's own orientation decides.
+        "portrait_kinds": list(PORTRAIT_KINDS),
+        "landscape_kinds": list(LANDSCAPE_KINDS),
+    }
+
+
 def property_layout(item):
     prop = item["property_data"]
     selected = prop.get("booklet_layout", "auto")
     if selected != "auto":
         return selected
     kind = unicodedata.normalize("NFKC", prop.get("property_type", "")).lower()
-    if any(
-        word in kind
-        for word in ("برج", "أبراج", "ابراج", "عمارة", "عمائر", "tower", "building")
-    ):
+    if any(word in kind for word in PORTRAIT_KINDS):
         return "portrait"
-    if any(
-        word in kind
-        for word in ("فيلا", "فيللا", "مزرعة", "أرض", "ارض", "villa", "farm", "land")
-    ):
+    if any(word in kind for word in LANDSCAPE_KINDS):
         return "landscape"
     assets = item.get("image_assets", [])
     return (

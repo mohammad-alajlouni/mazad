@@ -1,23 +1,34 @@
 "use client";
 
-import { useState, type InputHTMLAttributes } from "react";
+import { useEffect, useRef, useState, type InputHTMLAttributes } from "react";
 import { useTranslations } from "next-intl";
 export default function FileInput(
   props: InputHTMLAttributes<HTMLInputElement>,
 ) {
   const tr = useTranslations("common");
   const [name, setName] = useState("");
+  const input = useRef<HTMLInputElement>(null);
+  const names = (element: HTMLInputElement) =>
+    Array.from(element.files || [])
+      .map((f) => f.name)
+      .join(", ");
+  // The files may be replaced after picking (an edited photograph, or none
+  // when the editor was cancelled): show what the input holds now.
+  useEffect(() => {
+    const element = input.current;
+    if (!element) return;
+    const replaced = () => setName(names(element));
+    element.addEventListener("files-set", replaced);
+    return () => element.removeEventListener("files-set", replaced);
+  }, []);
   return (
     <span className="file-control">
       <input
         {...props}
+        ref={input}
         type="file"
         onChange={(e) => {
-          setName(
-            Array.from(e.target.files || [])
-              .map((f) => f.name)
-              .join(", "),
-          );
+          setName(names(e.target));
           props.onChange?.(e);
         }}
       />

@@ -163,6 +163,11 @@ def workflow(db, project):
             for field in ("property_type", "city", "district", "area", "deed_number"):
                 limit(field, 28)
     rules["limits"] = limits
+    if paged:
+        # Frames of the booklet's photographs, for the upload editor.
+        from ..generation.booklet.composer import image_frames
+
+        rules["image_frames"] = image_frames()
 
     # Issues name a property by title; the id lets the form open that property.
     from sqlalchemy import select as _select

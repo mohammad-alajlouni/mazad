@@ -901,6 +901,24 @@
     "retry": "Try again",
     "loading": "Loading your details…"
   },
+  "imageEditor": {
+    "help": "Drag the photograph to choose the part that shows, and make it larger or smaller with the slider. The frame keeps the size it has in print.",
+    "count": "(photograph {number} of {total})",
+    "shape": "Frame shape",
+    "frame": {
+      "landscape": "Wide",
+      "portrait": "Upright",
+      "additional": "Additional photograph",
+      "cover": "Cover"
+    },
+    "stage": "The photograph in its frame: arrow keys move it, + and - change its size",
+    "smaller": "Smaller",
+    "larger": "Larger",
+    "size": "Photograph size",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "apply": "Use photograph"
+  },
   "imagesStep": {
     "help": "Upload each property's photographs in its box: the main image, then additional ones; they appear in the live preview at once. The auction icon and the cover are fixed by the identity and the chosen cover.",
     "cover": "Cover photograph",

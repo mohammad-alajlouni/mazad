@@ -97,6 +97,14 @@ export type Detail = {
       closing_fields?: string[];
       // Longest value every output of the project can set in its design.
       limits?: Record<string, number>;
+      // The frame each uploaded photograph is printed in ([width, height]).
+      image_frames?: {
+        main: { landscape: [number, number]; portrait: [number, number] };
+        additional: [number, number];
+        cover: Record<string, [number, number]>;
+        portrait_kinds: string[];
+        landscape_kinds: string[];
+      };
     };
     stages: Record<
       string,

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Star, Trash2, Undo2 } from "lucide-react";
 import { api, send, Project, Item, Run, Detail } from "./api";
+import { setInputFiles, useImageEditor, type Frame } from "./ImageEditor";
 
 export function ProjectForm({
   run,
@@ -137,7 +138,10 @@ export function ItemForm({
   auctionType,
   images = [],
   photoRequired = false,
+  frames,
 }: {
+  // The frames the booklet prints this property's photographs in.
+  frames?: NonNullable<Detail["workflow"]>["rules"]["image_frames"];
   requiredFields?: string[];
   auctionType?: string;
   // The property's stored photographs; whether its main one is required.
@@ -157,6 +161,49 @@ export function ItemForm({
   const pt = useTranslations("properties");
 
   const im = useTranslations("imagesStep");
+  const editImages = useImageEditor();
+  // The frame of the main photograph follows the page layout: the chosen
+  // one, the one its type calls for, or (left open) the photograph's own.
+  const mainFrames = (form: HTMLFormElement): Frame[] => {
+    if (!frames) return [];
+    const options: Frame[] = (["landscape", "portrait"] as const).map(
+      (key) => ({
+        key,
+        width: frames.main[key][0],
+        height: frames.main[key][1],
+      }),
+    );
+    const read = (name: string) =>
+      String(new FormData(form).get(name) || "")
+        .normalize("NFKC")
+        .toLowerCase();
+    const chosen = read("property.booklet_layout");
+    const kind = read("property.property_type");
+    const layout =
+      chosen === "landscape" || chosen === "portrait"
+        ? chosen
+        : frames.portrait_kinds.some((word) => kind.includes(word))
+          ? "portrait"
+          : frames.landscape_kinds.some((word) => kind.includes(word))
+            ? "landscape"
+            : "";
+    return layout ? options.filter((o) => o.key === layout) : options;
+  };
+  // Picked photographs are placed in their frame first; a cancelled edit
+  // leaves the input empty.
+  const place = async (
+    input: HTMLInputElement,
+    options: Frame[],
+    title: string,
+  ) => {
+    const picked = Array.from(input.files || []);
+    if (!picked.length) return [];
+    const edited = options.length
+      ? await editImages(picked, { frames: options, title })
+      : picked;
+    setInputFiles(input, edited || []);
+    return edited || [];
+  };
   const [jsonError, setJsonError] = useState("");
   // Photographs are entered with the property and stored when it is saved:
   // a new main one, more additional ones, and stored ones to drop or promote.
@@ -328,9 +375,15 @@ export function ItemForm({
                   pt("photoNeeded"),
                 )
               }
-              onChange={(e) => {
-                e.target.setCustomValidity("");
-                setMainFile(e.target.files?.[0] || null);
+              onChange={async (e) => {
+                const input = e.target;
+                input.setCustomValidity("");
+                const edited = await place(
+                  input,
+                  mainFrames(input.form!),
+                  pt("photoMain"),
+                );
+                setMainFile(edited[0] || null);
               }}
             />
           </div>
@@ -413,7 +466,24 @@ export function ItemForm({
               type="file"
               accept="image/jpeg,image/png,image/webp"
               multiple
-              onChange={(e) => setMoreFiles(Array.from(e.target.files || []))}
+              onChange={async (e) => {
+                const input = e.target;
+                setMoreFiles(
+                  await place(
+                    input,
+                    frames
+                      ? [
+                          {
+                            key: "additional",
+                            width: frames.additional[0],
+                            height: frames.additional[1],
+                          },
+                        ]
+                      : [],
+                    pt("photoMore"),
+                  ),
+                );
+              }}
             />
           </div>
         </div>

@@ -3,6 +3,7 @@ import {
   fillPages,
   finishPages,
   newProject,
+  usePhoto,
 } from "./required-setup";
 import { completeAccount } from "./account-setup";
 import { test, expect } from "@playwright/test";
@@ -108,12 +109,14 @@ for (const flow of ["manual", "excel"])
         await page.getByLabel("Annual rent").fill("12000");
         // The first property's photographs go in with it, in the same form.
         if (n === 1)
-          for (const role of ["main", "additional"])
+          for (const role of ["main", "additional"]) {
             await page
               .locator(
                 `.property-form [data-slot="${role}"] input[type="file"]`,
               )
               .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
+            await usePhoto(page);
+          }
         const savedRequest = page.waitForResponse(
           (response) =>
             response.url().endsWith("/items") &&

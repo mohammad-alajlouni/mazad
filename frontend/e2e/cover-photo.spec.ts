@@ -1,5 +1,5 @@
 import { completeAccount } from "./account-setup";
-import { newProject } from "./required-setup";
+import { newProject, usePhoto } from "./required-setup";
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
@@ -49,6 +49,12 @@ test("photographic covers take the author's photograph, the others do not", asyn
   await box
     .locator('input[type="file"]')
     .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
+  // The photograph is placed in the cover's own window before it is stored.
+  const editor = page.locator("dialog.image-editor");
+  await expect(editor).toBeVisible();
+  const stage = await editor.locator(".editor-stage").boundingBox();
+  expect(stage!.width / stage!.height).toBeCloseTo(595.28 / 590, 1);
+  await usePhoto(page);
   const image = await (await stored).json();
   await expect(box.locator("img")).toBeVisible();
   await expect(page.locator('[name="auction_date"]')).toHaveValue("2026-10-10");

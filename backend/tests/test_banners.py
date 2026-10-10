@@ -293,7 +293,7 @@ def test_every_banner_size_holds_the_longest_announcement_and_court_decision():
     a little smaller (90%); a usual one keeps the full size."""
     import re
 
-    from app.services.banners import COURT_LIMIT, LEGAL_SMALL, SIZES
+    from app.services.banners import COURT_LIMIT, LEGAL_ROOM, LEGAL_SMALL, SIZES
 
     assert COURT_LIMIT == 200 and LEGAL_SMALL[0] >= 0.9
     sources = [
@@ -310,4 +310,8 @@ def test_every_banner_size_holds_the_longest_announcement_and_court_decision():
         for source in sources:
             longest, fits = board(size, words(220, source), words(COURT_LIMIT, source))
             assert fits, (size, source[:3])
-            assert size_of(longest) == pytest.approx(size_of(usual) * 0.9, rel=0.001)
+            # The square banner has room for it at the full size.
+            small = 221 + COURT_LIMIT > LEGAL_ROOM[SIZES[size]["layout"]]
+            assert size_of(longest) == pytest.approx(
+                size_of(usual) * (0.9 if small else 1), rel=0.001
+            )

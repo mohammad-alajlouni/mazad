@@ -287,6 +287,7 @@ export default function PropertyManager({
                 : detail.images.filter((i) => i.item_id === current.id)
             }
             photoRequired={detail.project.workspace_type === "project"}
+            frames={detail.workflow?.rules.image_frames}
             template={current === "new" ? template : undefined}
             number={current === "new" ? items.length + 1 : index + 1}
             hasNext={index >= 0 && index < items.length - 1}

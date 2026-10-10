@@ -72,6 +72,21 @@ export async function completeBookletBasics(page: Page) {
   await finishPages(page);
 }
 
+// A picked photograph opens the editor that places it in its frame: accept
+// each one as it is shown (whole frame, centred).
+export async function usePhoto(page: Page, count = 1) {
+  const editor = page.locator("dialog.image-editor");
+  for (let n = 1; n <= count; n++) {
+    await expect(editor).toBeVisible();
+    if (count > 1)
+      await expect(editor).toContainText(new RegExp(`${n} (of|من) ${count}`));
+    await editor
+      .getByRole("button", { name: /^(Use photograph|استخدام الصورة)$/ })
+      .click();
+  }
+  await expect(editor).toBeHidden();
+}
+
 // A property's photographs are entered in its own form: open the property,
 // pick the photograph and save. The list then shows it on the property's card.
 export async function addPhoto(page: Page, title: string, file: string) {
@@ -80,6 +95,7 @@ export async function addPhoto(page: Page, title: string, file: string) {
   await page
     .locator('.property-form [data-slot="main"] input[type="file"]')
     .setInputFiles(file);
+  await usePhoto(page);
   await page.locator(".property-form .item-actions button.primary").click();
   await expect(card.locator("img.property-thumb")).toBeVisible();
 }
