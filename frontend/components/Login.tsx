@@ -1,4 +1,5 @@
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeSwitcher from "./ThemeSwitcher";
 
 import { useTranslations } from "next-intl";
 import { ArrowRight } from "lucide-react";
@@ -21,6 +22,7 @@ export default function Login({
   return (
     <main className="login">
       <div className="login-language">
+        <ThemeSwitcher />
         <LanguageSwitcher />
       </div>
       <div className="login-story">

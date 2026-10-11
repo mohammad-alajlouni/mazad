@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Check } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeSwitcher from "./ThemeSwitcher";
 
 // The four booklet pages of the hero, from the back of the pile to the cover.
 const SHEETS = ["participation", "summary", "auction", "cover"] as const;
@@ -70,6 +71,7 @@ export default function Landing({ onEnter }: { onEnter: () => void }) {
           <a href="#lp-details">{t("navDetails")}</a>
         </nav>
         <div className="lp-bar-end">
+          <ThemeSwitcher />
           <LanguageSwitcher />
           <button type="button" className="lp-signin" onClick={onEnter}>
             {t("signIn")}

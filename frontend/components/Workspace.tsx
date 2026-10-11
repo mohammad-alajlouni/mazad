@@ -3,6 +3,7 @@ import { formatNumber, localizeKnownMessage } from "../i18n/format";
 import { errorMessage } from "../i18n/errors";
 
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeSwitcher from "./ThemeSwitcher";
 
 import { useTranslations } from "next-intl";
 import Login from "./Login";
@@ -304,7 +305,10 @@ export default function Workspace() {
   if (!user.profile_complete)
     return (
       <div className="profile-onboarding">
-        <LanguageSwitcher />
+        <div className="onboarding-tools">
+          <ThemeSwitcher />
+          <LanguageSwitcher />
+        </div>
         {!!error && (
           <div className="notice error" role="alert">
             {errorMessage(error)}
@@ -514,6 +518,7 @@ export default function Workspace() {
             </strong>
           </div>
           <div className="topbar-right">
+            <ThemeSwitcher />
             <LanguageSwitcher />
             <span className="environment">
               <i />

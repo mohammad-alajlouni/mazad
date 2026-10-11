@@ -27,17 +27,6 @@
 }
 
 .lp {
-  --paper: #f5f1e8;
-  --sheet: #fffdf8;
-  --ink: #0d2536;
-  --ink-soft: #46596a;
-  --rule: #d9d2c2;
-  --teal: #12827f;
-  --teal-bright: #37bfbd;
-  --navy: #00365d;
-  --go: #1f8a5b;
-  --go-deep: #14613f;
-  --stamp: #c9462c;
   --cut: 14px;
   --gutter: clamp(18px, 4.5vw, 64px);
   min-height: 100dvh;
@@ -69,6 +58,10 @@
 .lp :where(ul, ol) {
   list-style: none;
 }
+/* A heading takes its block's colour: white on the blue and turquoise ones. */
+.lp :is(h1, h2, h3) {
+  color: inherit;
+}
 .lp img {
   display: block;
   max-width: 100%;
@@ -78,7 +71,7 @@
   color: inherit;
 }
 .lp :focus-visible {
-  outline: 3px solid var(--teal);
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 .lp-skip {
@@ -86,8 +79,8 @@
   inset-inline-start: 12px;
   top: -60px;
   z-index: 50;
-  background: var(--ink);
-  color: #fff;
+  background: var(--fill);
+  color: var(--on-fill);
   padding: 10px 16px;
   text-decoration: none;
 }
@@ -101,7 +94,7 @@
   align-items: center;
   gap: 24px;
   padding: 18px var(--gutter);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--line);
 }
 .lp-brand {
   display: flex;
@@ -116,8 +109,8 @@
   place-items: center;
   width: 38px;
   height: 38px;
-  background: var(--go);
-  color: #fff;
+  background: var(--brand);
+  color: var(--on-brand);
   font-size: 20px;
   line-height: 1;
   clip-path: polygon(
@@ -148,7 +141,7 @@
 }
 .lp-bar nav a:hover {
   color: var(--ink);
-  border-color: var(--teal);
+  border-color: var(--accent);
 }
 .lp-bar-end {
   display: flex;
@@ -158,7 +151,7 @@
 .lp .language-switcher {
   min-height: 44px;
   width: auto;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--line);
   border-radius: 0;
   background: transparent;
   color: var(--ink);
@@ -182,8 +175,8 @@
     color 0.2s;
 }
 .lp-signin:hover {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
 }
 
 /* ---- hero ------------------------------------------------------------- */
@@ -200,7 +193,7 @@
   gap: 12px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--teal);
+  color: var(--accent);
   margin-bottom: 18px;
 }
 .lp-slug::before {
@@ -229,8 +222,8 @@
   font: inherit;
   font-weight: 900;
   line-height: 1;
-  color: #fff;
-  background: var(--go);
+  color: var(--on-dark);
+  background: var(--teal);
   border: 0;
   padding: 0.16em 0.42em 0.26em;
   cursor: pointer;
@@ -242,7 +235,7 @@
     0.22em 100%,
     0 calc(100% - 0.22em)
   );
-  box-shadow: inset 0 -0.11em 0 var(--go-deep);
+  box-shadow: inset 0 -0.11em 0 var(--teal-deep);
   transition:
     transform 0.12s ease-out,
     box-shadow 0.12s ease-out,
@@ -250,11 +243,11 @@
   touch-action: manipulation;
 }
 .lp-key:hover {
-  background: #23996a;
+  background: var(--teal-hover);
 }
 .lp-key:active {
   transform: translateY(0.05em) scale(0.985);
-  box-shadow: inset 0 -0.03em 0 var(--go-deep);
+  box-shadow: inset 0 -0.03em 0 var(--teal-deep);
 }
 .lp-lead {
   max-width: 34em;
@@ -276,8 +269,8 @@
   min-height: 56px;
   padding: 0 30px;
   border: 0;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--brand);
+  color: var(--on-brand);
   font: inherit;
   font-size: 17px;
   font-weight: 800;
@@ -296,7 +289,7 @@
   touch-action: manipulation;
 }
 .lp-cta:hover {
-  background: var(--go);
+  background: var(--brand-hover);
 }
 .lp-cta:active {
   transform: scale(0.98);
@@ -333,7 +326,7 @@ html[dir="ltr"] .lp-cta:hover svg {
 .lp-proof {
   position: relative;
   background: var(--sheet);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--line);
   padding: clamp(40px, 5vw, 60px) clamp(18px, 3vw, 40px) clamp(26px, 4vw, 44px);
 }
 .lp-crop {
@@ -457,7 +450,7 @@ html[dir="ltr"] .lp-cta:hover svg {
   color: var(--stamp);
   font-size: clamp(12px, 1.25vw, 15px);
   font-weight: 800;
-  background: #fffdf8cc;
+  background: var(--glass);
   transform: rotate(-7deg) scale(0.6);
   opacity: 0;
   transition:
@@ -490,13 +483,13 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
   padding: 20px 18px;
 }
 .lp-facts li + li {
-  border-inline-start: 1px solid var(--rule);
+  border-inline-start: 1px solid var(--line);
 }
 .lp-facts strong {
   font-size: clamp(2rem, 3.6vw, 3.2rem);
   font-weight: 900;
   line-height: 1;
-  color: var(--teal);
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 .lp-facts span {
@@ -547,7 +540,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
 .lp-output {
   position: relative;
   background: var(--sheet);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--line);
   overflow: hidden;
 }
 .lp-output h3 {
@@ -589,7 +582,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   align-items: center;
   background: var(--navy);
-  color: #fff;
+  color: var(--on-dark);
   border-color: var(--navy);
   clip-path: polygon(
     0 0,
@@ -601,7 +594,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
   );
 }
 .lp-output.booklet .lp-output-copy > p {
-  color: #c8dbe6;
+  color: var(--on-dark-soft);
 }
 .lp-output.booklet .lp-specs li::before {
   background: var(--teal-bright);
@@ -636,7 +629,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
 }
 .lp-output.banner > img {
   width: 100%;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--line);
 }
 .lp-sizes {
   display: flex;
@@ -659,8 +652,8 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
 .lp-posts {
   position: relative;
   aspect-ratio: 1 / 0.62;
-  background: #e9f4f2;
-  border-bottom: 1px solid var(--rule);
+  background: var(--ok-bg);
+  border-bottom: 1px solid var(--line);
   overflow: hidden;
 }
 .lp-posts img {
@@ -692,7 +685,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
   padding-inline: clamp(14px, 1.8vw, 26px);
 }
 .lp-steps li + li {
-  border-inline-start: 1px solid var(--rule);
+  border-inline-start: 1px solid var(--line);
 }
 /* The booklet's own numbered tab, cut at two corners. */
 .lp-tab {
@@ -703,7 +696,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
   padding: 0 10px;
   margin-top: -27px;
   background: var(--teal-bright);
-  color: #fff;
+  color: var(--on-bright);
   font-size: 19px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -718,6 +711,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
 }
 .lp-steps li:nth-child(even) .lp-tab {
   background: var(--navy);
+  color: var(--on-dark);
 }
 .lp-steps h3 {
   margin-top: 18px;
@@ -741,7 +735,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
   display: flex;
   gap: 16px;
   padding: 20px 0;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--line);
 }
 .lp-check {
   flex: none;
@@ -750,8 +744,8 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
   width: 28px;
   height: 28px;
   margin-top: 3px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
   clip-path: polygon(
     0 0,
     calc(100% - 7px) 0,
@@ -777,7 +771,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
   margin: clamp(64px, 9vw, 128px) var(--gutter) 0;
   padding: clamp(40px, 7vw, 96px) clamp(22px, 6vw, 96px);
   background: var(--teal);
-  color: #fff;
+  color: var(--on-dark);
   clip-path: polygon(
     0 0,
     calc(100% - 46px) 0,
@@ -804,15 +798,15 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
 }
 .lp-final .lp-cta {
   margin-top: 30px;
-  background: #fff;
-  color: var(--ink);
+  background: var(--on-dark);
+  color: var(--on-bright);
   min-height: 62px;
   font-size: 19px;
   padding: 0 38px;
 }
 .lp-final .lp-cta:hover {
-  background: var(--ink);
-  color: #fff;
+  background: var(--on-bright);
+  color: var(--on-dark);
 }
 .lp-final small {
   display: block;
@@ -889,7 +883,7 @@ html[dir="ltr"] .lp-proof[data-state="spread"] .lp-stamp {
     border-inline-start: 0;
   }
   .lp-facts li:nth-child(n + 3) {
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--line);
   }
   .lp-heading {
     grid-template-columns: minmax(0, 1fr);

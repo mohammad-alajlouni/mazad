@@ -1,0 +1,170 @@
+/* The colours of the whole site, by day and by night.
+
+   The identity is the booklet's own: its dark blue and its turquoise, on
+   paper by day and on the cover's blue by night. The other stylesheets paint
+   with these names, so a theme is this one list. (What stays as written
+   there is white paper under a document, and type on the identity's own
+   blocks: the same by day and by night.)
+
+   Day is the theme unless the visitor chose night with the switch beside the
+   language: the device's own setting never decides it. The choice is kept in
+   a cookie and put on <html data-theme> by the server, so a page never
+   flashes the other theme while loading. */
+
+:root {
+  color-scheme: light;
+
+  /* grounds */
+  --paper: #f5f1e8;
+  --sheet: #fffdf8;
+  --field: #ffffff;
+  --soft: #ece6d8;
+  --line: #d9d2c2;
+  --line-strong: #c9c1ae;
+  --glass: #fffdf8cc;
+  --scrim: #0d2536a6;
+
+  /* type */
+  --ink: #0d2536;
+  --ink-soft: #46596a;
+  --muted: #5b6b78;
+
+  /* identity: constant blocks that carry white type in both themes */
+  --navy: #00365d;
+  --teal: #12827f;
+  --teal-hover: #169590;
+  --teal-deep: #0b5c5a;
+  --teal-bright: #37bfbd;
+  --on-bright: #062233;
+  --on-dark: #ffffff;
+  --on-dark-soft: #c8dbe6;
+
+  /* the accent as type and rules */
+  --accent: #0c6b69;
+
+  /* what is pressed: the main action, and what is selected */
+  --brand: #00365d;
+  --brand-hover: #0b4b7c;
+  --brand-deep: #001f38;
+  --brand-off: #9aa9b5;
+  --on-brand: #ffffff;
+  --on-brand-off: #ffffff;
+  --fill: #0d2536;
+  --on-fill: #f5f1e8;
+
+  /* states */
+  --ok-bg: #dcefed;
+  --ok-fg: #0b5d5b;
+  --ok-line: #a5d2cf;
+  --warn-bg: #fbf1dc;
+  --warn-fg: #5f4409;
+  --warn-line: #ead7a8;
+  --warn-mark: #c08a1e;
+  --hold-bg: #f8e6d6;
+  --hold-fg: #8a3b12;
+  --bad-bg: #fbe9e4;
+  --bad-fg: #7c2413;
+  --bad-line: #efc2b6;
+  --stamp: #b93c23;
+  --stamp-fill: #b93c23;
+}
+
+/* Night, chosen by the visitor. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #071a28;
+  --sheet: #0d2638;
+  --field: #091f30;
+  --soft: #16334a;
+  --line: #24465f;
+  --line-strong: #3a6381;
+  --glass: #0d2638cc;
+  --scrim: #000000b8;
+  --ink: #edf2f1;
+  --ink-soft: #b9c9d4;
+  --muted: #9bb0bf;
+  --navy: #0a3f69;
+  --accent: #56d2cf;
+  --brand: #37bfbd;
+  --brand-hover: #63d6d4;
+  --brand-deep: #1c8f8d;
+  --brand-off: #2a4a5f;
+  --on-brand: #052030;
+  --on-brand-off: #8fa5b5;
+  --fill: #1d5078;
+  --on-fill: #ffffff;
+  --ok-bg: #0f3b40;
+  --ok-fg: #86dedb;
+  --ok-line: #1f6a6c;
+  --warn-bg: #3a2f12;
+  --warn-fg: #f2d994;
+  --warn-line: #6b5520;
+  --warn-mark: #e0ab3a;
+  --hold-bg: #41271b;
+  --hold-fg: #f4b995;
+  --bad-bg: #421b16;
+  --bad-fg: #ffb9ab;
+  --bad-line: #7a2c20;
+  --stamp: #ff8f78;
+}
+
+/* ---- the switch between them ------------------------------------------ */
+.theme-switcher {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1.5px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.theme-switcher:hover {
+  border-color: var(--ink);
+}
+.lp .theme-switcher {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+}
+/* It shows where a press leads: the moon by day, the sun by night. */
+.theme-switcher .to-day,
+:root[data-theme="dark"] .theme-switcher .to-night {
+  display: none;
+}
+:root[data-theme="dark"] .theme-switcher .to-day {
+  display: block;
+}
+.login-language,
+.onboarding-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.onboarding-tools {
+  margin-bottom: 20px;
+}
+
+/* ---- what stays paper at night ----------------------------------------- */
+/* A sheet of paper is white whatever the hour: the dashboard's drawn pages
+   keep the day's colours, and a logo, made for print, keeps a white ground. */
+.paper-stack {
+  --sheet: #fffdf8;
+  --warn-bg: #fbf1dc;
+  --soft: #ece6d8;
+  --line: #d9d2c2;
+  --ink: #0d2536;
+  --muted: #5b6b78;
+  --accent: #0c6b69;
+  color: var(--ink);
+}
+.editor-stage.logo {
+  --sheet: #fffdf8;
+  --soft: #ece6d8;
+}
+.account-profile-logo,
+.agent-card img {
+  background: #fff;
+}

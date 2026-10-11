@@ -282,7 +282,8 @@
     "deleteProjectConfirm": "Delete the project “{name}” for good? Its details, properties, photographs and every output made from it (booklet, banners and social posts) are deleted with it. This cannot be undone.",
     "deleteOutputConfirm": "Delete this output ({name}) for good? Its files are deleted. The project's data stays, and the output can be generated again.",
     "projectDeleted": "Project deleted",
-    "outputDeleted": "Output deleted"
+    "outputDeleted": "Output deleted",
+    "theme": "Switch between day and night mode"
   },
   "errors": {
     "TOO_MANY_LOGIN_ATTEMPTS_TRY_AGAIN_IN_FIVE_MINUTES": "Too many login attempts. Try again in five minutes.",

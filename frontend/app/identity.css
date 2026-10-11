@@ -6,21 +6,6 @@
    and the booklet's cut corner on what can be pressed or counted. */
 
 :root {
-  --paper: #f5f1e8;
-  --sheet: #fffdf8;
-  --soft: #ece6d8;
-  --ink: #0d2536;
-  --muted: #5b6b78;
-  --line: #d9d2c2;
-  --g: #1f8a5b;
-  --g-dark: #14613f;
-  --g-soft: #e3efe6;
-  --g-line: #b3d2c0;
-  --green: #1f8a5b;
-  --teal: #12827f;
-  --teal-bright: #37bfbd;
-  --navy: #00365d;
-  --stamp: #c9462c;
   --cut: 10px;
 }
 
@@ -68,7 +53,7 @@ small {
 
 /* What has the keyboard's attention is outlined, as on the landing page. */
 :focus-visible {
-  outline: 3px solid var(--teal);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -95,14 +80,15 @@ small {
 .brand-symbol {
   display: grid;
   place-items: center;
+  flex: none;
   width: 38px;
   height: 38px;
   font-family: inherit;
   font-size: 20px;
   font-weight: 800;
   line-height: 1;
-  background: var(--g);
-  color: #fff;
+  background: var(--brand);
+  color: var(--on-brand);
   clip-path: polygon(
     0 0,
     calc(100% - 9px) 0,
@@ -111,6 +97,14 @@ small {
     9px 100%,
     0 calc(100% - 9px)
   );
+}
+/* The Latin name is wider than the Arabic one: it keeps the tag inside. */
+html:lang(en) .sidebar .brand {
+  font-size: 19px;
+  gap: 6px;
+}
+html:lang(en) .sidebar .brand-tag {
+  letter-spacing: 0.4px;
 }
 .brand-tag,
 .nav-label {
@@ -126,8 +120,8 @@ small {
   color: var(--ink);
 }
 .sidebar button.active {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
   font-weight: 700;
   clip-path: polygon(
     0 0,
@@ -149,7 +143,7 @@ small {
 }
 .sidebar button.active .nav-count {
   background: var(--teal-bright);
-  color: var(--ink);
+  color: var(--on-bright);
 }
 .workspace-note {
   color: var(--muted);
@@ -158,8 +152,8 @@ small {
   color: var(--ink);
 }
 .avatar {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
   font-weight: 700;
 }
 .breadcrumbs {
@@ -178,7 +172,7 @@ small {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--teal);
+  color: var(--accent);
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
@@ -192,11 +186,11 @@ small {
 
 /* ---- buttons ---------------------------------------------------------- */
 .primary {
-  background: var(--g);
-  color: #fff;
+  background: var(--brand);
+  color: var(--on-brand);
   border: 0;
   font-weight: 800;
-  box-shadow: inset 0 -3px 0 var(--g-dark) !important;
+  box-shadow: inset 0 -3px 0 var(--brand-deep) !important;
   clip-path: polygon(
     0 0,
     calc(100% - var(--cut)) 0,
@@ -210,13 +204,14 @@ small {
     transform 0.12s ease-out;
 }
 .primary:hover:not(:disabled) {
-  background: #23996a;
+  background: var(--brand-hover);
 }
 .primary:active:not(:disabled) {
   transform: translateY(1px);
 }
 .primary:disabled {
-  background: #9db5a8;
+  background: var(--brand-off);
+  color: var(--on-brand-off);
   box-shadow: none !important;
 }
 /* A cut shape clips an outer outline: show focus inside it instead. */
@@ -224,7 +219,10 @@ small {
 .sidebar button.active:focus-visible,
 .preview-open:focus-visible {
   outline: 0;
-  box-shadow: inset 0 0 0 3px #fff !important;
+  box-shadow: inset 0 0 0 3px var(--on-fill) !important;
+}
+.primary:focus-visible {
+  box-shadow: inset 0 0 0 3px var(--on-brand) !important;
 }
 .secondary {
   background: transparent;
@@ -233,11 +231,11 @@ small {
   font-weight: 700;
 }
 .secondary:hover:not(:disabled) {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
 }
 .text-button {
-  color: var(--teal);
+  color: var(--accent);
   font-weight: 700;
 }
 .text-button:hover {
@@ -300,8 +298,8 @@ details {
 input,
 textarea,
 select {
-  background: #fff;
-  border: 1.5px solid #c9c1ae;
+  background: var(--field);
+  border: 1.5px solid var(--line-strong);
   color: var(--ink);
 }
 input:focus,
@@ -316,11 +314,11 @@ label {
 }
 .search input,
 .schedule-panel .form-grid > label {
-  background: #fff;
+  background: var(--field);
 }
 .file-control {
-  background: #fff;
-  border-color: #c9c1ae;
+  background: var(--field);
+  border-color: var(--line-strong);
 }
 .file-button {
   background: var(--soft);
@@ -360,8 +358,8 @@ label {
 .workflow-steps button.selected,
 .page-parts button.selected,
 .frame-choice button.selected {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
 }
 /* A step's number is the booklet's own numbered tab. */
 .workflow-steps button > span,
@@ -381,11 +379,11 @@ label {
 }
 .workflow-steps button.selected > span {
   background: var(--teal-bright);
-  color: var(--ink);
+  color: var(--on-bright);
 }
 .workflow-steps button > span:has(svg) {
-  background: var(--g-soft);
-  color: var(--g-dark);
+  background: var(--ok-bg);
+  color: var(--ok-fg);
   border: 0;
 }
 .workflow-steps button:not(.selected):has(span svg) {
@@ -393,7 +391,7 @@ label {
 }
 .property-number {
   background: var(--teal-bright);
-  color: #fff;
+  color: var(--on-bright);
 }
 .page-parts button > span {
   background: var(--soft);
@@ -401,7 +399,7 @@ label {
 }
 .page-parts button.selected > span {
   background: var(--teal-bright);
-  color: var(--ink);
+  color: var(--on-bright);
 }
 .page-parts button.done {
   background: transparent;
@@ -409,12 +407,12 @@ label {
   color: var(--ink);
 }
 .page-parts button.done > span {
-  background: var(--g-soft);
-  color: var(--g-dark);
+  background: var(--ok-bg);
+  color: var(--ok-fg);
 }
 .step-missing {
-  background: var(--stamp);
-  color: #fff;
+  background: var(--stamp-fill);
+  color: var(--on-dark);
 }
 .tabs button.selected,
 .filter-row button.selected {
@@ -439,32 +437,32 @@ label {
   border: 0;
 }
 .choice-card.selected .choice-icon {
-  background: var(--g);
-  color: #fff;
+  background: var(--brand);
+  color: var(--on-brand);
 }
 .hub-count,
 .chip.done {
-  background: var(--g-soft);
-  color: var(--g-dark);
+  background: var(--ok-bg);
+  color: var(--ok-fg);
 }
 .chip.warning {
-  background: #f8e6d6;
-  color: #8a3b12;
+  background: var(--hold-bg);
+  color: var(--hold-fg);
 }
 .property-thumb.empty {
-  background: #f8e6d6;
-  color: #8a3b12;
+  background: var(--hold-bg);
+  color: var(--hold-fg);
 }
 .sample-button {
-  color: var(--g-dark);
+  color: var(--ok-fg);
   font-weight: 800;
 }
 .sample-button:hover {
-  background: var(--g-soft);
+  background: var(--ok-bg);
 }
 .sample-fill > span svg,
 .publication-summary li::before {
-  color: var(--teal);
+  color: var(--accent);
 }
 .publication-summary li::before {
   background: var(--teal);
@@ -474,54 +472,55 @@ label {
 .notice {
   background: var(--sheet);
   border: 1px solid var(--line);
-  border-inline-start: 4px solid var(--teal);
+  border-inline-start: 4px solid var(--accent);
   color: var(--ink);
 }
 .notice.success,
 .notice.ready,
 .profile-return {
-  background: var(--g-soft);
-  border-color: var(--g-line);
-  border-inline-start-color: var(--g);
-  color: var(--g-dark);
+  background: var(--ok-bg);
+  border-color: var(--ok-line);
+  border-inline-start-color: var(--accent);
+  color: var(--ok-fg);
 }
 .notice.error,
 .workflow-problems {
-  background: #fbe9e4;
-  border-color: #efc2b6;
+  background: var(--bad-bg);
+  border-color: var(--bad-line);
   border-inline-start-color: var(--stamp);
-  color: #7c2413;
+  color: var(--bad-fg);
 }
 .step-checklist:not(.success) {
-  background: #fbf1dc;
-  border-color: #ead7a8;
-  border-inline-start-color: #c08a1e;
-  color: #5f4409;
+  background: var(--warn-bg);
+  border-color: var(--warn-line);
+  border-inline-start-color: var(--warn-mark);
+  color: var(--warn-fg);
 }
 .issue-link {
-  background: #fffdf8cc;
-  border-color: #ead7a8;
+  background: var(--glass);
+  border-color: var(--warn-line);
+  color: inherit;
 }
 .issue-link:hover,
 .issue-link:focus-visible {
-  background: #fff;
+  background: var(--field);
   border-color: var(--ink);
 }
 .badge {
   font-weight: 700;
 }
 .toast {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
   border: 0;
 }
 .toast.success {
-  background: var(--g-dark);
-  color: #fff;
+  background: var(--teal);
+  color: var(--on-dark);
 }
 .toast.error {
-  background: var(--stamp);
-  color: #fff;
+  background: var(--stamp-fill);
+  color: var(--on-dark);
 }
 .loading-line {
   background: var(--teal-bright);
@@ -540,7 +539,7 @@ td {
   border-top-color: var(--line);
 }
 tr.clickable:hover td {
-  background: #fff;
+  background: var(--paper);
 }
 .auction-review table {
   border-color: var(--line);
@@ -552,7 +551,7 @@ tr.clickable:hover td {
   background: #fff;
 }
 .live-preview-heading span {
-  color: var(--teal);
+  color: var(--accent);
   font-weight: 600;
 }
 .live-preview-navigation button {
@@ -561,8 +560,8 @@ tr.clickable:hover td {
   color: var(--ink);
 }
 .preview-open {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--fill);
+  color: var(--on-fill);
   clip-path: polygon(
     0 0,
     calc(100% - var(--cut)) 0,
@@ -573,7 +572,8 @@ tr.clickable:hover td {
   );
 }
 .preview-open.warns {
-  background: var(--stamp);
+  background: var(--stamp-fill);
+  color: var(--on-dark);
 }
 .preview-close {
   background: var(--sheet);
@@ -588,20 +588,20 @@ tr.clickable:hover td {
 }
 .confirmation::backdrop,
 .image-editor::backdrop {
-  background: #0d2536a6;
+  background: var(--scrim);
 }
 .editor-stage {
   outline-color: var(--ink);
 }
 .image-slot.missing {
-  background: #fbf1dc;
-  border-color: #ead7a8;
+  background: var(--warn-bg);
+  border-color: var(--warn-line);
 }
 .image-slot-heading span {
   font-weight: 700;
 }
 .image-slot.done .image-slot-heading span {
-  color: var(--g-dark);
+  color: var(--ok-fg);
 }
 .image-slot img,
 .property-thumb {
@@ -611,12 +611,12 @@ tr.clickable:hover td {
 /* ---- dashboard -------------------------------------------------------- */
 .metric strong,
 .metric b {
-  color: var(--teal);
+  color: var(--accent);
   font-weight: 900;
 }
 .welcome-banner {
   background: var(--navy);
-  color: #fff;
+  color: var(--on-dark);
   border: 0;
   clip-path: polygon(
     0 0,
@@ -631,11 +631,11 @@ tr.clickable:hover td {
 .welcome-banner h3,
 .welcome-banner strong,
 .welcome-banner .text-button {
-  color: #fff;
+  color: var(--on-dark);
 }
 .welcome-banner p,
 .welcome-banner .eyebrow {
-  color: #c8dbe6;
+  color: var(--on-dark-soft);
 }
 .paper,
 .paper-stack > * {
@@ -670,7 +670,7 @@ tr.clickable:hover td {
 .login-story h1 em {
   font-style: normal;
   font-weight: 900;
-  color: var(--teal);
+  color: var(--accent);
 }
 .login-story p:not(.eyebrow),
 .login-story .muted {
@@ -681,7 +681,7 @@ tr.clickable:hover td {
   border: 0;
 }
 .login-home {
-  color: var(--teal);
+  color: var(--accent);
 }
 .startup {
   background: var(--paper);
@@ -692,5 +692,5 @@ tr.clickable:hover td {
 .project-generation {
   background: var(--sheet);
   border: 1px solid var(--line);
-  border-top: 3px solid var(--g);
+  border-top: 3px solid var(--accent);
 }
