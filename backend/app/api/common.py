@@ -9,7 +9,11 @@ from ..models import (
     GeneratedFile,
     GeneratedOutput,
     Project,
+    ProjectImage,
+    SystemSetting,
+    User,
 )
+from ..services.storage import LocalStorage
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +102,33 @@ def output_view(db, o):
             )
         ],
     }
+
+
+def discard_files(db, keys):
+    """Remove stored files that no record refers to any more.
+
+    Call it after the deletion is committed. One file can serve several
+    records (an account's logo is the logo of each of its projects), so a file
+    goes only once its last reference is gone.
+    """
+    keys = set(keys)
+    if not keys:
+        return
+    kept = set(db.scalars(select(ProjectImage.key).where(ProjectImage.key.in_(keys))))
+    kept |= set(
+        db.scalars(select(GeneratedFile.key).where(GeneratedFile.key.in_(keys)))
+    )
+    for data in (
+        *db.scalars(select(User.agent_profile)),
+        *db.scalars(select(SystemSetting.data)),
+    ):
+        kept.add((data or {}).get("logo_key"))
+    storage = LocalStorage()
+    for key in keys - kept:
+        try:
+            storage.delete(key)
+        except (OSError, HTTPException):
+            logger.warning("Stored file %s could not be removed", key)
 
 
 async def upload_bytes(file):

@@ -30,7 +30,8 @@ import {
   Users,
 } from "lucide-react";
 import { api, send, Project, Output, Detail, Run, Account } from "./api";
-import { ProjectList, OutputList, title } from "./shared";
+import { ProjectList, OutputList, RemovalContext, title } from "./shared";
+import { useConfirm } from "./Confirmation";
 import OutputReview from "./OutputReview";
 import Settings, { Config } from "./Settings";
 type Page =
@@ -198,6 +199,34 @@ export default function Workspace() {
     if (detail) setDetail(await api<Detail>("/projects/" + detail.project.id));
     await refresh();
   };
+  const confirm = useConfirm();
+  // Deleting is final, so each one is confirmed with what goes with it.
+  const removal = {
+    project: async (p: Project) => {
+      if (!(await confirm(tr("common.deleteProjectConfirm", { name: p.name }))))
+        return;
+      void run(async () => {
+        await api("/projects/" + p.id, { method: "DELETE" });
+        if (detail?.project.id === p.id) setDetail(null);
+        await refresh();
+      }, tr("common.projectDeleted"));
+    },
+    output: async (o: Output) => {
+      if (
+        !(await confirm(
+          tr("common.deleteOutputConfirm", {
+            name: title(o.output_type) + " · " + o.project_name,
+          }),
+        ))
+      )
+        return;
+      void run(async () => {
+        await api("/outputs/" + o.id, { method: "DELETE" });
+        if (review?.id === o.id) setReview(null);
+        await reloadProject();
+      }, tr("common.outputDeleted"));
+    },
+  };
   // A new project opens straight in its wizard: its name is the auction name
   // entered on the first page, so nothing has to be asked beforehand.
   const createProject = () =>
@@ -335,7 +364,7 @@ export default function Workspace() {
         : tr("ui.one_source_of_truth_for_every_output"),
     ],
   };
-  return (
+  const shell = (
     <div className="app-shell">
       <aside className={"sidebar " + (mobile ? "open" : "")}>
         <div className="brand">
@@ -802,5 +831,8 @@ export default function Workspace() {
         </div>
       )}
     </div>
+  );
+  return (
+    <RemovalContext.Provider value={removal}>{shell}</RemovalContext.Provider>
   );
 }

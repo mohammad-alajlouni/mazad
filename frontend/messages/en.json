@@ -276,7 +276,13 @@
     "notFound": "Page not found",
     "returnHome": "Return to workspace",
     "unexpectedError": "Something went wrong. Please try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "deleteProject": "Delete project {name}",
+    "deleteOutput": "Delete output {name}",
+    "deleteProjectConfirm": "Delete the project “{name}” for good? Its details, properties, photographs and every output made from it (booklet, banners and social posts) are deleted with it. This cannot be undone.",
+    "deleteOutputConfirm": "Delete this output ({name}) for good? Its files are deleted. The project's data stays, and the output can be generated again.",
+    "projectDeleted": "Project deleted",
+    "outputDeleted": "Output deleted"
   },
   "errors": {
     "TOO_MANY_LOGIN_ATTEMPTS_TRY_AGAIN_IN_FIVE_MINUTES": "Too many login attempts. Try again in five minutes.",
@@ -395,7 +401,9 @@
     "Settings_updated": "Settings updated",
     "User_created": "User created",
     "User_status_updated": "User status updated",
-    "Account_profile_updated": "Account profile updated"
+    "Account_profile_updated": "Account profile updated",
+    "Project_deleted": "Project deleted",
+    "Output_deleted": "Output deleted"
   },
   "auction": {
     "deed_number_n": "Deed number {number}",

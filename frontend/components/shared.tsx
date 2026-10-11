@@ -1,8 +1,15 @@
+import { createContext, useContext } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowUpRight, FolderOpen, FileText } from "lucide-react";
+import { ArrowUpRight, FolderOpen, FileText, Trash2 } from "lucide-react";
 import { Project, Output } from "./api";
 export { systemLabel as title, formatDate as date } from "../i18n/format";
 import { systemLabel as title, formatDate as date } from "../i18n/format";
+// Deleting a project or an output, offered on every list of them. The
+// workspace provides it: it confirms, deletes and reloads the lists.
+export const RemovalContext = createContext<{
+  project?: (project: Project) => void;
+  output?: (output: Output) => void;
+}>({});
 export function Badge({ status }: { status: string }) {
   const tr = useTranslations();
 
@@ -31,6 +38,7 @@ export function ProjectList({
   onOpen: (id: string) => void;
 }) {
   const tr = useTranslations();
+  const removal = useContext(RemovalContext);
 
   return projects.length ? (
     <div className="table-scroll">
@@ -80,7 +88,24 @@ export function ProjectList({
                 <Badge status={p.status} />
               </td>
               <td>
-                <ArrowUpRight size={17} />
+                <span className="row-tools">
+                  {removal.project && (
+                    <button
+                      type="button"
+                      className="icon-button danger"
+                      title={tr("ui.delete")}
+                      aria-label={tr("common.deleteProject", { name: p.name })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removal.project?.(p);
+                      }}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                  <ArrowUpRight size={17} className="row-arrow" />
+                </span>
               </td>
             </tr>
           ))}
@@ -99,24 +124,40 @@ export function OutputList({
   onOpen: (o: Output) => void;
 }) {
   const tr = useTranslations();
+  const removal = useContext(RemovalContext);
 
   return outputs.length ? (
     <div className="output-grid">
       {outputs.map((o) => (
-        <button className="output-card" key={o.id} onClick={() => onOpen(o)}>
-          <div className="flex-row">
-            <span className="project-icon">
-              <FileText size={20} />
-            </span>
-            <Badge status={o.status} />
-          </div>
-          <h3>{title(o.output_type)}</h3>
-          <p>{o.project_name}</p>
-          <div className="output-footer">
-            <span>{date(o.created_at)}</span>
-            <ArrowUpRight size={17} />
-          </div>
-        </button>
+        <div className="output-item" key={o.id}>
+          <button className="output-card" onClick={() => onOpen(o)}>
+            <div className="flex-row">
+              <span className="project-icon">
+                <FileText size={20} />
+              </span>
+              <Badge status={o.status} />
+            </div>
+            <h3>{title(o.output_type)}</h3>
+            <p>{o.project_name}</p>
+            <div className="output-footer">
+              <span>{date(o.created_at)}</span>
+              <ArrowUpRight size={17} />
+            </div>
+          </button>
+          {removal.output && (
+            <button
+              type="button"
+              className="icon-button danger output-delete"
+              title={tr("ui.delete")}
+              aria-label={tr("common.deleteOutput", {
+                name: title(o.output_type) + " · " + o.project_name,
+              })}
+              onClick={() => removal.output?.(o)}
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+        </div>
       ))}
     </div>
   ) : (

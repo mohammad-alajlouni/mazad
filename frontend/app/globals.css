@@ -837,6 +837,25 @@ nav {
 .output-card:hover {
   border-color: #a3b899;
 }
+/* A card opens its output; its delete button sits on the card's last line,
+   beside the arrow, as a button of its own. */
+.output-item {
+  position: relative;
+  display: grid;
+}
+.output-item .output-card {
+  width: 100%;
+}
+.output-delete {
+  position: absolute;
+  inset-block-end: 16px;
+  inset-inline-end: 47px;
+}
+.row-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
 .output-card h3 {
   margin: 22px 0 8px;
 }
@@ -1959,6 +1978,8 @@ html[dir="rtl"] .profile-return .lucide-arrow-left { transform: scaleX(-1); }
   table.stacks td { display: block; border: 0; padding: 0; font-size: 13px; }
   table.stacks td:first-child { flex: 1 1 100%; font-size: 14px; overflow-wrap: anywhere; }
   table.stacks td:empty { display: none; }
-  table.project-table td:last-child { display: none; }
+  table.project-table td:last-child { margin-inline-start: auto; }
+  table.project-table td:last-child:not(:has(button)), table.project-table .row-arrow { display: none; }
+  .output-delete { inset-block-end: 5px; inset-inline-end: 34px; }
   thead th:first-child { min-width: 0; }
 }

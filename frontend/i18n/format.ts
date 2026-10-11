@@ -64,7 +64,11 @@ export function activityLabel(action: string) {
 export function activityDetail(action: string, detail: string) {
   if (action === "Settings updated")
     return translate("ui.organization_branding");
-  if (action === "Output generated" || action === "Output approved") {
+  if (
+    action === "Output generated" ||
+    action === "Output approved" ||
+    action === "Output deleted"
+  ) {
     const [kind, ...name] = detail.split(" · ");
     const key = kind.toLowerCase().replaceAll(" ", "_");
     const aliases: Record<string, string> = {

@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 
 from ..auth import current_user
 from ..db import get_db
 from ..models import (
+    AIGeneration,
     AuditLog,
+    ExcelImport,
+    ExcelImportRow,
+    GeneratedFile,
     GeneratedOutput,
     Project,
     ProjectImage,
@@ -16,7 +20,7 @@ from ..models import (
 )
 from ..schemas import ItemInput, ProjectInput
 from ..services.properties import item_view, save_item
-from .common import audit, get_project, invalidate, output_view
+from .common import audit, discard_files, get_project, invalidate, output_view
 
 router = APIRouter(dependencies=[Depends(current_user)], tags=["projects"])
 
@@ -81,7 +85,10 @@ def projects(db=Depends(get_db)):
 @router.post("/projects", status_code=201)
 def create_project(body: ProjectInput, db=Depends(get_db)):
     from ..services.agent_profile import apply_profile
-    user = db.scalar(select(User).where(User.id == db.info["user_id"]).with_for_update())
+
+    user = db.scalar(
+        select(User).where(User.id == db.info["user_id"]).with_for_update()
+    )
     data = body.model_dump(mode="json")
     data["auction"] = data["auction"] or {}
     p = Project(owner_id=db.info["user_id"], **data)
@@ -152,6 +159,39 @@ def update_project(id: str, body: ProjectInput, db=Depends(get_db)):
         db.rollback()
         raise HTTPException(409, "Project reference already exists")
     return p
+
+
+@router.delete("/projects/{id}")
+def delete_project(id: str, db=Depends(get_db)):
+    """Delete a project with everything made from it: it cannot be undone."""
+    p = get_project(db, id, True)
+    outputs = select(GeneratedOutput.id).where(GeneratedOutput.project_id == id)
+    imports = select(ExcelImport.id).where(ExcelImport.project_id == id)
+    items = select(ProjectItem.id).where(ProjectItem.project_id == id)
+    keys = [
+        *db.scalars(
+            select(GeneratedFile.key).where(GeneratedFile.output_id.in_(outputs))
+        ),
+        *db.scalars(select(ProjectImage.key).where(ProjectImage.project_id == id)),
+    ]
+    # Children first: each statement leaves nothing pointing at the next one.
+    for statement in (
+        delete(GeneratedFile).where(GeneratedFile.output_id.in_(outputs)),
+        delete(GeneratedOutput).where(GeneratedOutput.project_id == id),
+        delete(ExcelImportRow).where(ExcelImportRow.import_id.in_(imports)),
+        delete(ExcelImport).where(ExcelImport.project_id == id),
+        delete(AIGeneration).where(AIGeneration.project_id == id),
+        delete(RentalContract).where(RentalContract.item_id.in_(items)),
+        delete(ProjectImage).where(ProjectImage.project_id == id),
+        delete(ProjectItem).where(ProjectItem.project_id == id),
+        delete(SellingAgent).where(SellingAgent.project_id == id),
+        delete(Project).where(Project.id == id),
+    ):
+        db.execute(statement, execution_options={"synchronize_session": False})
+    audit(db, "Project deleted", p.name)
+    db.commit()
+    discard_files(db, keys)
+    return {"deleted": id}
 
 
 @router.post("/projects/{id}/items", status_code=201)

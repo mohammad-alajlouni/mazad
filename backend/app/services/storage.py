@@ -33,6 +33,9 @@ class LocalStorage:
     def read(self, key):
         return self.path(key).read_bytes()
 
+    def delete(self, key):
+        self.path(key).unlink(missing_ok=True)
+
     def image(self, data):
         if len(data) > settings().max_upload_mb * 1024 * 1024:
             raise HTTPException(413, "Image exceeds upload limit")

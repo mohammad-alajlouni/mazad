@@ -276,7 +276,13 @@
     "notFound": "الصفحة غير موجودة",
     "returnHome": "العودة إلى مساحة العمل",
     "unexpectedError": "حدث خطأ. يرجى المحاولة مجددًا.",
-    "retry": "المحاولة مجددًا"
+    "retry": "المحاولة مجددًا",
+    "deleteProject": "حذف المشروع {name}",
+    "deleteOutput": "حذف المخرج {name}",
+    "deleteProjectConfirm": "حذف المشروع «{name}» نهائيًا؟ ستُحذف معه بياناته وعقاراته وصوره وجميع المخرجات المولّدة منه (الكتيّب والبنرات ومنشورات التواصل). لا يمكن التراجع عن هذا الإجراء.",
+    "deleteOutputConfirm": "حذف هذا المخرج ({name}) نهائيًا؟ ستُحذف ملفاته، وتبقى بيانات المشروع ويمكن توليد المخرج من جديد.",
+    "projectDeleted": "تم حذف المشروع",
+    "outputDeleted": "تم حذف المخرج"
   },
   "errors": {
     "TOO_MANY_LOGIN_ATTEMPTS_TRY_AGAIN_IN_FIVE_MINUTES": "محاولات تسجيل دخول كثيرة. حاول مجددًا بعد خمس دقائق.",
@@ -395,7 +401,9 @@
     "Settings_updated": "تم تحديث الإعدادات",
     "User_created": "إنشاء حساب مستخدم",
     "User_status_updated": "تحديث حالة حساب",
-    "Account_profile_updated": "تحديث ملف الحساب"
+    "Account_profile_updated": "تحديث ملف الحساب",
+    "Project_deleted": "تم حذف المشروع",
+    "Output_deleted": "تم حذف المخرج"
   },
   "auction": {
     "deed_number_n": "رقم الصك {number, select, 1 {الأول} 2 {الثاني} 3 {الثالث} other {الرابع}}",

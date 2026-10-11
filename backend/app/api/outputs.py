@@ -20,7 +20,7 @@ from ..models import (
 )
 from ..services.ai import AIService
 from ..services.storage import LocalStorage
-from .common import audit, get_output, get_project, output_view
+from .common import audit, discard_files, get_output, get_project, output_view
 
 router = APIRouter(dependencies=[Depends(current_user)], tags=["outputs"])
 
@@ -176,6 +176,23 @@ def edit_output(id: str, body: ReviewInput, db=Depends(get_db)):
     audit(db, "Output edited", id)
     db.commit()
     return output_view(db, o)
+
+
+@router.delete("/outputs/{id}")
+def delete_output(id: str, db=Depends(get_db)):
+    """Delete one output and its files; the project's data stays as it is."""
+    o = get_output(db, id)
+    detail = f"{o.output_type} · {o.content['project']['name']}"
+    files = db.scalars(select(GeneratedFile).where(GeneratedFile.output_id == id)).all()
+    keys = [file.key for file in files]
+    for file in files:
+        db.delete(file)
+    db.flush()
+    db.delete(o)
+    audit(db, "Output deleted", detail)
+    db.commit()
+    discard_files(db, keys)
+    return {"deleted": id}
 
 
 @router.post("/outputs/{id}/approve")
