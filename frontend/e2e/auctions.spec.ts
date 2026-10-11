@@ -25,7 +25,7 @@ for (const flow of ["manual", "excel"])
   test(`official auction ${flow} browser flow`, async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto("/");
+    await page.goto("/#login");
     await page.locator(".language-switcher").selectOption("en");
     await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
     await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);

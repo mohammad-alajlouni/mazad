@@ -1797,6 +1797,7 @@ html[dir="rtl"] .nav-previous .lucide-arrow-left { transform: scaleX(-1); }
 .frame-choice button { border: 0; background: transparent; border-radius: 9px; padding: 6px 16px; cursor: pointer; font: inherit; color: #35524d; }
 .frame-choice button.selected { background: #fff; color: var(--g-dark); font-weight: 700; box-shadow: 0 1px 4px #0000001a; }
 .image-editor .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.login-home { justify-self: start; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--g-dark); text-underline-offset: 4px; }
 .field-with-more { display: grid; gap: 8px; align-content: start; min-width: 0; }
 .more-deed-row { display: flex; align-items: center; gap: 6px; }
 .more-deed-row input { flex: 1; min-width: 0; }

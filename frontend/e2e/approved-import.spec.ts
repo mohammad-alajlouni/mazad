@@ -17,7 +17,7 @@ const t = createTranslator({ locale: "ar", messages: ar });
 test("approved template download, invalid files, atomic import and stale preview", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#login");
   await page.getByLabel(t("ui.email_address")).fill(env.ADMIN_EMAIL);
   await page
     .getByLabel(t("ui.password"), { exact: true })

@@ -20,7 +20,7 @@ test("Arabic default, administrator provisioning, private author booklet and app
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/#login");
   await expect(page.locator("html")).toHaveAttribute("lang", "ar");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await page.getByLabel(t("ui.email_address")).fill(env.ADMIN_EMAIL);

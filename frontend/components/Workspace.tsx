@@ -7,6 +7,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslations } from "next-intl";
 import Login from "./Login";
 import AccountProfile from "./AccountProfile";
+import Landing from "./Landing";
 import UserManagement from "./UserManagement";
 import DashboardView, { Dashboard } from "./Dashboard";
 import BannerWorkspace, { BannerCreate } from "./BannerWorkspace";
@@ -95,6 +96,22 @@ export default function Workspace() {
       setBusy(false);
     }
   };
+  // Visitors meet the landing page; "#login" in the address is the sign-in
+  // form (so it can be linked to, and the browser's Back returns here).
+  const [entering, setEntering] = useState(false);
+  useEffect(() => {
+    const read = () => setEntering(location.hash === "#login");
+    read();
+    addEventListener("hashchange", read);
+    return () => removeEventListener("hashchange", read);
+  }, []);
+  const signedIn = useRef(false);
+  signedIn.current = !!user;
+  // Whoever is signed out (expired session, log out) lands on the form.
+  const signedOut = () => {
+    setUser(null);
+    if (location.hash !== "#login") location.hash = "login";
+  };
   // Account settings opened from a project are laid over it: the project
   // stays as it was left (step, page, unsaved values) and is one click back.
   const [profileOver, setProfileOver] = useState(false);
@@ -125,6 +142,10 @@ export default function Workspace() {
   const inProfile = page === "profile" || profileOver;
   useEffect(() => {
     const expired = () => {
+      // A session that ended mid-work goes to the form; a visitor who never
+      // signed in (the first check answers the same way) stays on the page.
+      if (signedIn.current && location.hash !== "#login")
+        location.hash = "login";
       setUser(null);
       setReview(null);
     };
@@ -221,11 +242,23 @@ export default function Workspace() {
         <p>{tr("ui.opening_your_workspace")}</p>
       </div>
     );
+  if (!user && !entering)
+    return (
+      <Landing
+        onEnter={() => {
+          location.hash = "login";
+          scrollTo(0, 0);
+        }}
+      />
+    );
   if (!user)
     return (
       <Login
         run={run}
         setUser={(account) => {
+          // Signed in: the address is the workspace's again.
+          history.replaceState(null, "", location.pathname + location.search);
+          setEntering(false);
           setUser(account);
           setPage(account.role === "admin" ? "users" : "dashboard");
         }}
@@ -258,7 +291,7 @@ export default function Workspace() {
           onClick={() =>
             void run(async () => {
               await api("/auth/logout", { method: "POST" });
-              setUser(null);
+              signedOut();
             })
           }
         >
@@ -409,7 +442,7 @@ export default function Workspace() {
               onClick={() =>
                 void run(async () => {
                   await api("/auth/logout", { method: "POST" });
-                  setUser(null);
+                  signedOut();
                   setReview(null);
                 })
               }

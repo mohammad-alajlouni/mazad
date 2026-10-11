@@ -100,6 +100,18 @@ export default function Login({
           <ArrowRight size={17} />
         </button>
         <small className="muted">{tr("flow.accountHelp")}</small>
+        {/* Back to the public page (the address without "#login"). */}
+        <a
+          className="login-home"
+          href="#"
+          onClick={(event) => {
+            event.preventDefault();
+            history.pushState(null, "", location.pathname + location.search);
+            dispatchEvent(new HashChangeEvent("hashchange"));
+          }}
+        >
+          {tr("landing.backHome")}
+        </a>
       </form>
     </main>
   );

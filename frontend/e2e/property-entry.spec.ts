@@ -17,7 +17,7 @@ const env = Object.fromEntries(
 test("properties are entered one after another without leaving the form", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#login");
   await page.locator(".language-switcher").selectOption("en");
   await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
   await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);

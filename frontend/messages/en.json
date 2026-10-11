@@ -901,6 +901,121 @@
     "retry": "Try again",
     "loading": "Loading your details…"
   },
+  "landing": {
+    "skip": "Skip to content",
+    "nav": "Page sections",
+    "brand": "Kutayyib",
+    "mark": "k",
+    "navOutputs": "What you get",
+    "navSteps": "How it works",
+    "navDetails": "Details",
+    "signIn": "Sign in",
+    "enter": "Enter the platform",
+    "seeOutputs": "See what you get",
+    "audience": "For selling agents in real-estate auctions",
+    "heroLine1": "Every auction publication",
+    "heroLine2": "at the press of a",
+    "heroKey": "button",
+    "keyLabel": "Button: press to lay the booklet pages out",
+    "lead": "Enter the auction and its properties once, and receive the booklet, the banners and the social posts ready to print and publish, in the approved identity and without waiting for a designer.",
+    "keyHint": "Try the button in the headline: that is how your booklet comes out.",
+    "proofLabel": "Real pages of an auction booklet made by the platform: cover, auction details, property summary and participation steps",
+    "ticketJob": "Auction booklet",
+    "ticketSize": "A4 · 210 × 297 mm",
+    "ticketRun": "Copy",
+    "stamp": "Ready to print",
+    "factsLabel": "The platform in numbers",
+    "facts": {
+      "covers": "approved covers to choose from",
+      "banners": "banner sizes",
+      "posts": "social post formats",
+      "languages": "languages: Arabic and English"
+    },
+    "outputsTitle": "Enter the data once. Three publications come out.",
+    "outputsLead": "What you type for the booklet is what appears on the banner and in the post. No copying, no pasting, and no figure that differs from one publication to the next.",
+    "bookletAlt": "Pages of an auction booklet: auction details, property summary and participation steps",
+    "bannerAlt": "A 4×2 metre “For sale by public auction” banner",
+    "postsAlt": "Two auction posts: a square one for Instagram and a tall one for stories",
+    "booklet": {
+      "title": "The auction booklet",
+      "text": "From the cover to the contact page in the guide's order: introduction, selling agent, auction details, property summary, a page for each property, terms and participation steps.",
+      "spec1": "A4 PDF, ready for the press",
+      "spec2": "A digital edition with links, a print edition with QR codes",
+      "spec3": "Six approved covers, and your own photograph on the two photographic ones"
+    },
+    "banner": {
+      "title": "Banners",
+      "text": "A banner for each property with the legal announcement, the licence number and the booklet's code, in the size that suits your site.",
+      "sizes": "Sizes in metres"
+    },
+    "posts": {
+      "title": "Social posts",
+      "text": "The auction announcement and a post for each property, with caption text ready to publish.",
+      "spec1": "X · Instagram · Stories",
+      "spec2": "A picture at each platform's exact size"
+    },
+    "stepsTitle": "Four steps, in the order of the booklet's pages.",
+    "stepsLead": "You go through the booklet page by page, with a live preview beside you showing the result before anything is generated.",
+    "steps": {
+      "auction": {
+        "title": "Auction and cover",
+        "text": "Choose a cover and enter the auction's name, type and dates."
+      },
+      "properties": {
+        "title": "Properties and photographs",
+        "text": "Add them one by one or import them from Excel, and place each photograph in its frame."
+      },
+      "closing": {
+        "title": "Closing pages",
+        "text": "The contact number and the links to the platform and the hall."
+      },
+      "generate": {
+        "title": "Generate",
+        "text": "One button makes the booklet, the banners and the posts together."
+      }
+    },
+    "detailsTitle": "Small details that spare you the revisions.",
+    "detailsLead": "Everything that used to send the file back to the designer, time after time, is taken care of here from the start.",
+    "details": {
+      "preview": {
+        "title": "Live preview",
+        "text": "The booklet page changes in front of you with every letter you type."
+      },
+      "excel": {
+        "title": "Import from Excel",
+        "text": "Upload the approved template and the properties are added in one go."
+      },
+      "editor": {
+        "title": "Photograph editor with a fixed frame",
+        "text": "The frame has the size of the photograph's place on the page; you choose the part that shows."
+      },
+      "summary": {
+        "title": "The property summary, built for you",
+        "text": "A table made from your data, twenty properties to a page."
+      },
+      "deeds": {
+        "title": "Up to four deeds per property",
+        "text": "Each deed named and numbered on the property's page and in the summary."
+      },
+      "links": {
+        "title": "QR codes and links",
+        "text": "For the location, the platform and the booklet, made from the links you enter."
+      },
+      "approval": {
+        "title": "Review and approval",
+        "text": "The final file is not downloaded before you review and approve it."
+      },
+      "languages": {
+        "title": "Arabic and English",
+        "text": "The interface and the outputs in both languages."
+      }
+    },
+    "finalTitle": "Your next auction is one press away.",
+    "finalText": "Sign in, enter your data, and press Generate. The booklet, the banners and the posts are waiting on the other side.",
+    "finalNote": "Sign in with the account the platform's administration activated for you.",
+    "footLine": "Booklets, banners and posts for real-estate auctions, from one set of data.",
+    "backHome": "Back to the home page"
+  },
   "imageEditor": {
     "help": "Drag the photograph to choose the part that shows, and make it larger or smaller with the slider. The frame keeps the size it has in print.",
     "helpLogo": "Move the logo and make it larger or smaller until it sits in the frame as you want. It starts whole, and a transparent background is kept.",

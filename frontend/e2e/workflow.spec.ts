@@ -30,7 +30,7 @@ test("administrator completes manual and Excel input, uploads image, reviews and
   );
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/#login");
   await page.locator(".language-switcher").selectOption("en");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);

@@ -37,7 +37,7 @@ for (const locale of ["en", "ar"] as const)
           problems.push(m.text());
       });
       if (mobile) await page.setViewportSize({ width: 390, height: 844 });
-      await page.goto("/");
+      await page.goto("/#login");
       await page.locator(".language-switcher").selectOption(locale);
       await expect(page.locator("html")).toHaveAttribute(
         "dir",

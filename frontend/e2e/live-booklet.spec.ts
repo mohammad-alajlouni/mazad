@@ -19,7 +19,7 @@ for (const mobile of [false, true])
     page,
   }) => {
     if (mobile) await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/");
+    await page.goto("/#login");
     await page.locator(".language-switcher").selectOption("en");
     await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
     await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);

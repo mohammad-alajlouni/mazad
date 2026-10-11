@@ -19,7 +19,7 @@ test("social campaign validates media, exports exact pixels and remains separate
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/#login");
   await page.locator(".language-switcher").selectOption("en");
   await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
   await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);

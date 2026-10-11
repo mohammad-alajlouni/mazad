@@ -20,7 +20,7 @@ test("a property's photographs are entered and changed in its own form", async (
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/#login");
   await page.locator(".language-switcher").selectOption("en");
   await page.getByLabel("Email address").fill(env.ADMIN_EMAIL);
   await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);

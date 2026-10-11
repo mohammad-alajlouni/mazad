@@ -31,7 +31,7 @@ test("account onboarding supplies projects and can only be edited in account set
   ).toBeTruthy();
   await page.request.post("/api/auth/logout");
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/#login");
   await page.locator(".language-switcher").selectOption("en");
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);

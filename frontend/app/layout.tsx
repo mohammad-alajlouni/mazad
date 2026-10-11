@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./landing.css";
 import { cookies } from "next/headers";
 import LocaleProvider from "../i18n/LocaleProvider";
 import { messages, normalizeLocale } from "../i18n/messages";
