@@ -72,7 +72,7 @@ export default function UserManagement({
       <section className="panel form-panel">
         <h2>{t("flow.users")}</h2>
         <div className="table-scroll">
-          <table>
+          <table className="stacks">
             <thead>
               <tr>
                 <th>{t("ui.email_address")}</th>

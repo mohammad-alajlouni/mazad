@@ -1895,3 +1895,70 @@ html[dir="rtl"] .profile-return .lucide-arrow-left { transform: scaleX(-1); }
 .workflow-steps button > span { width: 22px; height: 22px; font-size: 12px; }
 .workflow-steps .step-missing { min-width: 16px; height: 16px; line-height: 16px; font-size: 10px; padding: 0 4px; }
 .workflow-navigation:has(.nav-next[hidden]) { justify-content: flex-start; }
+
+/* ---- Phones ------------------------------------------------------------
+   Kept last so these rules win over the desktop ones above. */
+.confirmation { margin: auto; }
+.preview-open, .preview-close { display: none; }
+
+@media (max-width: 1050px) {
+  /* The live preview is a sheet over the form, opened from a floating button.
+     It stays laid out while closed (transparent, behind the page) so the page
+     in it is still measured; opacity hides the page frames too, which set
+     their own visibility. */
+  .preview-open {
+    position: fixed; inset-inline-end: 14px; bottom: 112px; z-index: 30;
+    display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 18px;
+    border: 0; border-radius: 999px; background: #101828; color: #fff;
+    font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 10px 24px #10182840;
+  }
+  .preview-open.warns { background: #b42318; }
+  .live-booklet-preview, .live-booklet-fields { grid-row: auto; }
+  .live-booklet-preview {
+    position: fixed; inset: 0; z-index: -1; opacity: 0; pointer-events: none;
+    display: block; max-height: none; overflow: auto; margin: 0;
+    border: 0; border-radius: 0; padding: 62px 16px 28px; background: #f7f8fa;
+  }
+  .live-booklet-preview.open { z-index: 70; opacity: 1; pointer-events: auto; }
+  body:has(.live-booklet-preview.open) { overflow: hidden; }
+  .live-preview-paper { grid-column: auto; grid-row: auto; width: 100%; max-width: 520px; margin-inline: auto; }
+  .live-preview-heading { display: flex; }
+  .live-preview-heading span { display: inline; }
+  .live-preview-navigation { margin: 12px 0; }
+  .live-booklet-preview p { margin-top: 10px; }
+  .preview-close {
+    position: fixed; top: 12px; inset-inline-end: 12px; z-index: 1;
+    display: grid; place-items: center; width: 44px; height: 44px;
+    border: 1px solid var(--line); border-radius: 50%; background: #fff; color: #101828; cursor: pointer;
+  }
+}
+
+@media (max-width: 700px) {
+  /* Tabs and steps wrap onto rows instead of running off the edge. */
+  .project-sections, .workflow-steps, .live-booklet-fields .workflow-steps { flex-wrap: wrap; overflow: visible; }
+  .project-sections button, .workflow-steps button {
+    flex: 1 1 calc(50% - 6px); min-width: 0; white-space: normal; padding: 10px 8px;
+  }
+  /* A property card: its name on its own lines, its tools beneath. */
+  .property-cards { max-height: none; }
+  .property-cards li { flex-wrap: wrap; padding-inline-end: 0; }
+  .property-card { flex: 1 1 100%; flex-wrap: wrap; row-gap: 6px; }
+  .property-text { flex: 1 1 60%; }
+  .property-text strong, .property-text small { white-space: normal; overflow-wrap: anywhere; }
+  .property-tools { margin-inline-start: auto; padding: 0 8px 6px; }
+  .icon-button { min-width: 40px; min-height: 40px; display: inline-grid; place-items: center; }
+  /* Lists of projects and accounts read as cards rather than cut-off tables. */
+  .table-scroll:has(table.stacks) { max-height: none; overflow: visible; }
+  table.stacks, table.stacks tbody { display: block; }
+  table.stacks thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  table.stacks tr {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+    padding: 14px 16px; border-top: 1px solid var(--line);
+  }
+  table.stacks td { display: block; border: 0; padding: 0; font-size: 13px; }
+  table.stacks td:first-child { flex: 1 1 100%; font-size: 14px; overflow-wrap: anywhere; }
+  table.stacks td:empty { display: none; }
+  table.project-table td:last-child { display: none; }
+  thead th:first-child { min-width: 0; }
+}

@@ -34,7 +34,7 @@ export function ProjectList({
 
   return projects.length ? (
     <div className="table-scroll">
-      <table>
+      <table className="stacks project-table">
         <thead>
           <tr>
             <th>{tr("ui.project")}</th>

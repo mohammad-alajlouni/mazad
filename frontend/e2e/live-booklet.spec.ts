@@ -27,9 +27,22 @@ for (const mobile of [false, true])
     await completeAccount(page);
     const name = "Live " + Date.now();
     await newProject(page, name, "project");
-    await expect(
-      page.getByRole("complementary", { name: "Live booklet preview" }),
-    ).toBeVisible();
+    // On a phone the preview is a sheet over the form, opened from a button
+    // and closed again to reach the form; on a wide screen it sits beside it.
+    const sheet = page.getByRole("complementary", {
+      name: "Live booklet preview",
+    });
+    const show = async () => {
+      if (mobile) await page.getByRole("button", { name: "Preview" }).click();
+      await expect(sheet).toBeVisible();
+    };
+    const hide = async () => {
+      if (!mobile) return;
+      await page.getByRole("button", { name: "Close preview" }).click();
+      await expect(sheet).toHaveCount(0);
+    };
+    if (mobile) await expect(sheet).toHaveCount(0);
+    else await expect(sheet).toBeVisible();
     const response = page.waitForResponse(
       (r) =>
         r.url().endsWith("/booklet-preview") &&
@@ -41,6 +54,7 @@ for (const mobile of [false, true])
     expect(preview.html).toContain("LIVE_CHANGED");
     expect(preview.saved).toBe(false);
     // The page renders in the browser: the new text appears within a second.
+    await show();
     const frame = page.locator(
       '.live-preview-paper iframe[aria-hidden="false"]',
     );
@@ -50,7 +64,7 @@ for (const mobile of [false, true])
         .frameLocator('.live-preview-paper iframe[aria-hidden="false"]')
         .getByText("LIVE_CHANGED"),
     ).toBeVisible();
-    expect(Date.now() - typed).toBeLessThan(1500);
+    expect(Date.now() - typed).toBeLessThan(mobile ? 2500 : 1500);
     // Required fields of this step are still empty: later steps stay locked.
     const options = page
       .getByLabel("Preview page", { exact: true })
@@ -69,6 +83,7 @@ for (const mobile of [false, true])
       "cover",
     );
     // A page cannot be left with its required values empty.
+    await hide();
     const infath = page
       .locator(".page-parts")
       .getByRole("button", { name: /About Infath/ });
@@ -88,6 +103,7 @@ for (const mobile of [false, true])
       await page.request.get("/api/projects").then((r) => r.json())
     ).find((p: { name: string }) => p.name === name);
     expect(project.auction.auction_name).toBe(name);
+    await show();
     await page.getByLabel("Preview page", { exact: true }).selectOption("0");
     await expect(page.locator(".live-preview-paper")).toHaveAttribute(
       "data-page-kind",

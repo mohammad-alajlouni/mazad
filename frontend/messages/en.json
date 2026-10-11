@@ -840,6 +840,8 @@
     "contact_information": "Selling-agent additional contact"
   },
   "liveBooklet": {
+    "open": "Preview",
+    "close": "Close preview",
     "title": "Live booklet preview",
     "help": "Updates instantly as you type and shows the pages of the step you are working on.",
     "updating": "Updating…",

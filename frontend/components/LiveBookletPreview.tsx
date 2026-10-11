@@ -1,6 +1,7 @@
 "use client";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Eye, X } from "lucide-react";
 import { api, Detail, send } from "./api";
 import { readProperty } from "./AuctionWorkspace";
 
@@ -87,6 +88,24 @@ export default function LiveBookletPreview({
   const [retry, setRetry] = useState(0);
   const [formComplete, setFormComplete] = useState(true);
   const [fits, setFits] = useState(true);
+  // On a phone the preview is a sheet over the form, opened from a button.
+  const [sheet, setSheet] = useState(false);
+  const [small, setSmall] = useState(false);
+  useEffect(() => {
+    const query = matchMedia("(max-width: 1050px)");
+    const read = () => setSmall(query.matches);
+    read();
+    query.addEventListener("change", read);
+    return () => query.removeEventListener("change", read);
+  }, []);
+  useEffect(() => {
+    if (!sheet) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSheet(false);
+    };
+    addEventListener("keydown", close);
+    return () => removeEventListener("keydown", close);
+  }, [sheet]);
   // Two frames: the new page loads in the hidden one, then they swap.
   const [frames, setFrames] = useState<[string, string]>(["", ""]);
   const [front, setFront] = useState(0);
@@ -345,7 +364,30 @@ export default function LiveBookletPreview({
       onChange={(e) => void changed(e.target as HTMLInputElement)}
     >
       <div className="live-booklet-fields">{children}</div>
-      <aside className="live-booklet-preview" aria-label={t("title")}>
+      <button
+        type="button"
+        className={"preview-open" + (fits ? "" : " warns")}
+        aria-expanded={sheet}
+        onClick={() => setSheet(true)}
+      >
+        <Eye size={18} />
+        {t("open")}
+      </button>
+      <aside
+        className={"live-booklet-preview" + (sheet ? " open" : "")}
+        aria-label={t("title")}
+        // Closed on a phone, it is out of reach of the keyboard and readers.
+        inert={small && !sheet}
+        aria-hidden={small && !sheet ? true : undefined}
+      >
+        <button
+          type="button"
+          className="preview-close"
+          aria-label={t("close")}
+          onClick={() => setSheet(false)}
+        >
+          <X size={20} />
+        </button>
         <div className="live-preview-heading">
           <strong>{t("title")}</strong>
           <span aria-live="polite">
