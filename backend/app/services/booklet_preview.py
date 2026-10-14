@@ -3,7 +3,7 @@
 import base64
 from functools import lru_cache
 from io import BytesIO
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 from uuid import uuid4
 
@@ -21,6 +21,13 @@ class PreviewImage(BaseModel):
     src: str = Field(max_length=3000000)
     category: Literal["agent_logo", "auction_logo", "cover", "main", "additional"]
     item_id: str | None = Field(default=None, max_length=100)
+    # Additional photographs picked together with this one: together they
+    # decide which pages a property gets (the features page needs two).
+    more: list[Annotated[str, Field(max_length=3000000)]] = Field(
+        default_factory=list, max_length=11
+    )
+    # The main photograph picked in the same form and not stored yet.
+    main: str | None = Field(default=None, max_length=3000000)
 
 
 class PreviewInput(BaseModel):
@@ -197,10 +204,18 @@ def preview(db, project, body):
             if not item:
                 raise HTTPException(404, "Item not found")
             photo = {"src": source, "orientation": orientation, "caption": ""}
+            others = [
+                dict(zip(("src", "orientation"), transient_image(src)), caption="")
+                for src in (body.image.more if category == "additional" else [])
+            ]
+            if category == "additional" and body.image.main:
+                src, shape = transient_image(body.image.main)
+                main = {"src": src, "orientation": shape, "caption": ""}
+                item["image_assets"] = [main] + item["image_assets"][1:]
             item["image_assets"] = (
                 ([photo] + item["image_assets"][1:])
                 if category == "main"
-                else item["image_assets"] + [photo]
+                else item["image_assets"] + [photo] + others
             )
             focused = item["id"]
     booklet = compose(p, items)
@@ -211,7 +226,7 @@ def preview(db, project, body):
             (
                 n
                 for n, page in enumerate(pages)
-                if page["kind"] == "images" and photo in page["images"]
+                if page["kind"] in ("features", "images") and photo in page["images"]
             ),
             None,
         )
@@ -267,8 +282,8 @@ def page_step(page):
         kind == "information" and page.get("item")
     ):
         return "items"
-    if kind == "images":
-        return "items"  # photographs are entered with their property
+    if kind in ("features", "images"):
+        return "items"  # photographs and features are entered with their property
     if kind in ("terms", "participation", "contact"):
         return "closing"
     return "auction"

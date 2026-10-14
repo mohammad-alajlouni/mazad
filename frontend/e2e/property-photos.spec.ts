@@ -87,10 +87,30 @@ test("a property's photographs are entered and changed in its own form", async (
     '.live-preview-paper iframe[aria-hidden="false"]',
   );
   await expect(preview.locator('image[href^="data:image/"]')).toHaveCount(1);
+  // With features, the first two additional photographs print in the smaller
+  // windows of the features page (guide p.17): they are cut to that shape,
+  // not to the wide band of the photographs page.
+  const features = form.locator('[name="property.features"]');
+  await form
+    .locator('details:has([name="property.features"]) > summary')
+    .click();
+  await features.fill("قريب من الخدمات\nموقع مميز");
   await slot("additional")
     .locator('input[type="file"]')
     .setInputFiles([photo, photo]);
+  const stage = page.locator("dialog.image-editor .editor-stage");
+  await expect(stage).toBeVisible();
+  const shape = await stage.evaluate((e) => {
+    const r = e.getBoundingClientRect();
+    return r.width / r.height;
+  });
+  expect(shape).toBeCloseTo(240.15 / 138.17, 1);
   await usePhoto(page, 2);
+  // The live preview shows the property's features page with them.
+  await expect(page.locator(".live-preview-paper")).toHaveAttribute(
+    "data-page-kind",
+    "features",
+  );
   await form
     .getByRole("button", { name: "Save and close", exact: true })
     .click();

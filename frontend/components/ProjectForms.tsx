@@ -189,16 +189,38 @@ export function ItemForm({
             : "";
     return layout ? options.filter((o) => o.key === layout) : options;
   };
-  // Picked photographs are placed in their frame first; a cancelled edit
-  // leaves the input empty.
+  // The frame of each additional photograph, by where it will print: with
+  // features, the first two sit in the smaller windows of the features page
+  // (guide p.17) under the main one; the others in the photographs page's
+  // bands (p.18).
+  const moreFrames = (form: HTMLFormElement, count: number): Frame[][] => {
+    if (!frames) return Array(count).fill([]);
+    const data = new FormData(form);
+    const shown = (field: string) => data.get(`booklet.${field}`) !== "false";
+    const features = String(data.get("property.features") || "").trim();
+    const kept = more.filter(
+      (i) => !dropped.includes(i.id) && i.id !== promoted,
+    ).length;
+    const page =
+      !!features &&
+      shown("include_information_page") &&
+      shown("include_images_page") &&
+      kept + count >= 2;
+    return Array.from({ length: count }, (_, n) => {
+      const key = page && kept + n < 2 ? "features" : "additional";
+      return [{ key, width: frames[key][0], height: frames[key][1] }];
+    });
+  };
+  // Picked photographs are placed in their frame first (one list of frames
+  // for all, or one per photograph); a cancelled edit leaves the input empty.
   const place = async (
     input: HTMLInputElement,
-    options: Frame[],
+    options: Frame[] | Frame[][],
     title: string,
   ) => {
     const picked = Array.from(input.files || []);
     if (!picked.length) return [];
-    const edited = options.length
+    const edited = options.flat().length
       ? await editImages(picked, { frames: options, title })
       : picked;
     setInputFiles(input, edited || []);
@@ -471,15 +493,7 @@ export function ItemForm({
                 setMoreFiles(
                   await place(
                     input,
-                    frames
-                      ? [
-                          {
-                            key: "additional",
-                            width: frames.additional[0],
-                            height: frames.additional[1],
-                          },
-                        ]
-                      : [],
+                    moreFrames(input.form!, input.files?.length || 0),
                     pt("photoMore"),
                   ),
                 );

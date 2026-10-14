@@ -42,7 +42,7 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 10
+LAYOUT_VERSION = 11
 # Rows that the reference tables hold before continuing on another page.
 # Summary table (guide p.14). Column edges (right to left) come from the open
 # reference booklet; the title and table sit where the guide places them, and
@@ -78,6 +78,10 @@ LINK_ORDER = (
 DESCRIPTION = {"landscape": (10, 497.3, 3), "portrait": (12, 198, 5)}
 INFO_BOX = {"landscape": (10, 268, 11), "portrait": (10, 262, 8)}
 INFO_PAGE = (11, 500, 33)
+# Guide p.17: the page after a property's first page when it has features and
+# more than one additional photograph. The features are set as numbered
+# points under their tab, between the photographs and the footer.
+FEATURES_BOX = (11, 498, 14)
 NUMBER_INDENT = 11
 # Other text regions: (font size, width, lines), measured on the reference.
 # Guide p.12 (selling agent): Ruaq Medium 16.02 pt on 28.5 pt lines, ten lines
@@ -149,6 +153,9 @@ def image_frames():
             "portrait": size(path_box(shapes()["photo_portrait"])),
         },
         "additional": size(path_box(shapes()["images"][0])),
+        # The first two additional photographs of a property with features
+        # sit in the smaller windows of its features page (guide p.17).
+        "features": size(path_box(shapes()["images_features"][1])),
         "cover": {f"infath-{n}": size(box) for n, box in COVER_PHOTO.items()},
         # How an "auto" layout is chosen from the property type; with neither
         # word, the photograph's own orientation decides.
@@ -566,12 +573,19 @@ def deeds(prop):
     ]
 
 
-def info_entries(item, include_lists):
-    """Box content in reference order: features, notes, then free text."""
+def features_of(prop):
+    return [f.strip() for f in prop.get("features", []) if f.strip()]
+
+
+def info_entries(item, include_lists, with_features=True):
+    """Box content in reference order: features, notes, then free text.
+
+    Features that have their own page (guide p.17) are left out of the box.
+    """
     prop = item["property_data"]
     entries = []
     if include_lists:
-        features = [f.strip() for f in prop.get("features", []) if f.strip()]
+        features = features_of(prop) if with_features else []
         if features:
             entries.append({"heading": "features"})
             entries += [{"number": n, "text": f} for n, f in enumerate(features, 1)]
@@ -710,8 +724,19 @@ def compose(project, items):
             if first or remainder
             else []
         )
+        # Guide p.17: features and more than one additional photograph get a
+        # page of their own after the property's first page; the main
+        # photograph heads it, the next two sit beneath, the rest follow on
+        # the photographs pages (p.18).
+        extras = (
+            item.get("image_assets", [])[1:]
+            if prop.get("include_images_page", True)
+            else []
+        )
+        features = features_of(prop) if include_info else []
+        feature_page = bool(features) and len(extras) >= 2
         shown, rest, info_size = fit_box(
-            info_entries(item, include_info), *INFO_BOX[layout]
+            info_entries(item, include_info, not feature_page), *INFO_BOX[layout]
         )
         close = electronic and bool(
             prop.get("auction_close_date") or prop.get("auction_close_time")
@@ -733,6 +758,29 @@ def compose(project, items):
                 ),
             }
         )
+        if feature_page:
+            entries = [{"number": n, "text": f} for n, f in enumerate(features, 1)]
+            listed, more, size = fit_box(entries, *FEATURES_BOX)
+            pages.append(
+                {
+                    "kind": "features",
+                    "item": item,
+                    "images": [item["image_assets"][0], *extras[:2]],
+                    "entries": listed,
+                    "size": size,
+                }
+            )
+            for group in paginate(more, *INFO_PAGE):
+                pages.append(
+                    {
+                        "kind": "information",
+                        "item": item,
+                        "heading": "features",
+                        "entries": group,
+                        "text": "",
+                    }
+                )
+            extras = extras[2:]
         if separate_boundaries:
             rows = []
             for side in ("north", "south", "east", "west"):
@@ -788,11 +836,7 @@ def compose(project, items):
                     "text": "".join(e["text"] for e in group if set(e) == {"text"}),
                 }
             )
-        for images in (
-            chunks(item.get("image_assets", [])[1:], 3)
-            if prop.get("include_images_page", True)
-            else []
-        ):
+        for images in chunks(extras, 3):
             pages.append({"kind": "images", "item": item, "images": images})
         rentals = [
             r

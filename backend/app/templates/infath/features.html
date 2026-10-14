@@ -1,0 +1,12 @@
+{#- Guide p.17: the page after a property's first page. Its main photograph
+    with the property's number, two additional photographs beneath, and the
+    property's features as numbered points under their tab. -#}
+{% set item = page.item %}{% set fit = item.property_data.get('booklet_image_fit', 'cover') %}
+{% for image in page.images %}{{ photo(image.src, shapes().images_features[loop.index0], fit, '#e4e4e4') }}{% endfor %}
+{{ art('images-features') }}{{ footer() }}
+<div class="t lb white" style="{{ T(526.8, 97.0, 34, 'l', align='center', width=64) }}">{{ '%02d' % item.number }}</div>
+<div class="t r w5 white" style="{{ T(480.2, 530.8, 12.5, align='center', width=130) }}">{{ bt('features') }}</div>
+{% set fs = page.size or 11 %}{% set flh = 1.4 * fs %}
+<div class="t" style="right:48pt;top:{{ 556 }}pt;width:498pt" data-fit="features" data-max-height="{{ 14 * 1.4 * 11 + 2 }}pt">
+{% for entry in page.entries %}<div style="position:relative"><div class="r w3" style="position:absolute;top:0;right:0;font-size:{{ fs }}pt;line-height:{{ flh }}pt;color:#000">-{{ entry.number }}</div><p class="r w3 body" style="font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:normal;text-align:justify;text-align-last:right;padding-right:14pt">{{ entry.text }}</p></div>
+{% endfor %}</div>

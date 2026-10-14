@@ -251,6 +251,40 @@ def test_additional_photo_preview_focuses_the_page_containing_it(admin):
     assert shown["kind"] == "images" and shown["step"] == "items"
 
 
+def test_an_added_photo_of_a_property_with_features_shows_its_features_page(admin):
+    p = create_auction(admin, workspace="booklet")
+    body = property_input()
+    body["property_data"]["features"] = ["قريب من الخدمات", "موقع مميز"]
+    item = add(admin, p, body)
+    for category in ("main", "additional"):
+        uploaded = admin.post(
+            f"/api/projects/{p}/images",
+            data={"item_id": item, "category": category},
+            files={"file": ("photo.png", image_data(), "image/png")},
+        )
+        assert uploaded.status_code == 200
+    response = admin.post(
+        f"/api/projects/{p}/booklet-preview",
+        json={
+            "stage": "images",
+            "image": {
+                "src": "data:image/png;base64,"
+                + base64.b64encode(image_data()).decode(),
+                "category": "additional",
+                "item_id": item,
+            },
+        },
+    )
+    assert response.status_code == 200, response.text
+    shown = response.json()["pages"][response.json()["page"]]
+    # The second additional photograph completes the guide's features page.
+    assert shown["kind"] == "features" and shown["step"] == "items"
+    assert "مميزات العقار" in response.json()["html"]
+    rules = admin.get(f"/api/projects/{p}").json()["workflow"]["rules"]
+    # The editor frames the first two additional photographs for its windows.
+    assert rules["image_frames"]["features"] == [240.15, 138.17]
+
+
 def test_photo_picked_in_a_new_property_form_shows_on_its_page(admin):
     """A property still being entered has no id yet: the photograph picked in
     its form is previewed on that draft property's page."""
@@ -338,3 +372,60 @@ def test_cover_photograph_is_previewed_and_replaced_only_on_photographic_covers(
     assert r.status_code == 200
     html = cover_html(other)
     assert "frame.png" not in html and "reference-cover-2.png" in html
+
+
+def test_additional_photos_picked_together_are_all_previewed(admin):
+    """Two additional photographs picked at once, before saving: with the
+    property's features they already make its features page in the preview."""
+    p = create_auction(admin, workspace="booklet")
+    body = property_input()
+    body["property_data"]["features"] = ["قريب من الخدمات"]
+    item = add(admin, p, body)
+    uploaded = admin.post(
+        f"/api/projects/{p}/images",
+        data={"item_id": item, "category": "main"},
+        files={"file": ("main.png", image_data(), "image/png")},
+    )
+    assert uploaded.status_code == 200
+    picture = "data:image/png;base64," + base64.b64encode(image_data()).decode()
+    one = {"src": picture, "category": "additional", "item_id": item}
+    shown = lambda r: r.json()["pages"][r.json()["page"]]["kind"]  # noqa: E731
+    alone = admin.post(
+        f"/api/projects/{p}/booklet-preview", json={"stage": "images", "image": one}
+    )
+    assert alone.status_code == 200 and shown(alone) == "images"
+    both = admin.post(
+        f"/api/projects/{p}/booklet-preview",
+        json={"stage": "images", "image": {**one, "more": [picture]}},
+    )
+    assert both.status_code == 200, both.text
+    assert shown(both) == "features"
+    assert both.json()["html"].count("<image ") >= 3
+
+
+def test_a_new_property_previews_its_unsaved_main_photo_with_the_others(admin):
+    p = create_auction(admin, workspace="booklet")
+    add(admin, p, property_input())
+    picture = "data:image/png;base64," + base64.b64encode(image_data()).decode()
+    draft = {
+        "title": "عقار جديد",
+        "property_data": {"property_type": "فيلا", "features": ["موقع مميز"]},
+    }
+    response = admin.post(
+        f"/api/projects/{p}/booklet-preview",
+        json={
+            "stage": "items",
+            "item": draft,
+            "image": {
+                "src": picture,
+                "category": "additional",
+                "more": [picture],
+                "main": picture,
+            },
+        },
+    )
+    assert response.status_code == 200, response.text
+    shown = response.json()["pages"][response.json()["page"]]
+    # Main, then two additional photographs: the features page, not a photo
+    # taken for the main one.
+    assert shown["kind"] == "features"

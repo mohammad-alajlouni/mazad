@@ -1123,3 +1123,77 @@ def test_rental_values_wrap_in_their_cells_and_the_note_follows_the_table():
     assert page["bottoms"][0] - 152.8 > 26.3  # the row grew for its wrapped cells
     note = next(b for b in boxes[n] if b[0] == "rentals-note")
     assert abs(note[2] - (page["bottoms"][-1] + 12)) < 0.2
+
+
+def photos(count):
+    return [{"src": f"photo-{n}", "orientation": "landscape"} for n in range(count)]
+
+
+def kinds_of(booklet):
+    return [p["kind"] for p in booklet["pages"] if "item" in p]
+
+
+def test_features_and_two_more_photos_get_the_guide_features_page():
+    """Guide p.17: the page after a property's first page holds its main
+    photograph, two additional ones and the features as numbered points; the
+    features are no longer inside the first page's box."""
+    features = ["قريب من الخدمات", "واجهة على شارع رئيسي", "موقع مميز"]
+    item = {**item_with(features=features), "image_assets": photos(5)}
+    booklet = compose(project_with(), [item])
+    assert kinds_of(booklet)[:3] == ["property", "features", "images"]
+    page = next(p for p in booklet["pages"] if p["kind"] == "features")
+    assert [i["src"] for i in page["images"]] == ["photo-0", "photo-1", "photo-2"]
+    assert [e["text"] for e in page["entries"]] == features
+    assert [e["number"] for e in page["entries"]] == [1, 2, 3]
+    first = property_pages(booklet)[0]
+    assert not any(e.get("heading") == "features" for e in first["info"])
+    assert not any(e.get("text") in features for e in first["info"])
+    # The two photographs left follow on a photographs page, none repeated.
+    rest = [p for p in booklet["pages"] if p["kind"] == "images"]
+    assert [[i["src"] for i in p["images"]] for p in rest] == [["photo-3", "photo-4"]]
+
+
+def test_without_features_or_a_second_photo_the_features_page_is_not_used():
+    features = ["قريب من الخدمات"]
+    one_photo = compose(
+        project_with(), [{**item_with(features=features), "image_assets": photos(2)}]
+    )
+    assert "features" not in kinds_of(one_photo)
+    # The features stay in the first page's box (guide p.15), the photo on p.18.
+    first = property_pages(one_photo)[0]
+    assert {"number": 1, "text": features[0]} in first["info"]
+    assert [p["kind"] for p in one_photo["pages"]].count("images") == 1
+    no_features = compose(project_with(), [{**item_with(), "image_assets": photos(4)}])
+    assert "features" not in kinds_of(no_features)
+    assert [p["kind"] for p in no_features["pages"]].count("images") == 1
+    hidden = compose(
+        project_with(),
+        [
+            {
+                **item_with(features=features, include_images_page=False),
+                "image_assets": photos(4),
+            }
+        ],
+    )
+    assert "features" not in kinds_of(hidden) and "images" not in kinds_of(hidden)
+
+
+def test_long_features_continue_on_a_features_page_without_loss():
+    features = [f"ميزة رقم {n} " + " ".join(["تفصيل"] * 30) for n in range(1, 25)]
+    booklet = compose(
+        project_with(), [{**item_with(features=features), "image_assets": photos(3)}]
+    )
+    page = next(p for p in booklet["pages"] if p["kind"] == "features")
+    more = [
+        p
+        for p in booklet["pages"]
+        if p["kind"] == "information" and p["heading"] == "features"
+    ]
+    assert more, "the features that do not fit continue on another page"
+    printed = page["entries"] + [e for p in more for e in p["entries"]]
+    assert [e["text"] for e in printed] == features
+    assert [e["number"] for e in printed] == list(range(1, 25))
+    # They come straight after the features page.
+    order = [p["kind"] for p in booklet["pages"]]
+    at = order.index("features")
+    assert order[at + 1 : at + 1 + len(more)] == ["information"] * len(more)

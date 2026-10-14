@@ -48,7 +48,13 @@ type Draft = {
   auction?: Record<string, unknown>;
   agent?: Record<string, unknown>;
   item?: Record<string, unknown>;
-  image?: { src: string; category: string; item_id?: string };
+  image?: {
+    src: string;
+    category: string;
+    item_id?: string;
+    more?: string[];
+    main?: string;
+  };
 };
 
 async function smallImage(file: File) {
@@ -310,6 +316,25 @@ export default function LiveBookletPreview({
       const serial = ++imageVersion.current;
       try {
         const src = await smallImage(file);
+        // Additional photographs picked together are all previewed: two of
+        // them with features make the property's features page (guide p.17).
+        const more =
+          picker?.dataset.category === "additional"
+            ? await Promise.all(
+                Array.from(picker.files || [])
+                  .slice(1, 12)
+                  .map(smallImage),
+              )
+            : [];
+        // With them, the main photograph picked in the same form and not
+        // stored yet: the pages depend on it too.
+        const pending =
+          picker?.dataset.category === "additional"
+            ? form.querySelector<HTMLInputElement>(
+                'input[type="file"][data-category="main"]',
+              )?.files?.[0]
+            : undefined;
+        const main = pending ? await smallImage(pending) : "";
         if (serial !== imageVersion.current) return;
         // A property's form names the role on each of its photograph inputs;
         // the photograph belongs to that property, saved or being entered.
@@ -331,7 +356,13 @@ export default function LiveBookletPreview({
           return;
         setDraft((d) => ({
           ...d,
-          image: { src, category, item_id: item || undefined },
+          image: {
+            src,
+            category,
+            item_id: item || undefined,
+            ...(more.length ? { more } : {}),
+            ...(main ? { main } : {}),
+          },
         }));
         setFocus(
           category === "agent_logo"

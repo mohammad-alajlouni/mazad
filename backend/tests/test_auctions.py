@@ -174,10 +174,15 @@ def test_manual_auction_end_to_end(admin):
     assert (
         kinds.count("property") == 2
         and kinds.count("rentals") == 2  # 21 contracts, 19 rows per reference page
-        and kinds.count("images") == 2
+        # Features and four additional photographs: the guide's features page
+        # (p.17) right after the property's first page holds the main photo
+        # and two more; the last two follow on a photographs page (p.18).
+        and kinds.count("features") == 1
+        and kinds.count("images") == 1
         and kinds.count("boundaries") == 0
         and "participation" in kinds
     )
+    assert kinds[kinds.index("property") + 1] == "features"
     data = pdf(admin, o)
     path = Path(__file__).resolve().parents[2] / "output/pdf/auction-manual.pdf"
     path.parent.mkdir(parents=True, exist_ok=True)

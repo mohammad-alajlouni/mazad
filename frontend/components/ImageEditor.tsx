@@ -13,8 +13,10 @@ import { Minus, Plus, RotateCcw } from "lucide-react";
 
 // A frame a photograph is shown in: its size fixes the proportions.
 export type Frame = { key: string; width: number; height: number };
-// A logo is shown whole to begin with and keeps its transparency.
-type Options = { frames: Frame[]; title: string; logo?: boolean };
+// A logo is shown whole to begin with and keeps its transparency. Frames are
+// one list for every picture, or one list per picture (in order) when they
+// print in different windows.
+type Options = { frames: Frame[] | Frame[][]; title: string; logo?: boolean };
 type Job = Options & {
   files: File[];
   at: number;
@@ -77,6 +79,12 @@ export function ImageEditorProvider({
   const [room, setRoom] = useState<[number, number]>([560, 440]);
 
   const file = job?.files[job.at];
+  // The frames this picture may be cut to.
+  const choices: Frame[] = !job
+    ? []
+    : Array.isArray(job.frames[0])
+      ? (job.frames as Frame[][])[job.at] || []
+      : (job.frames as Frame[]);
   const source = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
   useEffect(() => () => URL.revokeObjectURL(source), [source]);
   useEffect(() => {
@@ -96,7 +104,7 @@ export function ImageEditorProvider({
   useEffect(() => {
     setZoom(1);
     setOffset([0, 0]);
-    setFrame(job?.frames[0] || null);
+    setFrame(choices[0] || null);
   }, [file]);
 
   // The frame on screen, and the picture's size in it at each zoom.
@@ -218,13 +226,13 @@ export function ImageEditorProvider({
                 " " +
                   t("count", { number: job.at + 1, total: job.files.length })}
             </p>
-            {job.frames.length > 1 && (
+            {choices.length > 1 && (
               <div
                 className="frame-choice"
                 role="group"
                 aria-label={t("shape")}
               >
-                {job.frames.map((option) => (
+                {choices.map((option) => (
                   <button
                     key={option.key}
                     type="button"
@@ -316,11 +324,11 @@ export function ImageEditorProvider({
                     setZoom(Math.min(...fit) / Math.max(...fit));
                   }
                   // With a choice of frames, start in the picture's own shape.
-                  if (job.frames.length > 1)
+                  if (choices.length > 1)
                     setFrame(
-                      job.frames.find(
+                      choices.find(
                         (f) => f.width > f.height === size[0] >= size[1],
-                      ) || job.frames[0],
+                      ) || choices[0],
                     );
                 }}
                 style={{

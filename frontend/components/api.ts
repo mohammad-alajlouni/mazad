@@ -101,6 +101,7 @@ export type Detail = {
       image_frames?: {
         main: { landscape: [number, number]; portrait: [number, number] };
         additional: [number, number];
+        features: [number, number];
         cover: Record<string, [number, number]>;
         portrait_kinds: string[];
         landscape_kinds: string[];

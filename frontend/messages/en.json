@@ -872,6 +872,7 @@
     "summary": "Property summary",
     "property": "Property details",
     "images": "Property photos",
+    "features": "Property features",
     "information": "Additional information",
     "boundaries": "Boundaries",
     "rentals": "Rental contracts",
@@ -1036,6 +1037,7 @@
       "landscape": "Wide",
       "portrait": "Upright",
       "additional": "Additional photograph",
+      "features": "Features page",
       "cover": "Cover",
       "logo": "Logo"
     },
