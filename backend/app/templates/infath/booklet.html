@@ -27,14 +27,32 @@ top:{{ '%.2f' % (base - L / 2 - size * (0.366 if fam == 'r' else 0.255)) }}pt;fo
 {% macro plate(x0, y0, w, h) -%}
 <div class="plate" style="{{ box(x0, y0, w, h) }}"></div>
 {%- endmacro %}
-{% macro art(name) %}<img class="art" src="{{ asset('booklet-art/' ~ name ~ '.svg') }}">{% endmacro %}
+{#- Page artwork, with the supervising body's logo where the guide puts Infath's. -#}
+{% macro art(name) %}<img class="art" src="{{ asset('booklet-art/' ~ name ~ '.svg') }}">{{ supervisor_logo(project.supervisor, name) }}{% endmacro %}
 {% macro footer(reverse=false, agent_logo=true) %}{{ vec('footer-bar' ~ ('-reverse' if reverse else ''), 0, 822, 595.276, 19.89) }}{% if agent_logo and project.agent_logo %}{% set A = logo_fit(project.agent_logo, 80, 22.3) %}<img class="logo" style="{{ box(12.3, 803.05 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}{% endmacro %}
+{#- Nearby landmarks: up to three in a row, each icon beside its name (set at
+    size, on up to two lines; see composer.landmark_size). -#}
+{% macro landmark_row(items, size) %}<div style="display:flex;flex-direction:row;align-items:center;height:26pt">
+{%- for m in items %}<div style="display:flex;flex-direction:row;align-items:center;width:33.333%;padding-left:4pt">
+<img src="{{ asset('booklet-art/landmarks/' ~ m.icon ~ '.svg') }}" style="width:18pt;height:18pt;flex:none;margin-left:5pt" alt="">
+<div class="r w3 body" style="font-size:{{ size }}pt;line-height:{{ (size * 1.2)|round(2) }}pt;white-space:normal;text-align:right">{{ m.text }}</div></div>
+{%- endfor %}</div>{% endmacro %}
+{#- The entries of an additional-information region (composer.info_entries):
+    headings, numbered points (the number at the right edge, the text indented)
+    and free text, justified, at size fs on flh lines. -#}
+{% macro info_entries(entries, fs, flh) %}
+{% for entry in entries %}
+{% if entry.heading %}<p class="r w3 body" style="font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:normal;text-align:right">{{ bt(entry.heading) }} :</p>
+{% elif entry.number %}<div style="position:relative"><div class="r w3" style="position:absolute;top:0;right:0;font-size:{{ fs }}pt;line-height:{{ flh }}pt;color:#000">-{{ entry.number }}</div><p class="r w3 body" style="font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:normal;overflow-wrap:anywhere;text-align:justify;text-align-last:right;padding-right:{{ 11 * fs / 10 }}pt">{{ entry.text }}</p></div>
+{% elif entry.landmarks %}{{ landmark_row(entry.landmarks, entry.size or 8.5) }}
+{% else %}<p class="r w3 body" style="font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:pre-line;overflow-wrap:anywhere;text-align:justify;text-align-last:right">{{ entry.text|trim }}</p>{% endif %}
+{% endfor %}
+{%- endmacro %}
 {% macro qrs(links) %}<div class="qrs">{% for link in links %}<div class="qr"><a href="{{ link.url }}"><span>{{ bt(link.label) }}</span><img src="{{ link.image }}"></a></div>{% endfor %}</div>{% endmacro %}
 {% for page in booklet.pages %}
 {% if page.kind == 'cover' %}{% include 'infath/cover.html' %}
 {% else %}<section class="sheet {{ page.kind }}" data-kind="{{ page.kind }}">
-{% if page.kind != 'introduction' %}{# The introduction is the original PDF page, placed after layout. #}{% include 'infath/' + page.kind + '.html' %}{% endif %}
-{% if preview and page.kind == 'introduction' %}<img class="art" src="{{ asset('page/introduction.png') }}">{% endif %}
-{% if preview and page.kind == 'terms' %}<img class="icon" style="{{ box(110, 110, 395, 582) }}" src="{{ asset('page/terms.png') }}">{% endif %}
+{% include 'infath/' + page.kind + '.html' %}
+
 </section>{% endif %}{% endfor %}
 </body></html>

@@ -139,7 +139,9 @@ def number(value, language="ar", grouping=False):
     text = f"{amount.normalize():{',' if grouping else ''}f}"
     if "." in text:
         text = text.rstrip("0").rstrip(".")
-    return text.replace(".", "٫") if language == "ar" else text
+    # Thousands separated by commas, decimals after a point (92,566.88), in
+    # Arabic as in English, as the guide prints amounts and areas.
+    return text
 
 
 def money(value, language="ar"):

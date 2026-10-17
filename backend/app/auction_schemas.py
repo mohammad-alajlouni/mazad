@@ -17,7 +17,13 @@ class Structured(BaseModel):
         if value == "" and (
             info.field_name.endswith("_date")
             or info.field_name.endswith("_time")
-            or info.field_name in ("area", "participation_amount", "annual_rent_value")
+            or info.field_name
+            in (
+                "area",
+                "participation_amount",
+                "annual_rent_value",
+                "close_interval_minutes",
+            )
         ):
             return None
         return value
@@ -44,17 +50,27 @@ class Structured(BaseModel):
 
 class AuctionData(Structured):
     auction_name: str = Field(default="", max_length=200)
+    # Infath's assignment number for the auction: kept with it, not printed.
+    assignment_number: str = Field(default="", max_length=100)
     auction_type: Literal["physical", "electronic", "hybrid"] = "physical"
     license_number: str = Field(default="", max_length=100)
     auction_contact_number: str = Field(default="", max_length=100)
     supervising_authority: str = Field(default="", max_length=300)
     legal_announcement_text: str = Field(default="", max_length=10000)
     court_decision_text: str = Field(default="", max_length=10000)
+    # The terms of entry, when this auction's differ from the guide's
+    # (empty: the guide's, see generation/booklet/terms.py).
+    terms_text: str = Field(default="", max_length=10000)
     auction_date: date | None = None
     auction_start_date: date | None = None
     auction_end_date: date | None = None
     start_time: time | None = None
     end_time: time | None = None
+    # Electronic bidding closes property by property: the first at this time,
+    # each next one this many minutes later, on the auction's last day. A
+    # property's own closing date or time, when given, overrides its share.
+    first_close_time: time | None = None
+    close_interval_minutes: int | None = Field(default=None, ge=0, le=1440)
     physical_location: str = Field(default="", max_length=300)
     electronic_platform_name: str = Field(default="", max_length=200)
     electronic_platform_url: str = ""
@@ -65,14 +81,32 @@ class AuctionData(Structured):
         "infath-1", "infath-2", "infath-3", "infath-4", "infath-5", "infath-6"
     ] = "infath-2"
     document_language: Literal["ar", "en"] = "ar"
+    # The supervising body: Infath (its logo and introduction page, as an
+    # administrator keeps them), or another body giving its own.
+    supervisor: Literal["infath", "other"] = "infath"
+    supervisor_title: str = Field(default="", max_length=200)
+    supervisor_text: str = Field(default="", max_length=3000)
+    supervisor_phone: str = Field(default="", max_length=100)
+    supervisor_website: str = Field(default="", max_length=200)
+    supervisor_social: str = Field(default="", max_length=300)
     # Print editions carry QR codes; digital editions carry tappable link buttons.
     booklet_edition: Literal["print", "digital"] = "print"
+
+    @field_validator("terms_text", mode="before")
+    @classmethod
+    def own_terms(cls, value):
+        # Terms left as the guide's are not kept: they follow the guide.
+        from .generation.booklet.terms import TERMS
+
+        text = str(value or "").replace("\r\n", "\n").strip()
+        return "" if text == TERMS else text
 
     @model_validator(mode="after")
     def schedule(self):
         # Inactive fields must not leak into another auction type's output.
         if self.auction_type == "physical":
             self.auction_start_date = self.auction_end_date = None
+            self.first_close_time = self.close_interval_minutes = None
             self.electronic_platform_name = self.electronic_platform_url = ""
         else:
             self.auction_date = None
@@ -116,6 +150,29 @@ class Boundaries(Structured):
     west_length: str = Field(default="", max_length=100)
 
 
+# Icons a nearby landmark may carry in the additional information (see
+# booklet-art/landmarks): the guide's own icons and a few drawn alike.
+LANDMARK_ICONS = (
+    "road",
+    "hospital",
+    "school",
+    "mosque",
+    "market",
+    "park",
+    "airport",
+    "station",
+    "bank",
+    "government",
+    "location",
+    "city",
+)
+
+
+class Landmark(Structured):
+    icon: Literal[LANDMARK_ICONS] = "location"
+    text: str = Field(default="", max_length=60)
+
+
 class RentalInput(Structured):
     unit_number: str = Field(default="", max_length=100)
     property_type: str = Field(default="", max_length=100)
@@ -146,14 +203,21 @@ class PropertyData(Structured):
     include_information_page: bool = True
     include_images_page: bool = True
     include_rentals_page: bool = True
+    include_features_page: bool = True
+    # The boundaries on a page of their own though they fit beside the facts.
+    include_boundaries_page: bool = False
+    # The optional pages in the author's order (composer.OPTIONAL_PAGES).
+    page_order: list[
+        Literal["features", "boundaries", "information", "images", "rentals"]
+    ] = Field(default_factory=list, max_length=5)
     property_type: str = Field(default="", max_length=100)
     city: str = Field(default="", max_length=100)
     district: str = Field(default="", max_length=100)
     usage: str = Field(default="", max_length=100)
     area: Decimal | None = Field(default=None, ge=0, max_digits=18, decimal_places=4)
     deed_number: str = Field(default="", max_length=100)
-    # A property may stand on up to four deeds: the first above, the rest here.
-    extra_deed_numbers: list[str] = Field(default_factory=list, max_length=3)
+    # A property may stand on up to eight deeds: the first above, the rest here.
+    extra_deed_numbers: list[str] = Field(default_factory=list, max_length=7)
     plan_number: str = Field(default="", max_length=100)
     plot_number: str = Field(default="", max_length=100)
     execution_request_number: str = Field(default="", max_length=100)
@@ -161,6 +225,8 @@ class PropertyData(Structured):
         default=None, ge=0, max_digits=18, decimal_places=2
     )
     features: list[str] = Field(default_factory=list, max_length=200)
+    # Nearby landmarks, each with its icon, in the additional information.
+    landmarks: list[Landmark] = Field(default_factory=list, max_length=12)
     additional_information: str = Field(default="", max_length=20000)
     auction_close_date: date | None = None
     auction_close_time: time | None = None
@@ -170,6 +236,11 @@ class PropertyData(Structured):
     location_link: str = ""
     other_document_link: str = ""
     boundaries: Boundaries = Field(default_factory=Boundaries)
+    # Deeds with boundaries and lengths of their own: each deed then has its
+    # box on the boundaries page. The first deed's are those above; the
+    # further deeds' follow extra_deed_numbers, in the same order.
+    deeds_differ: bool = False
+    deed_boundaries: list[Boundaries] = Field(default_factory=list, max_length=7)
     rental_contracts: list[RentalInput] = Field(default_factory=list, max_length=1000)
 
     @field_validator("rental_contracts")
@@ -182,6 +253,24 @@ class PropertyData(Structured):
             if any(v not in (None, "") for v in row.model_dump().values())
         ]
 
+    @model_validator(mode="before")
+    @classmethod
+    def deeds_with_their_boundaries(cls, data):
+        # An empty deed row is dropped below; its boundaries go with it, so
+        # each further deed keeps its own.
+        if isinstance(data, dict) and isinstance(data.get("deed_boundaries"), list):
+            deeds = data.get("extra_deed_numbers")
+            if isinstance(deeds, list):
+                data = {
+                    **data,
+                    "deed_boundaries": [
+                        own
+                        for deed, own in zip(deeds, data["deed_boundaries"])
+                        if str(deed or "").strip()
+                    ],
+                }
+        return data
+
     @field_validator("extra_deed_numbers", mode="before")
     @classmethod
     def entered_deeds(cls, value):
@@ -192,6 +281,11 @@ class PropertyData(Structured):
         if any(len(v) > 100 for v in kept):
             raise ValueError("Deed number exceeds 100 characters")
         return kept
+
+    @field_validator("landmarks")
+    @classmethod
+    def landmarks_written(cls, value):
+        return [v for v in value if v.text]
 
     @field_validator("features")
     @classmethod

@@ -47,11 +47,12 @@ FACT_WIDTH = {
         "deed_number": 95,
         "plan_number": 95,
         "plot_number": 95,
-        "area": 105,
-        "usage": 105,
-        "district": 105,
-        "participation_amount": 105,
-        "execution_request_number": 150,
+        # The second column ends before the boundaries and lengths tabs.
+        "area": 82,
+        "usage": 82,
+        "district": 82,
+        "participation_amount": 82,
+        "execution_request_number": 82,
     },
     "portrait": {"execution_request_number": 150},
 }
@@ -70,7 +71,7 @@ def fact_text(prop, key, language="ar"):
     if key == "participation_amount":
         return money(raw, language)
     if key == "area":
-        return number(raw, language)
+        return number(raw, language, True)
     return "" if raw in (None, "") else str(raw)
 
 
@@ -98,7 +99,10 @@ def deed_size(text, layout):
 # Single-line boxes outside the property page: (width, size, minimum, family, weight).
 BOXES = {
     "auction_name": (315, 23.09, 14, "r", 700),
-    "agent_name": (317, 17.44, 12, "r", 500),  # guide p.12: Ruaq Medium
+    # The title of a profile page (guide p.11: Ruaq Bold 19.56): the agent's
+    # name, or the supervising body's.
+    "agent_name": (330.1, 19.56, 13, "r", 700),
+    "supervisor_title": (330.1, 19.56, 13, "r", 700),
     "physical_location": (330, 13.48, 9.5, "r", 500),
     "electronic_platform_name": (330, 13.48, 9.5, "r", 500),
     "participation_name": (200, 12.59, 8.5, "r", 400),
@@ -128,22 +132,54 @@ def booklet_issues(auction, agent, items, language="ar"):
                 }
             )
 
-    from .composer import agent_size
+    from .composer import (
+        PROFILE_FONT,
+        PROFILE_MIN,
+        PROFILE_TEXT,
+        fit_length,
+        profile_lines,
+        profile_size,
+    )
 
-    description = (agent.get("description") or "").strip()
-    if description and not agent_size(description)[1]:
-        # Characters that still fit on the single agent page at the smallest size.
-        from .composer import AGENT_BOX, AGENT_LINE, AGENT_MIN, AGENT_TEXT, fit_length
+    # Each profile page holds its text whole: what still fits at the smallest
+    # size is the limit given to the author.
+    for section, field, text in (
+        ("agent", "description", agent.get("description")),
+        (
+            "auction",
+            "supervisor_text",
+            auction.get("supervisor_text")
+            if auction.get("supervisor") == "other"
+            else "",
+        ),
+    ):
+        text = (text or "").strip()
+        if text and not profile_size(text)[1]:
+            issues.append(
+                {
+                    "section": section,
+                    "field": field,
+                    "item": None,
+                    "limit": fit_length(
+                        text,
+                        PROFILE_MIN,
+                        PROFILE_TEXT[1],
+                        profile_lines(PROFILE_MIN),
+                        PROFILE_FONT,
+                    )[0],
+                }
+            )
+    # The terms of entry stand whole on their page.
+    from . import terms as terms_page
 
-        lines = int(AGENT_BOX // (AGENT_LINE * AGENT_MIN / AGENT_TEXT[0]))
+    terms = (auction.get("terms_text") or "").strip()
+    if terms and not terms_page.terms_size(terms)[1]:
         issues.append(
             {
-                "section": "agent",
-                "field": "description",
+                "section": "closing",
+                "field": "terms_text",
                 "item": None,
-                "limit": fit_length(
-                    description, AGENT_MIN, AGENT_TEXT[1], lines, "RuaqArabic-Medium"
-                )[0],
+                "limit": terms_page.longest(terms),
             }
         )
     extra = (agent.get("contact_information") or "").strip()
@@ -171,6 +207,13 @@ def booklet_issues(auction, agent, items, language="ar"):
             auction.get("electronic_platform_name", ""),
         ),
         ("agent_name", "agent", agent.get("name", "")),
+        (
+            "supervisor_title",
+            "auction",
+            auction.get("supervisor_title", "")
+            if auction.get("supervisor") == "other"
+            else "",
+        ),
     ):
         width, _, minimum, fam, weight = BOXES[key]
         check(section, key, text, width, minimum, fam, weight)

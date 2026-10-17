@@ -18,17 +18,23 @@
 <img class="full-image" src="{{ asset('booklet-art/vector/cover-' ~ n ~ '-frame.png') }}">
 {% elif preview %}<img class="full-image" src="{{ asset('reference-cover-' ~ n ~ '.png') }}">
 {% else %}<div class="vec" data-vector="cover-{{ n }}" style="{{ box(0, 0, 595.276, 841.89) }}"></div>{% endif %}
+{#- The supervising body's logo, white, where the cover's design put Infath's. -#}
+{{ supervisor_logo(project.supervisor, 'cover-' ~ n) }}
 {#- Covers 1 and 6 carry their own photograph: the cover is chosen, not uploaded. -#}
 {#- The auction icon is fixed (guide V2 p.3-6): silver on every cover, 50.6 x 63.5 pt.
-    Only the auction name beside it changes. -#}
+    Only the auction name beside it changes. Like the date below, the auction's
+    logo appears once its name is entered: every cover starts without them. -#}
+{% if name %}
 {{ vec('auction-icon-silver', g.logo_right - 50.6, g.logo_top, 50.6, 63.5) }}
 {#- Covers with the title at the foot grow upwards; the others grow downwards. -#}
 {% set first = g.first_base - (30 * (lines - 1) if photo_cover else 0) %}
 <div class="t r w7 white" style="{{ T(g.title_right, first, 25, lh=30) }}">{{ prefix }}</div>
 <div class="t p r w7 white" data-fit="cover-title" data-max-height="{{ 30 * lines }}pt" style="{{ T(g.title_right, first + 30, 25, lh=30, width=250) }};white-space:normal">{{ name }}</div>
+{% endif %}
 {#- The cover shows the auction's start date only. -#}
 {% set date = fmt.day_range(dict(auction, auction_end_date=None), output_language, weekday=false, suffix='م' if ar else '', dash='-') %}
-{% if wide %}
+{% if not date %}
+{% elif wide %}
 <div class="t r w5 white" style="{{ T(37.2, 800.0, 10, align='left', width=200) }}">{{ date|nums }}</div>
 {% else %}
 {% set centre = 197.0 if photo_cover else 521.8 %}

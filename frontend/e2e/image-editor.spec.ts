@@ -135,16 +135,17 @@ test("every photograph is placed in its fixed frame before it is stored", async 
   await expect(editor).toBeHidden();
   await expect(main.locator("img")).toBeVisible();
 
-  // Additional photographs: one after another, in the images page's frame.
-  await form
-    .locator('[data-slot="additional"] input[type="file"]')
-    .setInputFiles([photo, photo]);
-  await expect(editor).toContainText("1 of 2");
-  expect(await ratio()).toBeCloseTo(499.3 / 181.8, 1);
-  await editor.getByRole("button", { name: "Use photograph" }).click();
-  await expect(editor).toContainText("2 of 2");
-  await editor.getByRole("button", { name: "Use photograph" }).click();
-  await expect(editor).toBeHidden();
+  // Additional photographs: each in its slot, in the images page's frame.
+  for (const at of [0, 1]) {
+    await form
+      .locator('[data-slot="additional"] input[type="file"]')
+      .nth(at)
+      .setInputFiles(photo);
+    await expect(editor).toBeVisible();
+    expect(await ratio()).toBeCloseTo(499.3 / 181.8, 1);
+    await editor.getByRole("button", { name: "Use photograph" }).click();
+    await expect(editor).toBeHidden();
+  }
   await form
     .getByRole("button", { name: "Save and close", exact: true })
     .click();

@@ -3,6 +3,7 @@ import FileInput from "./FileInput";
 
 import { useTranslations } from "next-intl";
 import { api, send, Run } from "./api";
+import InfathSettings from "./InfathSettings";
 export type Config = {
   branding: {
     organization_name: string;
@@ -100,6 +101,7 @@ export default function Settings({
             <button className="secondary">{tr("ui.upload_logo")}</button>
           </form>
         </div>
+        <InfathSettings run={run} />
         <div className="panel form-panel">
           <h2>{tr("ui.ai_configuration")}</h2>
           <span

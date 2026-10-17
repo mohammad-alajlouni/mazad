@@ -21,8 +21,6 @@ const SHARED = [
   "usage",
   "plan_number",
   "participation_amount",
-  "auction_close_date",
-  "auction_close_time",
   "booklet_layout",
   "booklet_image_fit",
 ];
@@ -289,6 +287,11 @@ export default function PropertyManager({
             photoRequired={detail.project.workspace_type === "project"}
             frames={detail.workflow?.rules.image_frames}
             template={current === "new" ? template : undefined}
+            closing={
+              current === "new"
+                ? detail.closings?.next
+                : detail.closings?.items[current.id]
+            }
             number={current === "new" ? items.length + 1 : index + 1}
             hasNext={index >= 0 && index < items.length - 1}
             run={run}

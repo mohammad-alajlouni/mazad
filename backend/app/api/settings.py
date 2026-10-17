@@ -90,3 +90,87 @@ async def ai_generate(id: str, body: AIInput, db=Depends(get_db)):
     db.add(record)
     db.commit()
     return {**result, "id": record.id}
+
+
+# Infath as the booklet shows it (guide p.11 and its logo on the pages): an
+# administrator may change its logo and introduction text without editing any
+# design. Kept in its own settings row; empty values keep the guide's.
+class InfathIdentity(BaseModel):
+    title: str = Field(default="", max_length=200)
+    text: str = Field(default="", max_length=3000)
+    phone: str = Field(default="", max_length=100)
+    website: str = Field(default="", max_length=200)
+    social: str = Field(default="", max_length=300)
+
+
+def infath_view(row):
+    from ..generation.booklet.supervisor import FIELDS, INFATH
+
+    data = row.data if row else {}
+    return {
+        "values": {key: data.get(f"infath_{key}", "") for key in FIELDS},
+        "defaults": {key: INFATH[key] for key in FIELDS},
+        "has_logo": bool(data.get("logo_key")),
+    }
+
+
+@router.get("/settings/infath")
+def read_infath(db=Depends(get_db)):
+    return infath_view(db.get(SystemSetting, "infath"))
+
+
+@router.put("/settings/infath", dependencies=[Depends(current_admin)])
+def save_infath(body: InfathIdentity, db=Depends(get_db)):
+    from ..services.booklet_text import text_issue
+
+    if text_issue(body.text):
+        raise HTTPException(422, "Introduction text is too long for its page")
+    row = db.get(SystemSetting, "infath")
+    if not row:
+        row = SystemSetting(id="infath", data={})
+        db.add(row)
+    row.data = {
+        **row.data,
+        **{f"infath_{k}": v.strip() for k, v in body.model_dump().items()},
+    }
+    audit(db, "Settings updated", "Infath identity")
+    db.commit()
+    return infath_view(row)
+
+
+@router.post("/settings/infath/logo", dependencies=[Depends(current_admin)])
+async def infath_logo(file: UploadFile = File(...), db=Depends(get_db)):
+    key = LocalStorage().image(await upload_bytes(file))
+    row = db.get(SystemSetting, "infath")
+    if not row:
+        row = SystemSetting(id="infath", data={})
+        db.add(row)
+    row.data = {**row.data, "logo_key": key}
+    audit(db, "Settings updated", "Infath identity")
+    db.commit()
+    return infath_view(row)
+
+
+@router.delete("/settings/infath/logo", dependencies=[Depends(current_admin)])
+def reset_infath_logo(db=Depends(get_db)):
+    row = db.get(SystemSetting, "infath")
+    if row and row.data.get("logo_key"):
+        row.data = {k: v for k, v in row.data.items() if k != "logo_key"}
+        audit(db, "Settings updated", "Infath identity")
+        db.commit()
+    return infath_view(row)
+
+
+@router.get("/settings/infath/logo")
+def infath_logo_file(db=Depends(get_db)):
+    from fastapi import Response
+
+    row = db.get(SystemSetting, "infath")
+    key = row.data.get("logo_key") if row else None
+    if not key:
+        raise HTTPException(404, "Image not found")
+    return Response(
+        LocalStorage().read(key),
+        media_type="image/png" if key.endswith(".png") else "image/jpeg",
+        headers={"Cache-Control": "private, no-store"},
+    )

@@ -42,7 +42,7 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 11
+LAYOUT_VERSION = 12
 # Rows that the reference tables hold before continuing on another page.
 # Summary table (guide p.14). Column edges (right to left) come from the open
 # reference booklet; the title and table sit where the guide places them, and
@@ -75,8 +75,92 @@ LINK_ORDER = (
     "location_link",
 )
 # Reference text regions: (font size, width in points, lines).
-DESCRIPTION = {"landscape": (10, 497.3, 3), "portrait": (12, 198, 5)}
-INFO_BOX = {"landscape": (10, 268, 11), "portrait": (10, 262, 8)}
+# The property description (guide p.15 and p.19): its first line's baseline,
+# right edge and width, the reference size and line height, and the lowest
+# point it may reach (above the property's facts). A longer description is
+# set smaller, a quarter point at a time, down to DESCRIPTION_MIN, using the
+# whole region; only what does not fit even then continues on another page.
+DESCRIPTION = {
+    "landscape": {
+        "base": 390.6,
+        "right": 550.1,
+        "width": 497.3,
+        "size": 10,
+        "line": 14,
+        "bottom": 441.0,
+    },
+    "portrait": {
+        "base": 93.9,
+        "right": 563.8,
+        "width": 198.0,
+        "size": 12,
+        "line": 14.4,
+        "bottom": 176.0,
+    },
+}
+DESCRIPTION_MIN = 8.0
+DESCRIPTION_FONT = "RuaqArabic-Light"
+# The additional-information box (guide p.15 and p.19-20): its edges in
+# points. In portrait the digital edition's box is wider (its links are
+# buttons in a narrow column) than the print edition's (two columns of QR
+# codes beside it). The text keeps the same margin from the top and both
+# sides of the box, and uses all of its width.
+INFO_REGION = {
+    "portrait": {
+        "top": 627.56,
+        "bottom": 757.68,
+        "right": 564.9,
+        "left": {"digital": 160.7, "print": 266.3},
+    },
+    "landscape": {
+        "top": 577.59,
+        "bottom": 750.62,
+        "right": 563.04,
+        "left": {"digital": 258.71, "print": 258.71},
+    },
+}
+# When the boundaries continue on a page of their own, the box takes their
+# place: in portrait it moves up beside the photograph (its tab where the
+# boundaries tab stood), in landscape it runs across to the page margin (the
+# links move up into the column the boundaries left).
+INFO_SEPARATE = {
+    "portrait": {
+        "top": 398.76,
+        "bottom": 757.68,
+        "right": 564.9,
+        "left": 350.0,
+        "tab": -228.8,
+    },
+    "landscape": {
+        "top": 577.59,
+        "bottom": 750.62,
+        "right": 563.04,
+        "left": 34.3,
+        "tab": 0.0,
+    },
+}
+INFO_PAD = 8.0
+INFO_SIZE, INFO_LINE = 10.0, 1.4
+
+
+def info_region(layout, edition, separate=False):
+    """The box, and the text region inside it: right edge, width, top of its
+    first line box, the lines it holds at the reference size, and how far its
+    tab moved (when the boundaries continue on their own page)."""
+    box = INFO_SEPARATE[layout] if separate else INFO_REGION[layout]
+    left = box["left"] if separate else box["left"].get(edition, box["left"]["print"])
+    line = INFO_SIZE * INFO_LINE
+    top = box["top"] + INFO_PAD - (line - INFO_SIZE) / 2
+    return {
+        "box": [left, box["top"], box["right"], box["bottom"]],
+        "right": round(box["right"] - INFO_PAD, 2),
+        "width": round(box["right"] - left - 2 * INFO_PAD, 2),
+        "top": round(top, 2),
+        "lines": int((box["bottom"] - INFO_PAD + (line - INFO_SIZE) / 2 - top) // line),
+        "tab": box.get("tab", 0.0) if separate else 0.0,
+    }
+
+
 INFO_PAGE = (11, 500, 33)
 # Guide p.17: the page after a property's first page when it has features and
 # more than one additional photograph. The features are set as numbered
@@ -84,17 +168,20 @@ INFO_PAGE = (11, 500, 33)
 FEATURES_BOX = (11, 498, 14)
 NUMBER_INDENT = 11
 # Other text regions: (font size, width, lines), measured on the reference.
-# Guide p.12 (selling agent): Ruaq Medium 16.02 pt on 28.5 pt lines, ten lines
-# in a 317 pt column whose right edge (466) is shared by the logo and the name.
-AGENT_TEXT = (16.02, 317.0, 10)
-AGENT_LINE = 28.5
-AGENT_BOX = 285  # points of height for the agent's description (10 lines)
-# The agent's logo on its page (guide p.12): the box it is fitted in, and the
-# frame the upload editor shows it in.
+# Guide p.11 (the supervising body) and p.12 (the selling agent) share one
+# layout, both set as the Infath page is: the title in Ruaq Bold 19.56, the
+# text in Ruaq Light 17.04 on 25.07 pt lines, justified in a 330.1 pt column
+# whose right edge (463.4) the logo and the title share; ten lines fit above
+# the contact row. A longer text is set smaller, down to PROFILE_MIN.
+PROFILE_TEXT = (17.04, 330.1, 10)
+PROFILE_LINE = 25.07
+PROFILE_FONT = "RuaqArabic-Light"
+PROFILE_MIN = 11.0
+# A logo on these pages (an agent's, or another body's): the box it is fitted
+# in, and the frame the upload editor shows it in.
 AGENT_LOGO = (145.2, 67.0)
 # The agent's extra contact text sits under the numbers on the contact page.
 CONTACT_EXTRA = (10, 360, 2)
-AGENT_MIN = 11.0  # smallest size the description is set at before it must be shortened
 # The announcement and court decision (guide p.13): three 29 pt lines at 19 pt,
 # right-aligned. A longer text keeps that setting and grows to six lines (the
 # schedule under it moves down); longer still, it is set smaller in that space.
@@ -156,7 +243,11 @@ def image_frames():
         # The first two additional photographs of a property with features
         # sit in the smaller windows of its features page (guide p.17).
         "features": size(path_box(shapes()["images_features"][1])),
+        # The features page's large window, above them.
+        "features_large": size(path_box(shapes()["images_features"][0])),
         "cover": {f"infath-{n}": size(box) for n, box in COVER_PHOTO.items()},
+        # A logo on a profile page (the agent's, or another supervising body's).
+        "logo": list(AGENT_LOGO),
         # How an "auto" layout is chosen from the property type; with neither
         # word, the photograph's own orientation decides.
         "portrait_kinds": list(PORTRAIT_KINDS),
@@ -214,13 +305,22 @@ def fit_length(text, size, width, max_lines, name="RuaqArabic-Light", margin=0.9
             lines, used = lines + 1, 0.0
             consumed += 1
             continue
-        word = text_width(token.rstrip(), size, name)
-        if used and used + word > width:
-            if lines == max_lines:
-                return consumed, lines
-            lines, used = lines + 1, 0.0
-        used += text_width(token, size, name)
-        consumed += len(token)
+        # A run wider than a line breaks inside, as the page breaks it.
+        bare = token.rstrip()
+        pieces = (
+            split_word(bare, size, width, name)
+            if text_width(bare, size, name) > width
+            else [bare]
+        )
+        for n, piece in enumerate(pieces):
+            last = n == len(pieces) - 1
+            part = piece + (token[len(bare) :] if last else "")
+            if used and used + text_width(piece, size, name) > width:
+                if lines == max_lines:
+                    return consumed, lines
+                lines, used = lines + 1, 0.0
+            used += text_width(part, size, name)
+            consumed += len(part)
     return consumed, lines
 
 
@@ -245,22 +345,43 @@ def lines_used(text, size, width):
     return fit_length(text, size, width, 10**6)[1]
 
 
-def agent_size(text):
-    """Largest size (guide: 16.02 pt on 28.5 pt lines) that sets the description
-    on page 3.
+def profile_lines(size):
+    """Lines of the profile text at a size (its line height scales with it)."""
+    return int(
+        PROFILE_TEXT[2] * PROFILE_LINE // (PROFILE_LINE * size / PROFILE_TEXT[0])
+    )
 
-    The guide has exactly one agent page; a longer description is set smaller,
-    and below AGENT_MIN it has to be shortened (reported in the workflow).
+
+def profile_size(text):
+    """Largest size (guide p.11: 17.04 pt on 25.07 pt lines) that sets a
+    profile text (the supervising body's, or the agent's) on its one page.
+
+    A longer text is set smaller, and below PROFILE_MIN it has to be shortened
+    (reported in the workflow).
     """
-    size = AGENT_TEXT[0]
+    size = PROFILE_TEXT[0]
     while True:
-        lines = int(AGENT_BOX // (AGENT_LINE * size / AGENT_TEXT[0]))
-        fitted = fit_length(text, size, AGENT_TEXT[1], lines, "RuaqArabic-Medium")
+        fitted = fit_length(
+            text, size, PROFILE_TEXT[1], profile_lines(size), PROFILE_FONT
+        )
         if fitted[0] >= len(text.rstrip()):
             return size, True
-        if size <= AGENT_MIN:
-            return AGENT_MIN, False
-        size = max(AGENT_MIN, round(size - 0.25, 2))
+        if size <= PROFILE_MIN:
+            return PROFILE_MIN, False
+        size = max(PROFILE_MIN, round(size - 0.25, 2))
+
+
+def profile_page(kind, text):
+    """A profile page: the text broken into justified lines at its size."""
+    text = (text or "").strip()
+    size, _ = profile_size(text)
+    return {
+        "kind": kind,
+        "text": text,
+        "size": size,
+        "line_height": round(PROFILE_LINE * size / PROFILE_TEXT[0], 2),
+        "lines": justified(text, size, PROFILE_TEXT[1], PROFILE_FONT),
+    }
 
 
 # Letters that join the next one: a kashida (tatweel) may follow them.
@@ -268,12 +389,36 @@ JOINING = set("بتثجحخسشصضطظعغفقكلمنهيئـ")
 TATWEEL = "ـ"
 
 
+def split_word(token, size, width, name):
+    """A run with no space, wider than a line, as pieces that each fit one
+    (repeated letters, a long code): the page breaks it there too."""
+    pieces, current = [], ""
+    for character in token:
+        if current and text_width(current + character, size, name) > width:
+            pieces.append(current)
+            current = character
+        else:
+            current += character
+    return pieces + [current]
+
+
 def wrap_lines(text, size, width, name):
-    """Text broken into lines as the page breaks it; each is (line, ends_paragraph)."""
+    """Text broken into lines as the page breaks it; each is (line, ends_paragraph).
+
+    A run with no space wider than a line is broken inside (split_word), so
+    no line is ever wider than width.
+    """
     lines = []
     for paragraph in text.split("\n"):
         current = ""
         for token in TOKENS.findall(paragraph):
+            if text_width(token.rstrip(), size, name) > width:
+                if current.strip():
+                    lines.append((current.rstrip(), False))
+                *whole, current = split_word(token.rstrip(), size, width, name)
+                lines += [(piece, False) for piece in whole]
+                current += token[len(token.rstrip()) :]
+                continue
             candidate = (current + token).rstrip()
             if current.strip() and text_width(candidate, size, name) > width:
                 lines.append((current.rstrip(), False))
@@ -334,7 +479,7 @@ def summary_value(item, key, language="ar"):
 
     value = item["property_data"].get(key)
     if key in ("area", "participation_amount"):
-        value = number(value, language, key == "participation_amount")
+        value = number(value, language, True)
     if key == "deed_number":
         # Every deed of the property, each on its own line in the cell.
         value = " ".join(deeds(item["property_data"]))
@@ -408,14 +553,102 @@ def spread(needs, space, cap):
     return [max(n, low) for n in needs]
 
 
+# The summary's column headings (white on the band): Ruaq Medium 6.48.
+SUMMARY_HEAD = (6.48, "RuaqArabic-Medium")
+SUMMARY_PAD = 6.0  # space beside a cell's widest line
+# A long word may still be split inside its cell (cell_text): no column is
+# made wider than this just to hold one.
+SUMMARY_WORD = 70.0
+
+
+def summary_heading(key, language="ar"):
+    from .labels import label
+
+    return label("area_short" if key == "area" else key, language)
+
+
+def summary_columns(items, language="ar"):
+    """Column edges (right to left) shared by the summary's pages, fitted to
+    the values: each column as wide as its widest value on one line (and its
+    heading), so a short column (the participation amount) gives its room to
+    the columns with more text. When the values cannot all stand on one line
+    the widest columns give way first, never below their longest word or
+    heading word; the table keeps the guide's outer edges."""
+    total = SUMMARY_COLS[0] - SUMMARY_COLS[-1]
+    natural, least = [], []
+    for key in SUMMARY_FIELDS:
+        values = [summary_value(item, key, language) for item in items] or ["-"]
+        if key == "deed_number":
+            # Several deeds stand one under another: the widest deed counts.
+            values = [deed for value in values for deed in value.split(" ")]
+        heading = summary_heading(key, language)
+        head = text_width(heading, *SUMMARY_HEAD)
+        head_word = max(text_width(w, *SUMMARY_HEAD) for w in heading.split())
+        words = [w for value in values for w in value.split()] or ["-"]
+        # A cell holds lines up to 94% of its inner width (cell_text): a
+        # column for a line of width w is w / 0.94 + 4 wide.
+        natural.append(
+            max(head, max(cell_width(v) for v in values) / 0.94 + 4) + SUMMARY_PAD
+        )
+        least.append(
+            max(
+                head_word,
+                min(SUMMARY_WORD, max(cell_width(w) for w in words)) / 0.94 + 4,
+            )
+            + SUMMARY_PAD
+        )
+    widths = list(natural)
+    # Too wide: the column with the longest text takes two lines first (it
+    # would wrap anyway), and so on, so short values keep their one line.
+    for c in sorted(range(len(widths)), key=lambda c: -natural[c]):
+        if sum(widths) <= total:
+            break
+        widths[c] = max(least[c], (natural[c] - SUMMARY_PAD) * 0.6 + SUMMARY_PAD)
+    if sum(widths) > total and sum(least) >= total:
+        widths = [m * total / sum(least) for m in least]
+    elif sum(widths) > total:
+        # Still too wide: the widest columns narrow to a common width.
+        wanted, low, high = list(widths), 0.0, max(widths)
+        for _ in range(50):
+            cap = (low + high) / 2
+            if sum(max(m, min(w, cap)) for w, m in zip(wanted, least)) > total:
+                high = cap
+            else:
+                low = cap
+        widths = [max(m, min(w, low)) for w, m in zip(wanted, least)]
+    # Room to spare is shared out evenly, so the table keeps its width.
+    spare = (total - sum(widths)) / len(widths)
+    widths = [w + spare for w in widths]
+    edges, x = [SUMMARY_COLS[0]], SUMMARY_COLS[0]
+    for width in widths:
+        x -= width
+        edges.append(round(x, 2))
+    edges[-1] = SUMMARY_COLS[-1]
+    return edges
+
+
 def summary_pages(items, language="ar"):
     """Summary tables with every value shown whole, at the reference size.
 
-    A value too long for its column wraps inside its cell and its row grows.
-    A page takes at most SUMMARY_ROWS properties (fewer when wrapped rows fill
-    it down to the footer first), and its rows share the table's height evenly.
+    Columns are fitted to the values (summary_columns). A value too long for
+    its column still wraps inside its cell and its row grows. A page takes at
+    most SUMMARY_ROWS properties (fewer when wrapped rows fill it down to the
+    footer first), and its rows share the table's height evenly.
     """
     space = SUMMARY_LIMIT - SUMMARY_TOP
+    cols = summary_columns(items, language)
+    heads = [
+        [
+            line
+            for line, _ in wrap_lines(
+                summary_heading(key, language),
+                SUMMARY_HEAD[0],
+                cols[i] - cols[i + 1] - 3,
+                SUMMARY_HEAD[1],
+            )
+        ]
+        for i, key in enumerate(SUMMARY_FIELDS)
+    ]
     pages, rows, needs, lines = [], [], [], []
 
     def close():
@@ -425,14 +658,21 @@ def summary_pages(items, language="ar"):
             y += height
             bottoms.append(round(y, 2))
         pages.append(
-            {"kind": "summary", "rows": rows, "bottoms": bottoms, "lines": lines}
+            {
+                "kind": "summary",
+                "rows": rows,
+                "bottoms": bottoms,
+                "lines": lines,
+                "cols": cols,
+                "heads": heads,
+            }
         )
 
     for item in items:
         texts = {
             key: cell_text(
                 summary_value(item, key, language),
-                SUMMARY_COLS[i] - SUMMARY_COLS[i + 1] - 4,
+                cols[i] - cols[i + 1] - 4,
             )
             for i, key in enumerate(SUMMARY_FIELDS)
         }
@@ -573,6 +813,17 @@ def deeds(prop):
     ]
 
 
+# A property's optional pages, in the guide's order; an author may reorder
+# them (PropertyData.page_order).
+OPTIONAL_PAGES = ("features", "boundaries", "information", "images", "rentals")
+
+
+def page_order(prop):
+    chosen = [k for k in prop.get("page_order") or [] if k in OPTIONAL_PAGES]
+    chosen = list(dict.fromkeys(chosen))
+    return chosen + [k for k in OPTIONAL_PAGES if k not in chosen]
+
+
 def features_of(prop):
     return [f.strip() for f in prop.get("features", []) if f.strip()]
 
@@ -595,7 +846,37 @@ def info_entries(item, include_lists, with_features=True):
             entries += [{"number": n, "text": t} for n, t in enumerate(notes, 1)]
     if prop.get("additional_information", "").strip():
         entries.append({"text": prop["additional_information"].strip()})
+    landmarks = [
+        m for m in prop.get("landmarks") or [] if (m.get("text") or "").strip()
+    ]
+    if landmarks:
+        # Nearby landmarks after the text, three to a row, each beside its icon.
+        entries.append({"heading": "landmarks"})
+        entries += [
+            {"landmarks": landmarks[i : i + LANDMARKS_PER_ROW]}
+            for i in range(0, len(landmarks), LANDMARKS_PER_ROW)
+        ]
     return entries
+
+
+# A row of landmarks: three to a row, an icon (LANDMARK_ICON points) beside
+# its name on up to two lines, set between these sizes to fit its cell.
+LANDMARKS_PER_ROW = 3
+LANDMARK_ICON = 18.0
+LANDMARK_ROW = 26.0  # height of a row, in points
+LANDMARK_SIZE, LANDMARK_MIN = 8.5, 6.5
+
+
+def landmark_size(items, width):
+    """The size at which every name of a row fits its cell on two lines."""
+    cell = width / LANDMARKS_PER_ROW - LANDMARK_ICON - 6
+    size = LANDMARK_SIZE
+    while size > LANDMARK_MIN and any(
+        len(wrap_lines(m["text"], size, cell * 0.96, "RuaqArabic-Light")) > 2
+        for m in items
+    ):
+        size = round(size - 0.25, 2)
+    return size
 
 
 def fill_box(entries, size, width, capacity):
@@ -604,7 +885,12 @@ def fill_box(entries, size, width, capacity):
     for index, entry in enumerate(entries):
         text = entry.get("text", "")
         indent = NUMBER_INDENT if "number" in entry else 0
-        need = 1 if "heading" in entry else lines_used(text, size, width - indent)
+        if "landmarks" in entry:
+            # Its own height, in lines of this size; its names fitted to the width.
+            entry = {**entry, "size": landmark_size(entry["landmarks"], width)}
+            need = -(-LANDMARK_ROW // (1.4 * size))
+        else:
+            need = 1 if "heading" in entry else lines_used(text, size, width - indent)
         if used + need <= capacity:
             shown.append(entry)
             used += need
@@ -654,28 +940,86 @@ def paginate(entries, size, width, capacity):
     return pages
 
 
+def closing(auction, prop, index):
+    """When bidding closes on a property (electronic auctions): its own date
+    and time if given; otherwise the auction's last day, at the first closing
+    time plus the interval for each property before it. Returns (date, time)
+    as ISO strings, either possibly empty."""
+    from datetime import date, datetime, timedelta
+
+    from .formatting import as_date, as_time
+
+    own_date = as_date(prop.get("auction_close_date"))
+    own_time = as_time(prop.get("auction_close_time"))
+    day = own_date or as_date(auction.get("auction_end_date"))
+    moment = own_time
+    first = as_time(auction.get("first_close_time"))
+    if not moment and first:
+        step = timedelta(minutes=(auction.get("close_interval_minutes") or 0) * index)
+        at = datetime.combine(day or date(2000, 1, 1), first) + step
+        moment = at.time()
+        # Past midnight, the closing falls on the next day (unless one is given).
+        if day and not own_date:
+            day = at.date()
+    return (day.isoformat() if day else "", moment.strftime("%H:%M") if moment else "")
+
+
+def description_fit(text, layout):
+    """The description set in its region (see DESCRIPTION): the size, its line
+    height, the region's top, the lines printed (justified, every one within
+    the width) and the text that continues on another page ("" when none)."""
+    region = DESCRIPTION[layout]
+    ratio = region["line"] / region["size"]
+    # The block's top stays where the reference size puts the first line.
+    top = region["base"] - region["line"] / 2 - region["size"] * 0.366
+    room = region["bottom"] - top
+    size = region["size"]
+    while True:
+        line = round(size * ratio, 2)
+        lines = wrap_lines(text, size, region["width"] * 0.98, DESCRIPTION_FONT)
+        capacity = max(1, int(room // line))
+        if len(lines) <= capacity or size <= DESCRIPTION_MIN:
+            break
+        size = max(DESCRIPTION_MIN, round(size - 0.25, 2))
+    shown, rest = lines[:capacity], lines[capacity:]
+    return {
+        "size": size,
+        "line_height": line,
+        "top": round(top, 2),
+        # Every line but a paragraph's last is filled to the width.
+        "lines": [
+            {
+                "text": row
+                if last or not row
+                else kashida(row, size, region["width"] * 0.985, DESCRIPTION_FONT),
+                "last": last,
+            }
+            for row, last in shown
+        ],
+        "rest": "".join(t + ("\n" if last else " ") for t, last in rest).strip(),
+    }
+
+
 def compose(project, items):
+    from .boundaries import deed_pages, deeds_differ, sides_layout
+    from .facts import property_facts
+    from .labels import label
+
     auction = project["auction"]
     cover = COVERS[auction["selected_cover_template_id"]]
     electronic = auction["auction_type"] in ("electronic", "hybrid")
     edition = auction.get("booklet_edition") or "print"
+    # Guide order: cover, the supervising body (Infath), the selling agent
+    # (one page each, set alike), the auction.
+    from .supervisor import INFATH
+
+    supervisor = project.get("supervisor") or INFATH
+    agent = project.get("selling_agent", {})
     pages = [
         {"kind": "cover", "cover_number": cover.display_order},
-        {"kind": "introduction"},
+        profile_page("introduction", supervisor.get("text")),
+        profile_page("agent", agent.get("description")),
     ]
-    # Guide order: cover, Infath, the selling agent (one page), the auction.
-    agent = project.get("selling_agent", {})
-    description = (agent.get("description") or "").strip()
-    size, _ = agent_size(description)
-    pages.append(
-        {
-            "kind": "agent",
-            "text": description,
-            "size": size,
-            "line_height": round(AGENT_LINE * size / AGENT_TEXT[0], 2),
-            "lines": justified(description, size, AGENT_TEXT[1]),
-        }
-    )
     auction_page = {"kind": "auction"}
     pages.append(auction_page)
     announcement = "\n".join(
@@ -708,7 +1052,11 @@ def compose(project, items):
         prop = item["property_data"]
         layout = property_layout(item)
         boundaries = prop.get("boundaries", {})
-        beside = boundary_fit(boundaries, layout)
+        per_deed = deeds_differ(prop)
+        beside = None if per_deed else sides_layout(boundaries, layout)
+        not_fit = beside is None
+        if prop.get("include_boundaries_page"):
+            beside = None  # the author put them on a page of their own
         separate_boundaries = beside is None
         include_info = prop.get("include_information_page", True)
         links = [k for k in LINK_ORDER if prop.get(k)] + sorted(
@@ -718,60 +1066,86 @@ def compose(project, items):
             {"label": k, "url": prop[k], "image": qr(prop[k], "#3cbebb", 0)}
             for k in links
         ]
-        first, remainder = split_text(item.get("description", ""), *DESCRIPTION[layout])
-        description = (
-            [first] + measured_chunks(remainder, *INFO_PAGE)
-            if first or remainder
-            else []
-        )
-        # Guide p.17: features and more than one additional photograph get a
-        # page of their own after the property's first page; the main
-        # photograph heads it, the next two sit beneath, the rest follow on
-        # the photographs pages (p.18).
-        extras = (
-            item.get("image_assets", [])[1:]
-            if prop.get("include_images_page", True)
-            else []
-        )
-        features = features_of(prop) if include_info else []
-        feature_page = bool(features) and len(extras) >= 2
+        # The description fills its region, set smaller when longer; what
+        # does not fit even then continues on description pages.
+        written = item.get("description", "") or ""
+        fitted = description_fit(written.strip() or item.get("title", ""), layout)
+        description = [""] + measured_chunks(fitted["rest"], *INFO_PAGE)
+        # The photographs: the main one on the property's page, the
+        # additional ones three to a photographs page (guide p.18), the
+        # features' own on the features page.
+        assets = item.get("image_assets", [])
+        main_photo = assets[:1]
+        own_features = [a for a in assets[1:] if a.get("category") == "features"]
+        extras = [a for a in assets[1:] if a.get("category") != "features"]
+        if not prop.get("include_images_page", True):
+            extras = []
+        # Guide p.17 and the notes (p.12): the features have a page of their
+        # own, never the additional-information box.
+        features = features_of(prop) if prop.get("include_features_page", True) else []
+        region = info_region(layout, edition, separate_boundaries)
         shown, rest, info_size = fit_box(
-            info_entries(item, include_info, not feature_page), *INFO_BOX[layout]
+            info_entries(item, include_info, with_features=False),
+            INFO_SIZE,
+            region["width"],
+            region["lines"],
         )
-        close = electronic and bool(
-            prop.get("auction_close_date") or prop.get("auction_close_time")
-        )
+        close_date, close_time = closing(auction, prop, index - 1)
+        close = electronic and bool(close_date or close_time)
         pages.append(
             {
                 "kind": "property",
                 "item": item,
                 "layout": layout,
                 "variant": layout + ("-close" if close else ""),
+                "close_date": close_date,
+                "close_time": close_time,
                 "edition": edition,
                 "separate_boundaries": separate_boundaries,
                 "boundaries": beside,
-                "description": description[0] if description else "",
+                "description": fitted,
+                "facts": property_facts(
+                    prop, layout, auction.get("document_language") or "ar"
+                ),
                 "info": shown,
                 "info_size": info_size,
+                "info_region": region,
                 "additional_information": "".join(
                     e["text"] for e in shown if set(e) == {"text"}
                 ),
+                # Optional pages the property's data calls for whatever the
+                # author chose: text that continues, boundaries that do not
+                # fit (or one box per deed).
+                "auto": {
+                    "information": bool(
+                        rest or description[1:] or item["qr_links"][PAGE_LINKS:]
+                    ),
+                    "boundaries": per_deed or not_fit,
+                },
             }
         )
-        if feature_page:
+        # Each optional page group, placed after the property's page in the
+        # order the author chose (page_order), else the guide's.
+        groups = {key: [] for key in OPTIONAL_PAGES}
+        if features:
+            # A large photograph above, two smaller beneath: the features'
+            # own, else the main one above and additional ones beneath.
+            photos = own_features[:3] or main_photo
+            while len(photos) < 3 and extras:
+                photos, extras = photos + extras[:1], extras[1:]
             entries = [{"number": n, "text": f} for n, f in enumerate(features, 1)]
             listed, more, size = fit_box(entries, *FEATURES_BOX)
-            pages.append(
+            groups["features"].append(
                 {
                     "kind": "features",
                     "item": item,
-                    "images": [item["image_assets"][0], *extras[:2]],
+                    "images": photos,
                     "entries": listed,
                     "size": size,
                 }
             )
             for group in paginate(more, *INFO_PAGE):
-                pages.append(
+                groups["features"].append(
                     {
                         "kind": "information",
                         "item": item,
@@ -780,8 +1154,17 @@ def compose(project, items):
                         "text": "",
                     }
                 )
-            extras = extras[2:]
-        if separate_boundaries:
+        if per_deed:
+            for group in deed_pages(
+                prop,
+                label("deed_box", auction.get("document_language") or "ar"),
+                label("length_of", auction.get("document_language") or "ar"),
+                lambda side: label(side, auction.get("document_language") or "ar"),
+            ):
+                groups["boundaries"].append(
+                    {"kind": "boundaries", "item": item, **group}
+                )
+        elif separate_boundaries:
             rows = []
             for side in ("north", "south", "east", "west"):
                 for text in measured_chunks(
@@ -795,9 +1178,12 @@ def compose(project, items):
                         }
                     )
             for group in chunks(rows, 4):
-                pages.append({"kind": "boundaries", "item": item, "rows": group})
+                groups["boundaries"].append(
+                    {"kind": "boundaries", "item": item, "rows": group}
+                )
+        information = groups["information"]
         for group in chunks(item["qr_links"][PAGE_LINKS:], 4):
-            pages.append(
+            information.append(
                 {
                     "kind": "information",
                     "item": item,
@@ -807,7 +1193,7 @@ def compose(project, items):
                 }
             )
         for text in description[1:]:
-            pages.append(
+            information.append(
                 {
                     "kind": "information",
                     "item": item,
@@ -818,7 +1204,7 @@ def compose(project, items):
         if include_info:
             for field in ("specifications", "technical_information"):
                 for text in measured_chunks(item.get(field, ""), *INFO_PAGE):
-                    pages.append(
+                    information.append(
                         {
                             "kind": "information",
                             "item": item,
@@ -827,7 +1213,7 @@ def compose(project, items):
                         }
                     )
         for group in paginate(rest, *INFO_PAGE):
-            pages.append(
+            information.append(
                 {
                     "kind": "information",
                     "item": item,
@@ -837,15 +1223,21 @@ def compose(project, items):
                 }
             )
         for images in chunks(extras, 3):
-            pages.append({"kind": "images", "item": item, "images": images})
+            groups["images"].append({"kind": "images", "item": item, "images": images})
         rentals = [
             r
             for r in prop.get("rental_contracts", [])
             if any(v not in (None, "") for v in r.values())
         ]
         if prop.get("include_rentals_page", True):
-            pages += rental_pages(item, rentals, auction.get("document_language"))
-    pages.append({"kind": "terms", "auction_type": auction["auction_type"]})
+            groups["rentals"] += rental_pages(
+                item, rentals, auction.get("document_language")
+            )
+        for key in page_order(prop):
+            pages += groups[key]
+    from .terms import terms_page
+
+    pages.append(terms_page(auction))
     if electronic:
         pages.append({"kind": "participation"})
     pages.append({"kind": "contact"})

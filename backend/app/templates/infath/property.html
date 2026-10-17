@@ -9,10 +9,10 @@
              ('area', 273.2), ('usage', 291.2), ('district', 309.2), ('participation_amount', 327.1), ('execution_request_number', 346.4)],
   'label_right': 564.8, 'value_right': 486.7, 'value_width': 150,
   'tab_b': (536.5, 384.6), 'tab_l': (536.5, 499.6),
-  'sides': (564.8, 486.7, [413.3, 433.1, 451.0, 470.3], 130), 'lengths': [528.3, 546.3, 564.3, 582.3],
+  'sides': (564.8, 486.7, [413.3, 433.1, 451.0, 470.3], 130), 'sides_width': 136,
   'info_tab': (560.4, 613.7), 'info': (553.3, 545.5, 556.4, 643.3, 262, 8),
-  'qr': [(169.5, 171.5, 215.9), (65.5, 68.3, 111.4)],
-  'buttons': (23.0, 650.0, 28.4, 0.88), 'badge': (-2.78, 234.82),
+  'qr': [(189.9, 191.9, 236.3), (73.2, 75.2, 119.6)], 'qr_rows': (624.5, 69.5),
+  'buttons': (28.8, 647.6, 28.17, 0.857), 'badge': (-2.78, 223.32),
 } %}
 {% else %}
 {% set G = {
@@ -20,10 +20,10 @@
   'fields': [('property_type', 454.9), ('deed_number', 472.9), ('plan_number', 490.9), ('plot_number', 508.8)],
   'fields2': [('area', 454.9), ('usage', 472.9), ('district', 490.9), ('participation_amount', 508.8), ('execution_request_number', 528.1)],
   'label_right': 550.0, 'value_right': 482.6, 'value_width': 105,
-  'sides': (194.9, 143.5, [455.7, 475.6, 494.6, 512.5], 100), 'lengths': [548.6, 566.5, 584.4, 602.3],
+  'sides': (194.9, 143.5, [455.7, 475.6, 494.6, 512.5], 100), 'sides_width': 103,
   'info_tab': (555.2, 566.4), 'info': (554.5, 546.8, 557.4, 592.3, 268, 11),
-  'qr': [(184.5, 186.7, 230.9), (80.5, 83.4, 126.4)],
-  'buttons': (90.6, 629.7, 28.8, 1), 'badge': (0, 0),
+  'qr': [(184.3, 186.3, 230.7), (73.4, 75.4, 119.8)], 'qr_rows': (625.9, 66.0),
+  'buttons': (120.9, 620.9, 29.2, 0.888), 'badge': (9.1, 0),
 } %}
 {% endif %}
 {#- Photograph beneath the artwork, clipped to the reference window without distortion. -#}
@@ -32,82 +32,81 @@
 {{ art(page.variant) }}{{ footer() }}
 <div class="t lb white" style="{{ T(G.num[0], G.num[1], G.num[2], 'l', align='center', width=60) }}">{{ '%02d' % item.number }}</div>
 {% if not portrait %}<div class="t r w5" style="{{ T(547.0, 372.5, 13.94) }};color:#117888">{{ bt('description') }}</div>{% endif %}
-{% set d = G.desc %}
-<div class="t p j r w3 body" style="{{ T(d[0], d[1], d[2], lh=d[3], width=d[4]) }}" data-fit="property-description" data-max-height="{{ d[3] * d[5] + 2 }}pt">{{ (page.description or item.title)|trim }}</div>
-{#- Property facts: teal labels, navy values. -#}
-{% macro fact(key, base, label_right, value_right, width) %}
-<div class="t r w5 label" style="{{ T(label_right, base, 10.06 if ar else 8.5) }}">{{ bt({'area': 'area_short', 'property_type': 'property_type_short', 'execution_request_number': 'execution_short'}.get(key, key)) }}</div>
-{% set raw = prop.get(key) %}
-{% set value = fmt.money(raw, output_language) if key == 'participation_amount' else fmt.number(raw, output_language) if key == 'area' else raw %}
-{#- Long values are set smaller (down to 7.5 pt); the items step rejects values
-    that would not fit even then, so export never fails on them. -#}
-{% set size = fit.fact_size(prop, key, page.layout, output_language) %}
-<div data-fit="property-field-{{ key }}" data-max-height="18pt" class="t {{ 'l' if has_digits(value) else 'r' }} w5 value" style="{{ T(value_right, base, size, 'l' if has_digits(value) else 'r', width=fit.fact_width(page.layout, key)) }};{{ 'color:#14385f' if key == 'execution_request_number' else '' }}">{{ (value or '-')|nums }}</div>
-{% endmacro %}
-{#- Up to four deeds, one under another (guide p.15 sets several numbers of a
-    field this way, smaller); the fields beneath move down to make room. -#}
-{% set deeds = ([prop.deed_number] if prop.deed_number else []) + (prop.extra_deed_numbers or [])|list %}
-{% set more = [deeds|length - 1, 0]|max %}{% set pitch = 10.5 %}
-{% set ns = namespace(after=false) %}
-{% for key, base in G.fields %}
-{#- Portrait: the gap before the second group of facts takes part of the room. -#}
-{% set drop = (more * pitch if not (portrait and loop.index0 > 3) else [more * pitch - 11.6, 0]|max) if ns.after else 0 %}
-{% if key == 'deed_number' and more %}
-{#- Each deed is named (first, second...) beside its number. -#}
-{% for deed in deeds %}<div class="t r w5 label" style="{{ T(G.label_right, base + pitch * loop.index0, 8.5 if ar else 7.5) }}">{{ bt('deed_number_' ~ loop.index) }}</div>
-<div data-fit="property-field-deed_number" data-max-height="18pt" class="t l w5 value" style="{{ T(G.value_right, base + pitch * loop.index0, fit.deed_size(deed, page.layout), 'l', width=fit.fact_width(page.layout, key)) }}">{{ deed|nums }}</div>
-{% endfor %}
-{% else %}{{ fact(key, base + drop, G.label_right, G.value_right, 0) }}{% endif %}
-{% if key == 'deed_number' %}{% set ns.after = true %}{% endif %}
-{% endfor %}
-{% for key, base in G.get('fields2', []) %}{{ fact(key, base, 384.5, 306.1, 0) }}{% endfor %}
-{#- Boundaries and lengths beside their tabs. -#}
-{% set labels_right, values_right, bases, width = G.sides %}
+{#- The description in its region: the composer's lines at its size (set
+    smaller for a longer text), each within the width, justified. -#}
+{% set D = page.description %}
+<div class="t r w3 body" style="top:{{ D.top }}pt;right:{{ 595.276 - G.desc[0] }}pt;width:{{ G.desc[4] }}pt;font-size:{{ D.size }}pt;line-height:{{ D.line_height }}pt;text-align:right" data-fit="property-description" data-max-height="{{ D.lines|length * D.line_height + 2 }}pt">
+{%- for line in D.lines %}<span class="jl{{ ' last' if line.last else '' }}">{{ line.text or '\u00a0' }}</span>{% endfor %}</div>
+{#- Property facts (facts.py): teal labels, navy values on the guide's
+    baselines. A long plan or plot number takes further lines, the deeds stand
+    two to a line under one label, and the facts beneath move down; values
+    too long for their line are set smaller. -#}
+{% set short = {'area': 'area_short', 'property_type': 'property_type_short', 'execution_request_number': 'execution_short'} %}
+{% for column in page.facts %}{% for row in column.rows %}
+<div class="t r w5 label" style="{{ T(column.label, row.base, 10.06 if ar else 8.5) }}">{{ bt(short.get(row.key, row.key)) }}</div>
+{% for line in row.lines %}<div data-fit="property-field-{{ row.key }}" data-max-height="18pt" class="t {{ row.family }} w5 value" style="{{ T(column.value, line.base, row.size, row.family, width=fit.fact_width(page.layout, row.key)) }};{{ 'color:#14385f' if row.key == 'execution_request_number' else '' }}">{{ line.text|nums }}</div>
+{% endfor %}{% endfor %}{% endfor %}
+{#- Boundaries and lengths beside their tabs (boundaries.sides_layout): each
+    description on the lines it needs, the rows beneath moving down (and in
+    portrait the lengths section with them); the lengths two to a row. When
+    the boundaries continue on a page of their own, a note stands here. -#}
+{% set S = page.boundaries %}
+{% set shift = S.shift if S else 0 %}
+{% set tabs = '_close' if close else '' %}
+{% if S %}
 {% if portrait %}
+<img class="art" src="{{ page_shape(shapes()['portrait_boundaries_tab' ~ tabs], '#12788a') }}">
 <div class="t r w5 white" style="{{ T(G.tab_b[0], G.tab_b[1], 10.09, align='center', width=64) }}">{{ bt('boundary_descriptions') }}</div>
-<div class="t r w5 white" style="{{ T(G.tab_l[0], G.tab_l[1], 10.09, align='center', width=64) }}">{{ bt('boundary_lengths') }}</div>
+<img class="art" src="{{ page_shape(shapes()['portrait_lengths_tab' ~ tabs], '#12788a', dy=shift) }}">
+<div class="t r w5 white" style="{{ T(G.tab_l[0], G.tab_l[1] + shift, 10.09, align='center', width=64) }}">{{ bt('boundary_lengths') }}</div>
 {% else %}
+<img class="art" src="{{ page_shape(shapes()['landscape_boundaries_tab' ~ tabs], '#117888') }}">
+<img class="art" src="{{ page_shape(shapes()['landscape_lengths_tab' ~ tabs], '#117888') }}">
 <div class="t r w5 white rot" style="{{ T(210.0, 482.9, 10.09, align='center', width=64) }}">{{ bt('boundary_descriptions') }}</div>
 <div class="t r w5 white rot" style="{{ T(210.0, 575.8, 10.09, align='center', width=64) }}">{{ bt('boundary_lengths') }}</div>
 {% endif %}
-{% set b = prop.boundaries or {} %}
-{% for side in ['north', 'south', 'east', 'west'] %}
-<div class="t r w5 label" style="{{ T(labels_right, bases[loop.index0], 10.06) }}">{{ bt(side) }}</div>
-{#- One line each, or two smaller lines in the same row (composer's fit). -#}
-{% set beside = page.boundaries or {'size': 9.6, 'length_size': 10.06, 'lines': {}} %}
-{% if not page.separate_boundaries %}{% set rows = beside.lines.get(side) or [b.get(side ~ '_description') or '-'] %}{% set at = loop.index0 %}
-{% for row in rows %}<div class="t l w5 value" data-fit="boundary-{{ side }}" data-max-height="18pt" style="{{ T(values_right, bases[at] + (loop.index0 - (rows|length - 1) / 2) * 8.8, beside.size, 'l', width=width) }}">{{ row|nums }}</div>
-{% endfor %}{% endif %}
-<div class="t r w5 label" style="{{ T(labels_right, G.lengths[loop.index0], 10.06) }}">{{ bt(side) }}</div>
-{% if not page.separate_boundaries %}<div class="t l w5 value" style="{{ T(values_right, G.lengths[loop.index0], beside.length_size, 'l', width=width) }}">{{ (b.get(side ~ '_length') or '-')|nums }}</div>{% endif %}
+{% set labels_right, values_right, bases, width = G.sides %}
+{% for row in S.rows %}
+<div class="t r w5 label" style="{{ T(labels_right, row.base, 10.06) }}">{{ bt(row.side) }}</div>
+{% for line in row.lines %}<div class="t l w5 value" data-fit="boundary-{{ row.side }}" data-max-height="18pt" style="{{ T(values_right, line.base, row.size, 'l', width=G.sides_width) }}">{{ line.text|nums }}</div>
+{% endfor %}{% endfor %}
+{% for item in S.lengths %}
+<div class="t r w5 label" style="{{ T(item.label, item.base, 10.06) }}">{{ bt(item.side) }}</div>
+<div class="t l w5 value" style="{{ T(item.value, item.base, item.size, 'l', width=item.width) }}">{{ item.text|nums }}</div>
 {% endfor %}
-{% if page.separate_boundaries %}<div class="t p r w3 body" style="{{ T(values_right, bases[0], 9, lh=13, width=width) }};white-space:normal">{{ bt('boundaries_continued') }}</div>{% endif %}
-{#- Additional information box: features, notes and free text as in page 9. -#}
-{% set heading_right, text_right, number_right, first, text_width, lines = G.info %}
-<div class="t r w5 white" style="{{ T(G.info_tab[0], G.info_tab[1], 10.12) }}">{{ bt('additional_information') }}</div>
-{% set edge = number_right + 3 %}
-<div class="t" style="right:{{ 595.276 - edge }}pt;top:{{ first - 14 }}pt;width:{{ text_width + edge - heading_right + 14 }}pt" data-fit="property-extra" data-max-height="{{ 14 * lines + 12 }}pt">
-{#- Set smaller when there is more content (composer), justified like the guide. -#}
+{% endif %}
+{#- (Boundaries on a page of their own leave nothing here: the information
+    box takes their place; see composer.info_region.) -#}
+{#- Additional information box (composer.info_region): features, notes and
+    free text, the same margin from the box's top and sides, set smaller when
+    there is more of it. The portrait box is drawn here: wider in the digital
+    edition. -#}
+{% set R = page.info_region %}
+{% set frame = 'M%.2f %.2fH%.2fV%.2fH%.2fZ' % (R.box[0], R.box[1], R.box[2], R.box[3], R.box[0]) %}
+{% if portrait %}<img class="art" src="{{ page_shape(frame, 'none', '#8bc5ac', 1) }}">
+<img class="art" src="{{ page_shape(shapes()['portrait_info_tab' ~ tabs], '#12788a', dy=R.tab) }}">
+{% else %}<img class="art" src="{{ page_shape(frame, 'none', '#107888', 0.42) }}">{% endif %}
+<div class="t r w5 white" style="{{ T(G.info_tab[0], G.info_tab[1] + R.tab, 10.12) }}">{{ bt('additional_information') }}</div>
 {% set fs = page.info_size or 10 %}{% set flh = 1.4 * fs %}
-{% for entry in page.info %}
-{% if entry.heading %}<p class="r w3 body" style="position:relative;font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:normal;text-align:right;padding-right:{{ edge - heading_right }}pt">{{ bt(entry.heading) }} :</p>
-{% elif entry.number %}<div style="position:relative"><div class="r w3" style="position:absolute;top:0;right:{{ edge - number_right }}pt;font-size:{{ fs }}pt;line-height:{{ flh }}pt;color:#000">-{{ entry.number }}</div><p class="r w3 body" style="font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:normal;text-align:justify;text-align-last:right;padding-right:{{ edge - text_right }}pt">{{ entry.text }}</p></div>
-{% else %}<p class="r w3 body" style="position:relative;font-size:{{ fs }}pt;line-height:{{ flh }}pt;white-space:pre-line;overflow-wrap:anywhere;text-align:justify;text-align-last:right;padding-right:{{ edge - text_right }}pt">{{ entry.text|trim }}</p>{% endif %}
-{% endfor %}</div>
+<div class="t" style="right:{{ 595.276 - R.right }}pt;top:{{ R.top + (14 - flh) / 2 }}pt;width:{{ R.width }}pt" data-fit="property-extra" data-max-height="{{ 14 * R.lines + 2 }}pt">
+{{ info_entries(page.info, fs, flh) }}</div>
 {#- Links: QR codes in the print edition, buttons in the digital edition. -#}
+{% set up = 0 if S or portrait else 450.0 - G.buttons[1] %}
 {% if page.edition == 'digital' %}
-{% set x0, y0, step, scale = G.buttons %}
+{% set x0, y0, step, scale = G.buttons %}{% set y0 = y0 + up %}
 {% for link in item.qr_links[:4] %}{% set top = y0 + step * loop.index0 %}
 <a class="hit" href="{{ link.url }}" style="{{ box(x0, top, 98.88 * scale, 17.49) }}"></a>{{ plate(x0, top, 98.88 * scale, 17.49) }}
 <img class="icon" style="{{ box(x0 + 98.88 * scale + 6.2, top + 4.4, 5.04, 6.1) }}" src="{{ shape_in('M5.04 0L0 3.05L5.04 6.1Z', '#cdebf1') }}">
 <div class="t r w5 white" style="{{ T(x0 + 49.44 * scale, top + 10.9, 9.75 if bt(link.label)|length < 18 else 8, align='center', width=98 * scale) }}">{{ bt(link.label) }}</div>
 {% endfor %}
 {% else %}
-{% for link in item.qr_links[:4] %}{% set col = G.qr[loop.index0 % 2] %}{% set dy = 59.6 * (loop.index0 // 2) %}
-<a class="hit" href="{{ link.url }}" style="{{ box(col[0] - 40.5, 633.0 + dy, 81, 54) }}"></a>{{ plate(col[0] - 40.5, 633.0 + dy, 81, 15) }}
-<img class="icon" style="{{ box(col[2], 637.1 + dy, 4.1, 4.9) }}" src="{{ shape_in('M4.1 0L0 2.45L4.1 4.9Z', '#cdebf1') }}">
-<div class="t r w5 white" style="{{ T(col[0], 642.0 + dy, 6.71, align='center', width=81) }}">{{ bt(link.label) }}</div>
-<img class="qr-code" style="{{ box(col[1] - 18, 650.9 + dy, 36, 36) }}" src="{{ link.image }}">
+{#- Two columns of QR codes, where the guide puts them (p.16 and p.20). -#}
+{% set y0, step = G.qr_rows %}{% set y0 = y0 + (0 if S or portrait else 450.0 - y0) %}
+{% for link in item.qr_links[:4] %}{% set col = G.qr[loop.index0 % 2] %}{% set top = y0 + step * (loop.index0 // 2) %}
+<a class="hit" href="{{ link.url }}" style="{{ box(col[0] - 40.5, top, 81, 54) }}"></a>{{ plate(col[0] - 40.5, top, 81, 15) }}
+<img class="icon" style="{{ box(col[2], top + 4.1, 4.1, 4.9) }}" src="{{ shape_in('M4.1 0L0 2.45L4.1 4.9Z', '#cdebf1') }}">
+<div class="t r w5 white" style="{{ T(col[0], top + 9.0, 6.71, align='center', width=81) }}">{{ bt(link.label) }}</div>
+<img class="qr-code" style="{{ box(col[1] - 18, top + 17.9, 36, 36) }}" src="{{ link.image }}">
 {% endfor %}
 {% endif %}
 {#- Electronic auctions: bidding closes on this property. -#}
@@ -115,6 +114,6 @@
 {% set closes = bt('closes').split('\n') %}
 <div class="t r w5 white" style="{{ T(259.5 + bx, 331.7 + by, 10.64) }}">{{ closes[0] }}</div>
 <div class="t r w5 white" style="{{ T(259.5 + bx, 344.5 + by, 10.64) }}">{{ closes[1] }}</div>
-<div class="t l w3 white" style="{{ T(144.85 + bx, 345.9 + by, 9.04, 'l', align='center', width=80) }}">{{ fmt.slash_date(prop.auction_close_date)|nums }}</div>
-<div class="t l w3 white" style="{{ T(72.2 + bx, 345.8 + by, 9.38, 'l', align='center', width=70) }}">{{ fmt.clock(prop.auction_close_time, output_language).replace(' : ', ':')|nums }}</div>
+<div class="t l w3 white" style="{{ T(144.85 + bx, 345.9 + by, 9.04, 'l', align='center', width=80) }}">{{ fmt.slash_date(page.close_date or prop.auction_close_date)|nums }}</div>
+<div class="t l w3 white" style="{{ T(72.2 + bx, 345.8 + by, 9.38, 'l', align='center', width=70) }}">{{ fmt.clock(page.close_time or prop.auction_close_time, output_language).replace(' : ', ':')|nums }}</div>
 {% endif %}

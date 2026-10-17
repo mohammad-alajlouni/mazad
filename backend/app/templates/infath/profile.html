@@ -1,0 +1,20 @@
+{#- Guide p.11 (the supervising body) and p.12 (the selling agent): one layout,
+    both set as the Infath page is. The logo and the title (Ruaq Bold 19.56,
+    baseline 301.94) end at x 463.4, as does the justified text (Ruaq Light
+    17.04 on 25.07 pt lines from baseline 338.72, set smaller when longer: see
+    composer.profile_page). Under it, up to three contacts beside their tiles,
+    each value ending 6.7 pt before its tile, its last line on the tile's foot.
+    Expects profile_logo (HTML), profile_title and profile_contacts. -#}
+{{ profile_logo }}
+<div class="t r w7" style="{{ T(463.4, 301.94, fit.box_size('agent_name', profile_title), width=330.1) }};color:#00365d" data-fit="profile-title" data-max-height="30pt">{{ profile_title }}</div>
+{% set size = page.size or 17.04 %}{% set lh = page.line_height or 25.07 %}
+<div class="t p j r w3" style="{{ T(463.4, 338.72, size, lh=lh, width=330.1) }};color:#00365d" data-fit="profile-text" data-max-height="252pt">
+{%- if page.lines %}{% for line in page.lines %}<span class="jl{{ ' last' if line.last else '' }}">{{ line.text or ' ' }}</span>{% endfor %}
+{%- else %}{{ page.text|trim }}{% endif %}</div>
+{% for key, value in profile_contacts %}{% set rows = (value or '').strip().split('\n')|map('trim')|select|list %}{% if rows %}
+{% set tile, width = [(440.1, 80), (323.4, 87), (200.0, 140)][loop.index0] %}
+{#- The longest line decides the size: measured, set smaller when it is wider. -#}
+{% set ns = namespace(size=9.85) %}{% for row in rows %}{% set ns.size = [ns.size, fit.fit_size(row, width, 9.85, 6, 'l', 500)]|min %}{% endfor %}{% set size = ns.size %}
+{{ vec('agent-' ~ key, tile, 595.3, 23.8, 23.8) }}
+{% for row in rows %}<div class="t l w5" style="{{ T(tile - 6.7, 618.4 - 12.33 * (rows|length - loop.index), size, 'l', width=width) }};color:#00365d" data-fit="profile-contact-{{ key }}" data-max-height="20pt" dir="ltr">{{ row }}</div>
+{% endfor %}{% endif %}{% endfor %}

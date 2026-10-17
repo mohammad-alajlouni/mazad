@@ -5,6 +5,7 @@ from .social import review_social
 from ..generation.booklet.validation import validate_project
 
 AUCTION_COMMON = [
+    "assignment_number",
     "auction_name",
     "license_number",
     "auction_contact_number",
@@ -39,6 +40,8 @@ AUCTION_BY_TYPE = {
         "auction_end_date",
         "start_time",
         "end_time",
+        "first_close_time",
+        "close_interval_minutes",
         "electronic_platform_name",
         "electronic_platform_url",
     ],
@@ -47,6 +50,8 @@ AUCTION_BY_TYPE = {
         "auction_end_date",
         "start_time",
         "end_time",
+        "first_close_time",
+        "close_interval_minutes",
         "physical_location",
         "auction_location_url",
         "electronic_platform_name",
@@ -168,6 +173,10 @@ def workflow(db, project):
         from ..generation.booklet.composer import image_frames
 
         rules["image_frames"] = image_frames()
+        # The guide's terms of entry, which an auction may change.
+        from ..generation.booklet.terms import TERMS
+
+        rules["terms_default"] = TERMS
 
     # Issues name a property by title; the id lets the form open that property.
     from sqlalchemy import select as _select

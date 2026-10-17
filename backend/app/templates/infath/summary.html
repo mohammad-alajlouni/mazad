@@ -3,7 +3,9 @@
 {% set navy = booklet.theme == 'navy' %}{% set band = '#00365d' if navy else '#37bfbd' %}
 {% set dy = -103.5 %}{% set table_top = 297.7 + dy %}
 {% set bottoms = page.bottoms %}{% set last = bottoms[-1] %}
-{% set cols = [509.2, 455.1, 413.1, 350.6, 308.6, 265.9, 225.9, 152.6, 37.6] %}
+{#- Column edges fitted to the values (composer.summary_columns); the guide's
+    for a plan written before they were. -#}
+{% set cols = page.cols or [509.2, 455.1, 413.1, 350.6, 308.6, 265.9, 225.9, 152.6, 37.6] %}
 {{ art('plain') }}
 {#- Title rules either side of the heading (two short, two long). -#}
 <img class="art" src="{{ page_shape(['M229.6 58.5H219.7', 'M229.6 64.4H186.1', 'M371.2 58.5H381.1', 'M371.2 64.4H414.7'], 'none', '#127887', 1) }}">
@@ -13,12 +15,14 @@
 {{ footer() }}
 <div class="t r w7" style="{{ T(300.4, 67.1, 21.24, align='center', width=260) }};color:#127887">{{ bt('summary') }}</div>
 {% for key in summary_fields %}{% set centre = (cols[loop.index0] + cols[loop.index]) / 2 %}
-<div class="t r w5 white" style="{{ T(centre, 271.9 + dy, 6.48, align='center', width=cols[loop.index0] - cols[loop.index]) }}">{{ bt('area_short' if key == 'area' else key) }}</div>
+{% set head = page.heads[loop.index0] if page.heads else [bt('area_short' if key == 'area' else key)] %}
+{#- A heading wider than its column takes two lines, centred on the band's line. -#}
+{% for line in head %}<div class="t r w5 white" style="{{ T(centre, 271.9 + dy + 7.4 * (loop.index0 - (head|length - 1) / 2), 6.48, align='center', width=cols[loop.index0] - cols[loop.index]) }}">{{ line }}</div>{% endfor %}
 {% endfor %}
 {% for item in page.rows %}{% set row = loop.index0 %}{% set top = table_top if loop.first else bottoms[row - 1] %}{% set middle = (top + bottoms[row]) / 2 %}{% set base = middle + 3.2 %}
 <div class="t lr white" style="{{ T(540.3, base + 0.4, 12.99, 'l', align='center', width=38) }}">{{ '%02d' % item.number }}</div>
 {% for key in summary_fields %}{% set prop = item.property_data %}
-{% set value = fmt.number(prop.get(key), output_language, key == 'participation_amount') if key in ('area', 'participation_amount') else prop.get(key) %}
+{% set value = fmt.number(prop.get(key), output_language, true) if key in ('area', 'participation_amount') else prop.get(key) %}
 {% set width = cols[loop.index0] - cols[loop.index] - 4 %}{% set lines = page.lines[row][key] if page.lines else [] %}{% set count = lines|length %}
 {% if count > 1 %}{#- Too long for one line: the composer's lines, in its own cell, same size, centred. -#}
 <div class="t {{ 'l' if has_digits(value) else 'r' }} w5 body" style="{{ box((cols[loop.index0] + cols[loop.index]) / 2 - width / 2, middle - count * 10.5 / 2 + 0.3, width, count * 10.5) }};font-size:{{ 8 if has_digits(value) else 8.12 }}pt;line-height:10.5pt;text-align:center;white-space:nowrap">{% for line in lines %}{{ line|nums }}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>

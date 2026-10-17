@@ -38,6 +38,14 @@ def validate_project(db, project):
     images = db.scalars(
         select(ProjectImage).where(ProjectImage.project_id == project.id)
     ).all()
+    if a.get("supervisor") == "other":
+        # Another supervising body gives what its introduction page and logo need.
+        required("auction.supervisor_title", a.get("supervisor_title"))
+        required("auction.supervisor_text", a.get("supervisor_text"))
+        required(
+            "auction.supervisor_logo",
+            any(i.category == "supervisor_logo" and not i.item_id for i in images),
+        )
     rows = []
     for i, item in enumerate(items, 1):
         p = item.property_data

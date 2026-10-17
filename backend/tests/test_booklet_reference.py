@@ -152,16 +152,17 @@ def test_page_settings_persist_and_preview_matches_export(admin):
     assert preview.status_code == 200 and preview.json()["html"]
 
 
-def test_long_field_cannot_overlap_the_next_property_row(admin):
+def test_a_long_deed_wraps_in_its_column_instead_of_overlapping(admin):
+    """A deed number too long for one line takes further lines in its column
+    (the facts beneath move down): the booklet is made, nothing overlaps."""
     p = create_auction(admin)
     body = property_input()
-    body["property_data"]["deed_number"] = "1234567890" * 10
+    body["property_data"]["deed_number"] = "1234567890" * 4
     add(admin, p, body)
     response = admin.post(
         f"/api/projects/{p}/generate", json={"types": ["project_booklet"]}
     )
-    assert response.status_code == 422
-    assert "preflight" in response.text
+    assert response.status_code == 200, response.text
 
 
 def project_with(auction_type="electronic", **auction):
@@ -217,57 +218,74 @@ def test_tables_close_at_the_last_record_on_every_page():
     assert summaries == [20, 2] and rentals == [19, 1]
 
 
-def test_boundaries_use_measured_width_of_the_reference_line():
+def test_boundaries_use_the_room_they_have_before_leaving_the_page():
+    """Notes p.15: the boundaries take as many lines as they need beside their
+    labels (the rows below move down), are set gradually smaller only when the
+    column runs out, and go to a page of their own only when even that fails."""
+
     def page(boundaries, **prop):
         item = item_with(boundaries=boundaries, **prop)
         return property_pages(compose(project_with(), [item]))[0]
 
+    import itertools
+
+    def north(plan):
+        return plan["boundaries"]["rows"][0]
+
     # A short boundary is one line at the reference size.
     fits = page({"north_description": "شارع بعرض 30م", "north_length": "30 م"})
     assert not fits["separate_boundaries"]
-    assert fits["boundaries"]["size"] == 9.6
-    assert fits["boundaries"]["lines"]["north"] == ["شارع بعرض 30م"]
-    assert fits["boundaries"]["lines"]["south"] == ["-"]
-    # A little longer: still one line, set slightly smaller.
-    snug = page({"north_description": "يحدها من الشمال ارض ااا"})
-    assert 8.0 <= snug["boundaries"]["size"] < 9.6
-    assert snug["boundaries"]["lines"]["north"] == ["يحدها من الشمال ارض ااا"]
-    # Longer again: two lines in the same row, whole, instead of a separate page.
+    assert north(fits)["size"] == 9.6
+    assert [x["text"] for x in north(fits)["lines"]] == ["شارع بعرض 30م"]
+    assert [x["text"] for x in fits["boundaries"]["rows"][1]["lines"]] == ["-"]
+    # Longer: further lines at the same size, the text whole.
     text = "شارع بعرض ثلاثين متراً من الجهة الشمالية الشرقية"
-    long = page({"north_description": text})
+    long = page({"north_description": text * 2})
     assert not long["separate_boundaries"]
-    assert long["boundaries"]["size"] == 7.5
-    assert len(long["boundaries"]["lines"]["north"]) == 2
-    assert " ".join(long["boundaries"]["lines"]["north"]) == text
-    # Too long even for two lines: the boundaries continue on their own page.
-    far = page({"north_description": text * 3})
-    assert far["separate_boundaries"] and far["boundaries"] is None
-    # Portrait pages have the wider reference value column.
-    medium = page(
-        {"north_description": "قطعة رقم 6110 + قطعة 6112"}, booklet_layout="portrait"
+    assert north(long)["size"] == 9.6 and len(north(long)["lines"]) > 2
+    assert " ".join(x["text"] for x in north(long)["lines"]).split() == (
+        (text * 2).split()
     )
-    assert medium["boundaries"]["size"] == 9.6
+    rows = long["boundaries"]["rows"]
+    assert all(
+        a["lines"][-1]["base"] < b["lines"][0]["base"]
+        for a, b in itertools.pairwise(rows)
+    )
+    # Longer again: set a little smaller rather than leaving the page.
+    smaller = page({"north_description": text * 3})
+    assert not smaller["separate_boundaries"]
+    assert 7.0 <= north(smaller)["size"] < 9.6
+    # Too long even so: the boundaries continue on their own page, and the
+    # property's page leaves them out entirely.
+    far = page({"north_description": text * 6})
+    assert far["separate_boundaries"] and far["boundaries"] is None
+    # Portrait pages have the wider column: more fits at the reference size.
+    wide = page({"north_description": text * 4}, booklet_layout="portrait")
+    assert north(wide)["size"] == 9.6
     # A long length is set smaller on its line; an impossible one leaves the page.
-    length = page({"north_length": "107,032.55 متر طولي تقريباً"})
-    assert 7.5 <= length["boundaries"]["length_size"] < 10.06
+    length = page({"north_length": "1,032.55 م"})
+    assert 7.0 <= length["boundaries"]["lengths"][0]["size"] <= 10.06
     assert page({"north_length": "م" * 80})["separate_boundaries"]
+    # The author may put them on their own page though they fit.
+    chosen = page({"north_description": "شارع"}, include_boundaries_page=True)
+    assert chosen["separate_boundaries"] and not chosen["auto"]["boundaries"]
 
 
 def test_boundaries_are_printed_inside_their_column_on_both_layouts():
-    """However they are set (one line, smaller, two lines) the boundaries stay
-    between the page edge and their labels."""
+    """However they are set the boundaries stay between the page edge and
+    their labels."""
     boundaries = {
         "north_description": "يحدها من الشمال ارض فضاء",
-        "south_description": "شارع الملك سعود بعرض 60م ثم ممر مشاة",
+        "south_description": "شارع الملك سعود بعرض 60م ثم ممر مشاة " * 2,
         "east_description": "قطعة رقم 161 وقطعة رقم 162",
         "west_description": "شارع بعرض 30م",
         "north_length": "107,032م",
         "south_length": "108,468م",
     }
-    for layout, (right, width) in {
-        "landscape": (143.5, 100),
-        "portrait": (486.7, 130),
-    }.items():
+    from app.generation.booklet.boundaries import GEOMETRY
+
+    for layout in ("landscape", "portrait"):
+        right, width = GEOMETRY[layout]["value"], GEOMETRY[layout]["width"]
         item = {
             **item_with(
                 property_type="عمارة", boundaries=boundaries, booklet_layout=layout
@@ -277,12 +295,11 @@ def test_boundaries_are_printed_inside_their_column_on_both_layouts():
         booklet, _, pdf = exported(project_with("physical"), [item])
         n = [p["kind"] for p in booklet["pages"]].index("property")
         plan = booklet["pages"][n]
-        assert plan["boundaries"]["size"] == 7.5
-        assert len(plan["boundaries"]["lines"]["south"]) == 2
+        assert len(plan["boundaries"]["rows"][1]["lines"]) >= 2
         text = pdf[n].get_text()
         for word in ("فضاء", "مشاة", "162", "107,032"):
             assert word in text, (layout, word)
-        # The south boundary's two lines: both inside the value column.
+        # The south boundary's lines: all inside the value column.
         found = [
             (x0, x1)
             for x0, _, x1, _, word, *_ in pdf[n].get_text("words")
@@ -358,14 +375,15 @@ def test_schedule_moves_down_with_a_longer_announcement():
     assert abs((moved - plain) - long_shift) < 0.5
 
 
-def test_a_property_prints_up_to_four_deeds_and_the_summary_lists_them():
-    """The first deed and up to three more, one under another on the property
-    page (the facts beneath move down) and all in the summary's deed cell."""
+def test_a_property_prints_up_to_eight_deeds_under_one_label():
+    """The first deed and up to seven more: one "deed number" label, the
+    numbers two to a line beside it (the facts beneath move down), and all in
+    the summary's deed cell."""
     import pydantic
 
-    numbers = ["947603471790", "310115041563", "430107012766", "520118033311"]
+    numbers = [f"{n}4760347179{n}" for n in range(1, 9)]
     with pytest.raises(pydantic.ValidationError):
-        PropertyData.model_validate({"extra_deed_numbers": numbers})  # four more
+        PropertyData.model_validate({"extra_deed_numbers": numbers})  # eight more
     kept = PropertyData.model_validate({"extra_deed_numbers": ["", " 12 ", ""]})
     assert kept.extra_deed_numbers == ["12"]
     for layout in ("landscape", "portrait"):
@@ -388,23 +406,112 @@ def test_a_property_prints_up_to_four_deeds_and_the_summary_lists_them():
             text = page.get_text()
             assert all(n in text for n in numbers[:count]), (layout, count)
             assert not any(n in text for n in numbers[count:])
-            # Several deeds are each named; a single one keeps the plain label.
+            # One label for them all: the deeds are not named one by one.
             from app.generation.booklet.labels import label
 
-            # (The first is skipped: PDF text extraction reorders its lam-alef.)
-            for n in range(2, 5):
-                named = label(f"deed_number_{n}", "ar").split()[-1]
-                assert (named in text) is (count > 1 and n <= count), (count, n)
+            for n in range(2, 9):
+                assert label(f"deed_number_{n}", "ar").split()[-1] not in text
             summary = booklet["pages"][kinds.index("summary")]
             assert summary["lines"][0]["deed_number"] == numbers[:count]
-            return next(w[1] for w in page.get_text("words") if w[4] == key)
+            facts = booklet["pages"][kinds.index("property")]["facts"]
+            row = next(r for c in facts for r in c["rows"] if r["key"] == "deed_number")
+            return next(w[1] for w in page.get_text("words") if w[4] == key), row
 
-        # One deed: the reference positions. Four: the facts below move down.
-        assert base(4, "PLAN_MARK") - base(1, "PLAN_MARK") == pytest.approx(
-            31.5, abs=0.3
+        plan_1, row_1 = base(1, "PLAN_MARK")
+        plan_8, row_8 = base(8, "PLAN_MARK")
+        assert len(row_1["lines"]) == 1
+        # The facts beneath the deeds move down, and stay inside the column.
+        assert plan_8 > plan_1
+        assert len(row_8["lines"]) in (4, 8)  # two to a line where two fit
+
+
+def test_deeds_with_their_own_boundaries_each_have_a_box():
+    """Several deeds whose boundaries differ: the property page leaves the
+    boundaries out and each deed has its framed box, its number on the tab;
+    a deed too long for what is left of the page starts on the next one, and
+    one longer than a page goes on in a box of its own there."""
+    numbers = ["320111010760", "947603471790", "310115041563"]
+    long = "ملك جار ابتداء من الزاوية الجنوبية باتجاه الشرق بطول 173 متر " * 40
+    item = {
+        **item_with(
+            property_type="عمارة",
+            deed_number=numbers[0],
+            extra_deed_numbers=numbers[1:],
+            deeds_differ=True,
+            boundaries={
+                "north_description": "شارع عرض 25 م",
+                "north_length": "19.70 م",
+            },
+            deed_boundaries=[
+                {"north_description": "أرض جار", "north_length": "625 م"},
+                {"north_description": long[:3000], "south_description": long[:3000]},
+            ],
+            booklet_layout="portrait",
+        ),
+        "title": "عقار",
+    }
+    booklet, _, pdf = exported(project_with("physical"), [item])
+    kinds = [p["kind"] for p in booklet["pages"]]
+    assert booklet["pages"][kinds.index("property")]["boundaries"] is None
+    pages = [p for p in booklet["pages"] if p["kind"] == "boundaries"]
+    titles = [b["title"] for p in pages for b in p["boxes"]]
+    assert [t.split()[-1] for t in titles][:2] == numbers[:2]
+    assert titles.count(titles[-1]) >= 2  # the long deed goes on
+    for page in pages:
+        for box in page["boxes"]:
+            assert 36 <= box["tab"] < box["top"] < box["bottom"] <= 747.5
+            for row in box["rows"]:
+                assert all(box["top"] < x["base"] < box["bottom"] for x in row["lines"])
+    first = pdf[kinds.index("boundaries")].get_text()
+    assert numbers[0] in first and "625" in first and "19.70" in first
+    # Not differing (or a single deed): the first deed's boundaries, as before.
+    item["property_data"]["deeds_differ"] = False
+    booklet = compose(project_with("physical"), [item])
+    assert not any(p["kind"] == "boundaries" for p in booklet["pages"])
+
+
+def test_an_empty_deed_takes_its_boundaries_with_it():
+    prop = PropertyData.model_validate(
+        {
+            "extra_deed_numbers": ["", "12"],
+            "deed_boundaries": [{"north_description": "a"}, {"north_description": "b"}],
+        }
+    )
+    assert prop.extra_deed_numbers == ["12"]
+    assert [b.north_description for b in prop.deed_boundaries] == ["b"]
+
+
+def test_long_plan_and_plot_numbers_take_a_second_line():
+    """A plan or plot number too long for its line goes on, smaller if need
+    be, on further lines in its column; the facts beneath move down and the
+    column stays above what follows it."""
+    from app.generation.booklet.facts import COLUMNS, property_facts
+
+    prop = PropertyData.model_validate(
+        {
+            "plot_number": "1609 - 1608 - 1610 - 1607 - 1605 - 1606",
+            "plan_number": "1433/234/ع/17/8899001122/4455",
+            "deed_number": "320111010769",
+            "extra_deed_numbers": ["320111010768", "320111010770", "320111010767"],
+            "execution_request_number": "403094700065084400",
+        }
+    ).model_dump(mode="json")
+    for layout in ("portrait", "landscape"):
+        columns = property_facts(prop, layout)
+        rows = {r["key"]: r for c in columns for r in c["rows"]}
+        printed = " ".join(line["text"] for line in rows["plot_number"]["lines"])
+        # Every number is printed (a line break replaces a separator).
+        assert all(n in printed for n in prop["plot_number"].split(" - "))
+        assert len(rows["plot_number"]["lines"]) >= 2
+        assert not any(
+            line["text"].endswith("-") or line["text"].startswith("-")
+            for line in rows["plot_number"]["lines"]
         )
-        moved = base(4, "EXEC_MARK") - base(1, "EXEC_MARK")
-        assert moved == pytest.approx(0 if layout == "landscape" else 19.9, abs=0.3)
+        for column, spec in zip(columns, COLUMNS[layout]):
+            bottom = column["rows"][-1]["lines"][-1]["base"]
+            assert bottom <= spec["limit"] + 0.01, (layout, bottom)
+            bases = [line["base"] for r in column["rows"] for line in r["lines"]]
+            assert bases == sorted(bases)  # nothing drawn over another line
 
 
 def test_a_further_deed_too_long_for_its_box_is_reported_with_the_property():
@@ -439,7 +546,9 @@ def test_dates_times_and_amounts_follow_the_reference():
     )
     assert f.slash_date("2026-07-29") == "\u20662026 / 07 / 29\u2069"
     assert f.money("10000.00") == "10,000 ريال"
-    assert f.number("1130.4510") == "1130٫451"
+    assert f.number("1130.4510") == "1130.451"
+    # Areas, like amounts: thousands separated, decimals after a point.
+    assert f.number("92566.88", "ar", True) == "92,566.88"
 
 
 def test_info_box_moves_overflow_without_losing_or_repeating_entries():
@@ -537,7 +646,7 @@ def cover_images(cover, auction_logo, agent_logo):
     project = {
         "id": str(uuid4()),
         "auction": AuctionData.model_validate(
-            {"auction_name": "مزاد", "selected_cover_template_id": cover}
+            {"auction_name": "مزاد درة البحر", "selected_cover_template_id": cover}
         ).model_dump(mode="json"),
         "selling_agent": {},
         "agent_logo": agent_logo,
@@ -738,7 +847,9 @@ def test_long_summary_values_wrap_in_their_cell_without_shrinking():
         tops = [SUMMARY_TOP] + page["bottoms"][:-1]
         assert page["bottoms"][-1] <= SUMMARY_LIMIT + 0.01
         for top, bottom, texts in zip(tops, page["bottoms"], page["lines"]):
-            assert len(texts["district"]) >= 2 and len(texts["city"]) >= 2
+            # The long district wraps; the columns are fitted to the values,
+            # so a short city keeps its one line.
+            assert len(texts["district"]) >= 2 and len(texts["city"]) == 1
             # Nothing is dropped: the lines are the value itself.
             assert " ".join(texts["district"]) == long["property_data"]["district"]
             needed = max(len(text) for text in texts.values()) * SUMMARY_LINE + 6
@@ -798,7 +909,6 @@ def test_every_summary_value_is_printed_inside_its_own_cell():
     page every value, however long, lies between its column's rules and inside
     its row."""
     from app.generation.booklet.composer import (
-        SUMMARY_COLS,
         SUMMARY_FIELDS,
         SUMMARY_TOP,
         summary_value,
@@ -819,9 +929,9 @@ def test_every_summary_value_is_printed_inside_its_own_cell():
     booklet, _, pdf = exported(project_with("physical"), items)
     n = [p["kind"] for p in booklet["pages"]].index("summary")
     plan = booklet["pages"][n]
-    characters = cell_characters(
-        pdf[n], SUMMARY_TOP, plan["bottoms"][-1], SUMMARY_COLS[0]
-    )
+    # The columns are fitted to the values: the page's own edges.
+    cols = plan["cols"]
+    characters = cell_characters(pdf[n], SUMMARY_TOP, plan["bottoms"][-1], cols[0])
     rows = list(zip([SUMMARY_TOP] + plan["bottoms"][:-1], plan["bottoms"]))
     cells = {}
     for x0, y0, x1, y1, character in characters:
@@ -829,7 +939,7 @@ def test_every_summary_value_is_printed_inside_its_own_cell():
         column = next(
             i
             for i in range(len(SUMMARY_FIELDS))
-            if SUMMARY_COLS[i + 1] + 1 <= x0 and x1 <= SUMMARY_COLS[i] - 1
+            if cols[i + 1] + 1 <= x0 and x1 <= cols[i] - 1
         )
         row = next(i for i, (a, b) in enumerate(rows) if a <= y0 + 1 and y1 - 1 <= b)
         cells.setdefault((row, column), []).append(character)
@@ -924,8 +1034,12 @@ def exported(project, items):
 def test_fixed_artwork_is_exported_as_vectors_not_pictures():
     """Covers, icons and the footer bar are the original vector files: the
     exported pages carry no raster copy of them (review: pixelated artwork)."""
+    # (The cover shows the auction's logo once its name is entered.)
     project = project_with(
-        "hybrid", auction_start_date="2026-07-27", start_time="10:00"
+        "hybrid",
+        auction_name="درة البحر",
+        auction_start_date="2026-07-27",
+        start_time="10:00",
     )
     project["selling_agent"] = {"name": "وكيل", "phone": "0550000000"}
     booklet, boxes, pdf = exported(project, [])
@@ -1153,19 +1267,23 @@ def test_features_and_two_more_photos_get_the_guide_features_page():
     assert [[i["src"] for i in p["images"]] for p in rest] == [["photo-3", "photo-4"]]
 
 
-def test_without_features_or_a_second_photo_the_features_page_is_not_used():
+def test_features_always_have_their_own_page_never_the_info_box():
+    """Notes p.12: the additional information stays on the property's page,
+    the features go on their optional page, whatever the photographs."""
     features = ["قريب من الخدمات"]
     one_photo = compose(
         project_with(), [{**item_with(features=features), "image_assets": photos(2)}]
     )
-    assert "features" not in kinds_of(one_photo)
-    # The features stay in the first page's box (guide p.15), the photo on p.18.
+    assert "features" in kinds_of(one_photo)
     first = property_pages(one_photo)[0]
-    assert {"number": 1, "text": features[0]} in first["info"]
-    assert [p["kind"] for p in one_photo["pages"]].count("images") == 1
+    assert not any(e.get("text") == features[0] for e in first["info"])
+    page = next(p for p in one_photo["pages"] if p["kind"] == "features")
+    assert [i["src"] for i in page["images"]] == ["photo-0", "photo-1"]
+    assert "images" not in kinds_of(one_photo)  # its one photo is used there
     no_features = compose(project_with(), [{**item_with(), "image_assets": photos(4)}])
     assert "features" not in kinds_of(no_features)
     assert [p["kind"] for p in no_features["pages"]].count("images") == 1
+    # The photographs page switched off: the features keep theirs.
     hidden = compose(
         project_with(),
         [
@@ -1175,7 +1293,58 @@ def test_without_features_or_a_second_photo_the_features_page_is_not_used():
             }
         ],
     )
-    assert "features" not in kinds_of(hidden) and "images" not in kinds_of(hidden)
+    assert "features" in kinds_of(hidden) and "images" not in kinds_of(hidden)
+    # The features page switched off: the features are not printed.
+    off = compose(
+        project_with(),
+        [
+            {
+                **item_with(features=features, include_features_page=False),
+                "image_assets": photos(4),
+            }
+        ],
+    )
+    assert "features" not in kinds_of(off)
+    assert not any(
+        e.get("text") == features[0] for p in property_pages(off) for e in p["info"]
+    )
+
+
+def test_the_features_page_shows_the_features_own_photographs():
+    features = ["قريب من الخدمات"]
+    assets = photos(3) + [
+        {"src": f"feature-{n}", "orientation": "landscape", "category": "features"}
+        for n in range(3)
+    ]
+    booklet = compose(
+        project_with(), [{**item_with(features=features), "image_assets": assets}]
+    )
+    page = next(p for p in booklet["pages"] if p["kind"] == "features")
+    assert [i["src"] for i in page["images"]] == ["feature-0", "feature-1", "feature-2"]
+    # The additional photographs keep their page, the features' are not repeated.
+    images = [p for p in booklet["pages"] if p["kind"] == "images"]
+    assert [[i["src"] for i in p["images"]] for p in images] == [["photo-1", "photo-2"]]
+
+
+def test_the_optional_pages_follow_the_authors_order():
+    item = {
+        **item_with(
+            features=["قريب من الخدمات"],
+            boundaries={"north_description": "شارع " * 400},
+            rental_contracts=[{"unit_number": "1", "annual_rent_value": "1000"}],
+        ),
+        "image_assets": photos(6),
+    }
+
+    def groups(booklet):  # a group may run on several pages
+        kinds = kinds_of(booklet)
+        return [k for n, k in enumerate(kinds) if not n or kinds[n - 1] != k]
+
+    guide = groups(compose(project_with(), [item]))
+    assert guide == ["property", "features", "boundaries", "images", "rentals"]
+    item["property_data"]["page_order"] = ["rentals", "images", "boundaries"]
+    chosen = groups(compose(project_with(), [item]))
+    assert chosen == ["property", "rentals", "images", "boundaries", "features"]
 
 
 def test_long_features_continue_on_a_features_page_without_loss():
@@ -1197,3 +1366,105 @@ def test_long_features_continue_on_a_features_page_without_loss():
     order = [p["kind"] for p in booklet["pages"]]
     at = order.index("features")
     assert order[at + 1 : at + 1 + len(more)] == ["information"] * len(more)
+
+
+def test_properties_close_one_after_another_unless_given_their_own_time():
+    """Electronic bidding closes on the first property at its time, on the
+    auction's last day, and on each next one the interval later; a property's
+    own date or time overrides its share."""
+    from app.generation.booklet.composer import closing
+
+    auction = {
+        "auction_end_date": "2026-11-14",
+        "first_close_time": "18:00",
+        "close_interval_minutes": 2,
+    }
+    assert closing(auction, {}, 0) == ("2026-11-14", "18:00")
+    assert closing(auction, {}, 3) == ("2026-11-14", "18:06")
+    own = {"auction_close_time": "20:30"}
+    assert closing(auction, own, 3) == ("2026-11-14", "20:30")
+    assert closing(auction, {"auction_close_date": "2026-11-20"}, 1) == (
+        "2026-11-20",
+        "18:02",
+    )
+    # Past midnight the closing moves to the next day.
+    late = {**auction, "first_close_time": "23:58"}
+    assert closing(late, {}, 2) == ("2026-11-15", "00:02")
+    # Without a schedule, only the auction's last day.
+    assert closing({"auction_end_date": "2026-11-14"}, {}, 4) == ("2026-11-14", "")
+    booklet = compose(
+        project_with(
+            "electronic",
+            auction_end_date="2026-11-14",
+            first_close_time="18:00",
+            close_interval_minutes=5,
+        ),
+        [item_with(), item_with(), item_with(auction_close_time="21:00")],
+    )
+    pages = property_pages(booklet)
+    assert [(p["close_date"], p["close_time"]) for p in pages] == [
+        ("2026-11-14", "18:00"),
+        ("2026-11-14", "18:05"),
+        ("2026-11-14", "21:00"),
+    ]
+    assert all(p["variant"].endswith("-close") for p in pages)
+    # Physical auctions have no closing schedule.
+    physical = compose(
+        project_with("physical", first_close_time="18:00"), [item_with()]
+    )
+    assert not property_pages(physical)[0]["variant"].endswith("-close")
+
+
+def test_the_project_gives_each_property_its_scheduled_closing(admin):
+    p = create_auction(admin)
+    first = add(admin, p, property_input(1))
+    second = add(admin, p, property_input(2))
+    project = admin.get(f"/api/projects/{p}").json()["project"]
+    project["auction"].update(
+        auction_end_date="2026-10-12",
+        first_close_time="17:00",
+        close_interval_minutes=3,
+    )
+    assert admin.put(f"/api/projects/{p}", json=project).status_code == 200
+    closings = admin.get(f"/api/projects/{p}").json()["closings"]
+    assert closings["items"][first] == ["2026-10-12", "17:00"]
+    assert closings["items"][second] == ["2026-10-12", "17:03"]
+    assert closings["next"] == ["2026-10-12", "17:06"]
+
+
+def test_summary_columns_follow_their_values():
+    """A column is as wide as its values need: the participation amount gives
+    its room to the columns with more text, and the table keeps its edges."""
+    from app.generation.booklet.composer import (
+        SUMMARY_COLS,
+        SUMMARY_FIELDS,
+        summary_columns,
+    )
+
+    items = [
+        item_with(
+            property_type="أرض سكني تجاري",
+            city="جدة",
+            district="أبحر الشمالية",
+            plot_number="التنزيلات الشمالي من قطعة رقم 116",
+            participation_amount="150000",
+        )
+    ]
+    cols = summary_columns(items)
+    widths = dict(
+        zip(SUMMARY_FIELDS, [cols[i] - cols[i + 1] for i in range(len(SUMMARY_FIELDS))])
+    )
+    assert cols[0] == SUMMARY_COLS[0] and cols[-1] == SUMMARY_COLS[-1]
+    guide = dict(
+        zip(
+            SUMMARY_FIELDS,
+            [SUMMARY_COLS[i] - SUMMARY_COLS[i + 1] for i in range(len(SUMMARY_FIELDS))],
+        )
+    )
+    assert widths["participation_amount"] < guide["participation_amount"]
+    assert widths["plot_number"] > guide["plot_number"]
+    page = summary_pages = compose(project_with("physical"), items)["pages"][4]
+    assert page["kind"] == "summary" and page["cols"] == cols
+    # Short values keep one line; the long plot text wraps in its cell.
+    lines = summary_pages["lines"][0]
+    assert all(len(lines[k]) == 1 for k in ("property_type", "city", "district"))

@@ -98,10 +98,14 @@ export type Detail = {
       // Longest value every output of the project can set in its design.
       limits?: Record<string, number>;
       // The frame each uploaded photograph is printed in ([width, height]).
+      // The guide's terms of entry (an auction may change them).
+      terms_default?: string;
       image_frames?: {
         main: { landscape: [number, number]; portrait: [number, number] };
         additional: [number, number];
         features: [number, number];
+        features_large: [number, number];
+        logo: [number, number];
         cover: Record<string, [number, number]>;
         portrait_kinds: string[];
         landscape_kinds: string[];
@@ -122,6 +126,11 @@ export type Detail = {
   selling_agent?: Record<string, unknown>;
   project: Project;
   items: Item[];
+  // Each property's share of the closing schedule (date, time), and the next.
+  closings?: {
+    items: Record<string, [string, string]>;
+    next: [string, string];
+  };
   outputs: Output[];
   images: ImageAsset[];
 };

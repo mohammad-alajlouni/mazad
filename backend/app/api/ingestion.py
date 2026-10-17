@@ -28,13 +28,19 @@ async def upload_image(
     file: UploadFile = File(...),
     item_id: str | None = Form(None),
     category: Literal[
-        "main", "additional", "cover", "auction_logo", "agent_logo"
+        "main",
+        "additional",
+        "features",
+        "cover",
+        "auction_logo",
+        "agent_logo",
+        "supervisor_logo",
     ] = Form("additional"),
     caption: str = Form("", max_length=300),
     db=Depends(get_db),
 ):
     p = get_project(db, id, True)
-    if category in ("auction_logo", "cover"):
+    if category in ("auction_logo", "cover", "supervisor_logo"):
         item_id = None  # project-level roles, whatever property was selected
     if category == "agent_logo":
         from ..models import User
@@ -51,7 +57,7 @@ async def upload_image(
     key = LocalStorage().image(await upload_bytes(file))
     with Image.open(BytesIO(LocalStorage().read(key))) as im:
         orientation = "portrait" if im.height > im.width else "landscape"
-    if category in ("main", "auction_logo", "cover"):
+    if category in ("main", "auction_logo", "cover", "supervisor_logo"):
         # The newest upload replaces the previous one of the same role.
         for old in db.scalars(
             select(ProjectImage).where(
@@ -62,8 +68,8 @@ async def upload_image(
                 ProjectImage.category == category,
             )
         ):
-            if category == "cover":
-                db.delete(old)  # a replaced cover photograph has no other use
+            if category in ("cover", "supervisor_logo"):
+                db.delete(old)  # a replaced cover photograph or logo has no other use
             else:
                 old.category = "additional"
     image = ProjectImage(
@@ -93,7 +99,7 @@ class ImageUpdate(BaseModel):
     """Correct what an uploaded image is for, without uploading it again."""
 
     model_config = ConfigDict(extra="forbid")
-    category: Literal["main", "additional", "cover", "auction_logo"]
+    category: Literal["main", "additional", "features", "cover", "auction_logo"]
     item_id: str | None = None
 
 
@@ -113,7 +119,9 @@ def update_image(id: str, body: ImageUpdate, db=Depends(get_db)):
     img, p = _owned_image(db, id)
     if img.category == "agent_logo":
         raise HTTPException(409, "Update selling agent information in account settings")
-    item_id = body.item_id if body.category in ("main", "additional") else None
+    item_id = (
+        body.item_id if body.category in ("main", "additional", "features") else None
+    )
     if body.category == "main" and not item_id:
         raise HTTPException(422, "A main image belongs to a property")
     if item_id:

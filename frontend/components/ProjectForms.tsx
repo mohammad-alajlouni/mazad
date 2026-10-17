@@ -139,7 +139,11 @@ export function ItemForm({
   images = [],
   photoRequired = false,
   frames,
+  closing,
 }: {
+  // The property's share of the closing schedule (date, time): shown in its
+  // closing fields, and kept automatic unless changed.
+  closing?: [string, string];
   // The frames the booklet prints this property's photographs in.
   frames?: NonNullable<Detail["workflow"]>["rules"]["image_frames"];
   requiredFields?: string[];
@@ -189,28 +193,13 @@ export function ItemForm({
             : "";
     return layout ? options.filter((o) => o.key === layout) : options;
   };
-  // The frame of each additional photograph, by where it will print: with
-  // features, the first two sit in the smaller windows of the features page
-  // (guide p.17) under the main one; the others in the photographs page's
-  // bands (p.18).
-  const moreFrames = (form: HTMLFormElement, count: number): Frame[][] => {
-    if (!frames) return Array(count).fill([]);
-    const data = new FormData(form);
-    const shown = (field: string) => data.get(`booklet.${field}`) !== "false";
-    const features = String(data.get("property.features") || "").trim();
-    const kept = more.filter(
-      (i) => !dropped.includes(i.id) && i.id !== promoted,
-    ).length;
-    const page =
-      !!features &&
-      shown("include_information_page") &&
-      shown("include_images_page") &&
-      kept + count >= 2;
-    return Array.from({ length: count }, (_, n) => {
-      const key = page && kept + n < 2 ? "features" : "additional";
-      return [{ key, width: frames[key][0], height: frames[key][1] }];
-    });
-  };
+  // The frame each photograph prints in: the additional ones in the
+  // photographs page's bands (guide p.18); the features' own in the
+  // features page's large window, then its two smaller ones (p.17).
+  const frameOf = (key: "additional" | "features" | "features_large") =>
+    frames && frames[key]
+      ? [{ key, width: frames[key][0], height: frames[key][1] }]
+      : [];
   // Picked photographs are placed in their frame first (one list of frames
   // for all, or one per photograph); a cancelled edit leaves the input empty.
   const place = async (
@@ -227,14 +216,39 @@ export function ItemForm({
     return edited || [];
   };
   const [jsonError, setJsonError] = useState("");
+  // Closed (saved or cancelled), the form's unsaved values leave the live
+  // preview, which shows the property as stored again.
+  // Opened, the form is read by the live preview at once: it shows this
+  // property and tells its page settings which pages its data calls for.
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    const timer = setTimeout(() =>
+      formRef.current?.dispatchEvent(
+        new Event("preview-form", { bubbles: true }),
+      ),
+    );
+    return () => {
+      clearTimeout(timer);
+      window.dispatchEvent(new Event("preview-item-closed"));
+    };
+  }, []);
   // Photographs are entered with the property and stored when it is saved:
   // a new main one, more additional ones, and stored ones to drop or promote.
   const [mainFile, setMainFile] = useState<File | null>(null);
-  const [moreFiles, setMoreFiles] = useState<File[]>([]);
+  // New photographs by slot: the additional ones and the features' own.
+  const [moreFiles, setMoreFiles] = useState<Record<number, File>>({});
+  const [featureFiles, setFeatureFiles] = useState<Record<number, File>>({});
   const [dropped, setDropped] = useState<string[]>([]);
   const [promoted, setPromoted] = useState<string | null>(null);
   const main = images.find((i) => i.category === "main");
-  const more = images.filter((i) => i.category !== "main");
+  const more = images.filter(
+    (i) => i.category !== "main" && i.category !== "features",
+  );
+  const featureImages = images.filter((i) => i.category === "features");
+  // Three additional photographs make the photographs page (notes p.11);
+  // with three stored, one more slot for a further page.
+  const moreSlots = Math.max(1, 3 - more.length);
+  const featureSlots = Math.max(0, 3 - featureImages.length);
   const picked = useMemo(
     () => (mainFile ? URL.createObjectURL(mainFile) : ""),
     [mainFile],
@@ -261,11 +275,15 @@ export function ItemForm({
         body: send({ category: "main", item_id: item }),
       });
     }
-    for (const file of moreFiles) await upload(file, "additional");
+    for (const file of Object.values(moreFiles))
+      await upload(file, "additional");
+    for (const file of Object.values(featureFiles))
+      await upload(file, "features");
     for (const id of dropped) await api(`/images/${id}`, { method: "DELETE" });
   };
   return (
     <form
+      ref={formRef}
       data-stage-form
       data-preview-form="item"
       data-item-id={existing?.id}
@@ -278,9 +296,20 @@ export function ItemForm({
         const data = Object.fromEntries(new FormData(e.currentTarget));
         const form = new FormData(e.currentTarget);
         const property_data = readProperty(form);
+        // The scheduled closing stays automatic (it follows the schedule and
+        // the property's place); only a changed value is the property's own.
+        if (closing) {
+          if (property_data.auction_close_date === closing[0])
+            property_data.auction_close_date = "";
+          if (
+            String(property_data.auction_close_time || "").slice(0, 5) ===
+            closing[1]
+          )
+            property_data.auction_close_time = "";
+        }
         for (const key of Object.keys(data))
           // Structured fields travel inside property_data, never top level.
-          if (/^(property|boundary|rental|booklet)\./.test(key))
+          if (/^(property|boundary|deedb|rental|booklet)\./.test(key))
             delete data[key];
         let attributes;
         try {
@@ -347,6 +376,50 @@ export function ItemForm({
         template={template}
         requiredFields={requiredFields}
         auctionType={auctionType}
+        closing={closing}
+        featurePhotos={
+          <div className="image-slots feature-photos">
+            <p className="muted">{pt("featurePhotosHelp")}</p>
+            {featureImages.map((i, at) => (
+              <StoredPhoto
+                key={i.id}
+                id={i.id}
+                label={pt(at ? "featurePhotoSmall" : "featurePhotoLarge")}
+                dropped={dropped.includes(i.id)}
+                onDrop={() =>
+                  setDropped(
+                    dropped.includes(i.id)
+                      ? dropped.filter((id) => id !== i.id)
+                      : [...dropped, i.id],
+                  )
+                }
+              />
+            ))}
+            {Array.from({ length: featureSlots }, (_, slot) => {
+              const at = featureImages.length + slot;
+              const label = pt(at ? "featurePhotoSmall" : "featurePhotoLarge");
+              return (
+                <NewPhoto
+                  key={"f" + slot}
+                  label={label}
+                  category="features"
+                  file={featureFiles[slot]}
+                  onPick={async (input) => {
+                    const [file] = await place(
+                      input,
+                      frameOf(at ? "features" : "features_large"),
+                      label,
+                    );
+                    const next = { ...featureFiles };
+                    if (file) next[slot] = file;
+                    else delete next[slot];
+                    setFeatureFiles(next);
+                  }}
+                />
+              );
+            })}
+          </div>
+        }
       >
         <label>
           {tr("ui.description")}
@@ -409,98 +482,46 @@ export function ItemForm({
               }}
             />
           </div>
-          <div data-slot="additional" tabIndex={-1} className="image-slot done">
-            <div className="image-slot-heading">
-              <strong>{pt("photoMore")}</strong>
-              <span>
-                {moreFiles.length
-                  ? pt("photoPending")
-                  : more.length
-                    ? im("added")
-                    : im("optional")}
-              </span>
-            </div>
-            {more.length > 0 && (
-              <ul className="photo-thumbs">
-                {more.map((i) => (
-                  <li
-                    key={i.id}
-                    className={
-                      dropped.includes(i.id)
-                        ? "dropped"
-                        : promoted === i.id
-                          ? "promoted"
-                          : ""
-                    }
-                  >
-                    <img
-                      src={`/api/images/${i.id}?size=preview`}
-                      alt={pt("photoMore")}
-                    />
-                    <span>
-                      <button
-                        type="button"
-                        className="icon-button"
-                        title={pt("photoMakeMain")}
-                        aria-label={pt("photoMakeMain")}
-                        aria-pressed={promoted === i.id}
-                        disabled={dropped.includes(i.id)}
-                        onClick={() =>
-                          setPromoted(promoted === i.id ? null : i.id)
-                        }
-                      >
-                        <Star size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-button danger"
-                        title={pt(
-                          dropped.includes(i.id) ? "photoKeep" : "photoRemove",
-                        )}
-                        aria-label={pt(
-                          dropped.includes(i.id) ? "photoKeep" : "photoRemove",
-                        )}
-                        onClick={() =>
-                          setDropped(
-                            dropped.includes(i.id)
-                              ? dropped.filter((id) => id !== i.id)
-                              : [...dropped, i.id],
-                          )
-                        }
-                      >
-                        {dropped.includes(i.id) ? (
-                          <Undo2 size={15} />
-                        ) : (
-                          <Trash2 size={15} />
-                        )}
-                      </button>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {(dropped.length > 0 || promoted) && (
-              <p className="muted">{pt("photoChanges")}</p>
-            )}
-            <FileInput
-              aria-label={pt("photoMore")}
-              data-category="additional"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={async (e) => {
-                const input = e.target;
-                setMoreFiles(
-                  await place(
-                    input,
-                    moreFrames(input.form!, input.files?.length || 0),
-                    pt("photoMore"),
-                  ),
+          {more.map((i) => (
+            <StoredPhoto
+              key={i.id}
+              id={i.id}
+              label={pt("photoMore")}
+              dropped={dropped.includes(i.id)}
+              promoted={promoted === i.id}
+              onPromote={() => setPromoted(promoted === i.id ? null : i.id)}
+              onDrop={() =>
+                setDropped(
+                  dropped.includes(i.id)
+                    ? dropped.filter((id) => id !== i.id)
+                    : [...dropped, i.id],
+                )
+              }
+            />
+          ))}
+          {Array.from({ length: moreSlots }, (_, slot) => (
+            <NewPhoto
+              key={"m" + slot}
+              label={pt("photoMoreN", { number: more.length + slot + 1 })}
+              category="additional"
+              file={moreFiles[slot]}
+              onPick={async (input) => {
+                const [file] = await place(
+                  input,
+                  frameOf("additional"),
+                  pt("photoMore"),
                 );
+                const next = { ...moreFiles };
+                if (file) next[slot] = file;
+                else delete next[slot];
+                setMoreFiles(next);
               }}
             />
-          </div>
+          ))}
         </div>
+        {(dropped.length > 0 || promoted) && (
+          <p className="muted">{pt("photoChanges")}</p>
+        )}
       </fieldset>
       <details>
         <summary>{pt("advanced")}</summary>
@@ -791,6 +812,98 @@ export function ImageUpload({
           </figure>
         ))}
       </div>
+    </div>
+  );
+}
+
+// A stored photograph of the property in its slot: shown, with buttons to
+// make it the main one (additional photographs) or to drop it on saving.
+function StoredPhoto({
+  id,
+  label,
+  dropped,
+  promoted,
+  onDrop,
+  onPromote,
+}: {
+  id: string;
+  label: string;
+  dropped: boolean;
+  promoted?: boolean;
+  onDrop: () => void;
+  onPromote?: () => void;
+}) {
+  const pt = useTranslations("properties");
+  const im = useTranslations("imagesStep");
+  return (
+    <div
+      data-slot="stored"
+      className={`image-slot done${dropped ? " dropped" : ""}${promoted ? " promoted" : ""}`}
+    >
+      <div className="image-slot-heading">
+        <strong>{label}</strong>
+        <span>{dropped ? pt("photoRemoving") : im("added")}</span>
+      </div>
+      <img src={`/api/images/${id}?size=preview`} alt={label} />
+      <span className="photo-tools">
+        {onPromote && (
+          <button
+            type="button"
+            className="icon-button"
+            title={pt("photoMakeMain")}
+            aria-label={pt("photoMakeMain")}
+            aria-pressed={!!promoted}
+            disabled={dropped}
+            onClick={onPromote}
+          >
+            <Star size={15} />
+          </button>
+        )}
+        <button
+          type="button"
+          className="icon-button danger"
+          title={pt(dropped ? "photoKeep" : "photoRemove")}
+          aria-label={pt(dropped ? "photoKeep" : "photoRemove")}
+          onClick={onDrop}
+        >
+          {dropped ? <Undo2 size={15} /> : <Trash2 size={15} />}
+        </button>
+      </span>
+    </div>
+  );
+}
+
+// An empty slot: a photograph picked here is placed in its frame, shown,
+// and stored with the property.
+function NewPhoto({
+  label,
+  category,
+  file,
+  onPick,
+}: {
+  label: string;
+  category: string;
+  file?: File;
+  onPick: (input: HTMLInputElement) => void | Promise<void>;
+}) {
+  const pt = useTranslations("properties");
+  const im = useTranslations("imagesStep");
+  const src = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
+  useEffect(() => () => URL.revokeObjectURL(src), [src]);
+  return (
+    <div data-slot={category} className="image-slot done">
+      <div className="image-slot-heading">
+        <strong>{label}</strong>
+        <span>{file ? pt("photoPending") : im("optional")}</span>
+      </div>
+      {src && <img src={src} alt={label} />}
+      <FileInput
+        aria-label={label}
+        data-category={category}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={(e) => void onPick(e.target)}
+      />
     </div>
   );
 }

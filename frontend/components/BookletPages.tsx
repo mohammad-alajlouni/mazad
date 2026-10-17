@@ -8,10 +8,13 @@ import {
   Clock3,
   Globe,
   ImagePlus,
+  Landmark,
   Layers,
+  RotateCcw,
+  Sparkles,
   UserRound,
 } from "lucide-react";
-import { api, send, Detail, Run } from "./api";
+import { api, send, Detail, Item, Run } from "./api";
 import { useImageEditor } from "./ImageEditor";
 import { Fields } from "./AuctionWorkspace";
 
@@ -22,8 +25,10 @@ type Part = {
   number?: number; // page number in the booklet (guide order)
   fields?: string[];
   fixed?: boolean;
+  terms?: boolean;
   agent?: boolean;
   cover?: boolean;
+  supervisor?: boolean;
 };
 
 // The booklet's own order (guide V2, pages 9-26): each part fills one page and
@@ -37,13 +42,19 @@ function partsFor(section: "auction" | "closing", kind: string): Part[] {
         number: 1,
         cover: true,
         fields: [
+          "assignment_number",
           "auction_name",
           "auction_date",
           "auction_start_date",
           "auction_end_date",
         ],
       },
-      { page: "introduction", key: "introduction", number: 2, fixed: true },
+      {
+        page: "introduction",
+        key: "introduction",
+        number: 2,
+        supervisor: true,
+      },
       { page: "agent", key: "agent", number: 3, agent: true },
       {
         page: "auction",
@@ -54,13 +65,15 @@ function partsFor(section: "auction" | "closing", kind: string): Part[] {
           "court_decision_text",
           "start_time",
           "end_time",
+          "first_close_time",
+          "close_interval_minutes",
           "physical_location",
           "electronic_platform_name",
         ],
       },
     ];
   return [
-    { page: "terms", key: "terms", fixed: true },
+    { page: "terms", key: "terms", fixed: true, terms: true },
     ...(kind === "physical"
       ? []
       : [
@@ -85,6 +98,75 @@ function partsFor(section: "auction" | "closing", kind: string): Part[] {
         "contact_url",
       ],
     },
+  ];
+}
+
+// The terms of entry: the guide's written in, each term on its own line; the
+// author may change them for this auction or go back to the guide's.
+function TermsText({ initial, guide }: { initial: string; guide: string }) {
+  const p = useTranslations("bookletPages");
+  const area = useRef<HTMLTextAreaElement>(null);
+  return (
+    <div className="terms-text">
+      <label>
+        <span className="label-text">{p("termsText")}</span>
+        <textarea
+          ref={area}
+          name="terms_text"
+          rows={14}
+          defaultValue={initial}
+        />
+      </label>
+      <button
+        type="button"
+        className="text-button"
+        onClick={() => {
+          if (!area.current) return;
+          area.current.value = guide;
+          area.current.dispatchEvent(new Event("input", { bubbles: true }));
+          area.current.form?.dispatchEvent(
+            new Event("change", { bubbles: true }),
+          );
+        }}
+      >
+        <RotateCcw size={14} />
+        {p("termsRestore")}
+      </button>
+    </div>
+  );
+}
+
+// Auction names to suggest, from the cities and districts of its properties
+// when there are any (guide p.3: "مزاد درة البحر" — the cover adds "مزاد").
+function nameIdeas(items: Item[], language: string) {
+  const unique = (key: string) => [
+    ...new Set(
+      items
+        .map((i) => String(i.property_data?.[key] || "").trim())
+        .filter(Boolean),
+    ),
+  ];
+  const [city] = unique("city");
+  const [district] = unique("district");
+  const oneCity = unique("city").length === 1;
+  const oneDistrict = unique("district").length === 1;
+  if (language === "en")
+    return [
+      ...(oneDistrict ? [`${district} Pearl`, `${district} Oasis`] : []),
+      ...(oneCity ? [`${city} Prime Properties`, `${city} Horizon`] : []),
+      "Prime Assets",
+      "Investment Horizon",
+      "Elite Properties",
+    ];
+  const quarter = district?.startsWith("حي") ? district : `حي ${district}`;
+  return [
+    ...(oneDistrict ? [`درة ${district}`, `واحة ${district}`, quarter] : []),
+    ...(oneCity ? [`عقارات ${city}`, `لؤلؤة ${city}`, `نخبة ${city}`] : []),
+    "درة الاستثمار",
+    "الأفق العقاري",
+    "نخبة الأصول",
+    "واحة الاستثمار",
+    "صفوة العقار",
   ];
 }
 
@@ -115,6 +197,7 @@ export function BookletPages({
 }) {
   const t = useTranslations("auction");
   const p = useTranslations("bookletPages");
+  const sv = useTranslations("supervisor");
   const f = useTranslations("flow");
   const v = useTranslations("validationFlow");
   const locale = useLocale();
@@ -127,6 +210,10 @@ export function BookletPages({
     { id: string; name_ar: string; name_en: string; thumbnail: string }[]
   >([]);
   const [draft, setDraft] = useState<Values>({});
+  // Infath, or another body with its own logo and introduction page.
+  const [supervisor, setSupervisor] = useState(
+    String(auction.supervisor || "infath"),
+  );
   const rules = detail.workflow?.rules.auction[kind];
   const visible = (fields: string[] = []) =>
     fields.filter((key) => !rules || rules.visible.includes(key));
@@ -177,6 +264,15 @@ export function BookletPages({
   const partValid = (at: number) => {
     const container = containers.current[at];
     if (!container) return true;
+    // Another supervising body needs its logo (stored on its own).
+    const logoButton = container.querySelector<HTMLButtonElement>(
+      'button[name="supervisor_logo"][data-missing]',
+    );
+    if (logoButton) {
+      logoButton.setCustomValidity(sv("otherLogoMissing"));
+      logoButton.reportValidity();
+      return false;
+    }
     for (const el of container.querySelectorAll<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >("input, textarea, select")) {
@@ -220,15 +316,20 @@ export function BookletPages({
   const photoInput = useRef<HTMLInputElement>(null);
   // The preview starts again from the saved project when it reloads: hand it
   // this page's unsaved choices again (the cover may not be saved yet).
-  const photoSeen = useRef(photo?.id);
+  // (The same for another supervising body's logo, stored at once too.)
+  const logoSeen = detail.images.find(
+    (i) => i.category === "supervisor_logo" && !i.item_id,
+  )?.id;
+  const photoSeen = useRef(`${photo?.id}|${logoSeen}`);
   useEffect(() => {
-    if (photoSeen.current === photo?.id) return;
-    photoSeen.current = photo?.id;
+    const seen = `${photo?.id}|${logoSeen}`;
+    if (photoSeen.current === seen) return;
+    photoSeen.current = seen;
     const timer = setTimeout(() =>
       form.current?.dispatchEvent(new Event("preview-form", { bubbles: true })),
     );
     return () => clearTimeout(timer);
-  }, [photo?.id]);
+  }, [photo?.id, logoSeen]);
   const editImages = useImageEditor();
   const uploadPhoto = async (picked?: File) => {
     if (!picked) return;
@@ -258,11 +359,65 @@ export function BookletPages({
       await api(`/images/${photo!.id}`, { method: "DELETE" });
       await reload();
     }, p("coverPhotoRemoved"));
+  // Another supervising body's logo, stored at once like the cover photograph.
+  const bodyLogo = detail.images.find(
+    (i) => i.category === "supervisor_logo" && !i.item_id,
+  );
+  const bodyLogoInput = useRef<HTMLInputElement>(null);
+  const uploadBodyLogo = async (picked?: File) => {
+    if (!picked) return;
+    const frame = detail.workflow?.rules.image_frames?.logo;
+    const edited = await editImages([picked], {
+      frames: [
+        {
+          key: "logo",
+          width: frame?.[0] || 145.2,
+          height: frame?.[1] || 67,
+        },
+      ],
+      title: sv("otherLogo"),
+      logo: true,
+    });
+    const file = edited?.[0];
+    if (!file) return;
+    void run(async () => {
+      const body = new FormData();
+      body.set("category", "supervisor_logo");
+      body.set("file", file);
+      await api(`/projects/${detail.project.id}/images`, {
+        method: "POST",
+        body,
+      });
+      await reload();
+    }, sv("logoSaved"));
+  };
   const agent = detail.selling_agent || {};
   const logo = detail.images.find(
     (i) => i.id === agent.logo_image_id || i.category === "agent_logo",
   );
   const agentIssues = detail.workflow?.stages.agent?.missing || [];
+  // Each press suggests the name after the current one; the author may edit it.
+  const suggestName = () => {
+    const input = form.current?.querySelector<HTMLInputElement>(
+      'input[name="auction_name"]',
+    );
+    if (!input) return;
+    const language = String(
+      new FormData(form.current!).get("document_language") ||
+        auction.document_language ||
+        "ar",
+    );
+    const ideas = nameIdeas(detail.items, language);
+    const next = ideas[(ideas.indexOf(input.value.trim()) + 1) % ideas.length];
+    // Set as if typed, so the form and the live preview take it.
+    Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )!.set!.call(input, next);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.setCustomValidity("");
+    input.focus();
+  };
 
   return (
     <form
@@ -416,7 +571,8 @@ export function BookletPages({
               // Dates and times sit together in a schedule panel; the fields
               // before and after it keep their order.
               const shown = visible(item.fields);
-              const timed = (key: string) => /_(date|time)$/.test(key);
+              const timed = (key: string) =>
+                /_(date|time)$/.test(key) || key === "close_interval_minutes";
               const first = shown.findIndex(timed);
               const before = first < 0 ? shown : shown.slice(0, first);
               const schedule = shown.filter(timed);
@@ -432,12 +588,38 @@ export function BookletPages({
               })();
               return (
                 <>
-                  {before.length > 0 && (
-                    <Fields
-                      fields={before}
-                      values={values}
-                      requiredFields={rules?.required}
-                    />
+                  {item.cover && before.includes("auction_name") ? (
+                    // The assignment number beside the name, and between
+                    // them the button that suggests one.
+                    <div className="name-row">
+                      <Fields
+                        fields={before.filter((k) => k !== "auction_name")}
+                        values={values}
+                        requiredFields={rules?.required}
+                      />
+                      <button
+                        type="button"
+                        className="secondary suggest-name"
+                        title={p("suggestNameHelp")}
+                        onClick={suggestName}
+                      >
+                        <Sparkles size={16} />
+                        {p("suggestName")}
+                      </button>
+                      <Fields
+                        fields={["auction_name"]}
+                        values={values}
+                        requiredFields={rules?.required}
+                      />
+                    </div>
+                  ) : (
+                    before.length > 0 && (
+                      <Fields
+                        fields={before}
+                        values={values}
+                        requiredFields={rules?.required}
+                      />
+                    )
                   )}
                   {item.cover && (
                     <fieldset className="choice-group">
@@ -553,6 +735,116 @@ export function BookletPages({
                 </div>
               </div>
             </>
+          )}
+          {item.supervisor && (
+            <>
+              <fieldset className="choice-group">
+                <legend>{sv("choice")}</legend>
+                <div className="choice-cards two">
+                  {(
+                    [
+                      ["infath", Landmark],
+                      ["other", Building2],
+                    ] as const
+                  ).map(([key, Icon]) => (
+                    <label
+                      key={key}
+                      className={
+                        supervisor === key
+                          ? "choice-card selected"
+                          : "choice-card"
+                      }
+                    >
+                      <input
+                        type="radio"
+                        name="supervisor"
+                        value={key}
+                        checked={supervisor === key}
+                        onChange={() => setSupervisor(key)}
+                      />
+                      <span className="choice-icon">
+                        <Icon size={20} />
+                      </span>
+                      {supervisor === key && (
+                        <Check className="choice-check" size={18} />
+                      )}
+                      <strong>{sv(key)}</strong>
+                      <small>{sv(key + "ChoiceHelp")}</small>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              {supervisor === "other" && (
+                <>
+                  <div className="cover-photo-box">
+                    {bodyLogo && (
+                      <img
+                        src={`/api/images/${bodyLogo.id}?size=preview`}
+                        alt={sv("otherLogo")}
+                      />
+                    )}
+                    <div>
+                      <strong>
+                        {sv("otherLogo")}
+                        <b aria-hidden="true"> *</b>
+                      </strong>
+                      <p className="muted">
+                        {bodyLogo
+                          ? sv("otherLogoHelp")
+                          : sv("otherLogoMissing")}
+                      </p>
+                      <div className="cover-photo-actions">
+                        <button
+                          type="button"
+                          name="supervisor_logo"
+                          className="secondary"
+                          data-missing={bodyLogo ? undefined : ""}
+                          onClick={(e) => {
+                            e.currentTarget.setCustomValidity("");
+                            bodyLogoInput.current?.click();
+                          }}
+                        >
+                          <ImagePlus size={16} />
+                          {sv(bodyLogo ? "replaceLogo" : "chooseLogo")}
+                        </button>
+                      </div>
+                      <input
+                        ref={bodyLogoInput}
+                        type="file"
+                        hidden
+                        aria-label={sv("otherLogo")}
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(event) => {
+                          void uploadBodyLogo(event.target.files?.[0]);
+                          event.target.value = "";
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <Fields
+                    fields={[
+                      "supervisor_title",
+                      "supervisor_text",
+                      "supervisor_phone",
+                      "supervisor_website",
+                      "supervisor_social",
+                    ]}
+                    values={{ ...auction, ...draft }}
+                    requiredFields={["supervisor_title", "supervisor_text"]}
+                  />
+                </>
+              )}
+            </>
+          )}
+          {item.terms && (
+            <TermsText
+              initial={String(
+                auction.terms_text ||
+                  detail.workflow?.rules.terms_default ||
+                  "",
+              )}
+              guide={String(detail.workflow?.rules.terms_default || "")}
+            />
           )}
           {/* The agent's details live in the account: nothing is repeated
               here, only what is still missing and the way to its place. */}

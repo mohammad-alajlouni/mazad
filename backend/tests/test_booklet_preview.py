@@ -375,8 +375,9 @@ def test_cover_photograph_is_previewed_and_replaced_only_on_photographic_covers(
 
 
 def test_additional_photos_picked_together_are_all_previewed(admin):
-    """Two additional photographs picked at once, before saving: with the
-    property's features they already make its features page in the preview."""
+    """Additional photographs picked at once, before saving: with the
+    property's features they already stand on its features page in the
+    preview."""
     p = create_auction(admin, workspace="booklet")
     body = property_input()
     body["property_data"]["features"] = ["قريب من الخدمات"]
@@ -393,7 +394,8 @@ def test_additional_photos_picked_together_are_all_previewed(admin):
     alone = admin.post(
         f"/api/projects/{p}/booklet-preview", json={"stage": "images", "image": one}
     )
-    assert alone.status_code == 200 and shown(alone) == "images"
+    # The features have their page whatever the photographs (notes p.12).
+    assert alone.status_code == 200 and shown(alone) == "features"
     both = admin.post(
         f"/api/projects/{p}/booklet-preview",
         json={"stage": "images", "image": {**one, "more": [picture]}},

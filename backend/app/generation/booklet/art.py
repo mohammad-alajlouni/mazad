@@ -321,8 +321,7 @@ def cover_with_photo(number, src):
 def original_pdf_artwork(pdf, content, document=None):
     """Place the immutable original artwork on its pages, as vectors.
 
-    The Infath page and the terms block are original PDF pages; icons, tiles,
-    the footer bar and the covers are the vector files built by
+    Icons, tiles, the footer bar and the covers are the vector files built by
     scripts/build_vector_art.py, placed beneath the text in the boxes the
     templates reserved (document is the rendered WeasyPrint document).
     """
@@ -357,14 +356,62 @@ def original_pdf_artwork(pdf, content, document=None):
                     keep_proportion=False,
                     overlay=False,
                 )
-            if page["kind"] == "introduction":
-                output[n].show_pdf_page(
-                    output[n].rect, source("reference-introduction.pdf"), 0
-                )
-            elif page["kind"] == "terms":
-                # Reference page 19, clipped to the terms block; footer is the template's.
-                box = pymupdf.Rect(110, 110, 505, 692)
-                output[n].show_pdf_page(
-                    box, source("booklet-art/terms.pdf"), 0, clip=box
-                )
         return output.tobytes(garbage=3, deflate=True)
+
+
+@lru_cache(maxsize=1)
+def logo_boxes():
+    """Where the supervising body's logo stands on each artwork and cover (see
+    scripts/extract_supervisor_logo.py): x, y, width, height in points."""
+    return json.loads((ASSETS / "booklet-art/logo-boxes.json").read_text())
+
+
+@lru_cache(maxsize=8)
+def infath_logo(colour):
+    """The guide's Infath logo (its own paths, as on the pages) in a colour."""
+    svg = (ASSETS / "booklet-art/infath-logo.svg").read_text()
+    svg = svg.replace('fill="#031445"', f'fill="{colour}"')
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+
+
+# The guide's colours for the Infath logo: navy in page footers, the deeper
+# navy of its introduction page, white on the covers.
+LOGO_COLOURS = {"introduction": "#001547", "cover": "#ffffff"}
+
+
+def supervisor_logo(supervisor, place, box=None):
+    """The supervising body's logo where the guide puts Infath's.
+
+    place names an artwork, a cover ("cover-2") or the introduction page; box
+    (x, y, width, height) overrides where it stands. Infath's own logo fills
+    the box exactly, as drawn on the pages; any other logo (another body's,
+    or one an administrator gave Infath) is fitted inside it, against its right
+    edge and centred in height, white on the covers. Returns HTML, or "".
+    """
+    from markupsafe import Markup
+
+    box = box or logo_boxes().get(place)
+    if not box:
+        return ""
+    x, y, w, h = box
+    cover = place.startswith("cover-")
+    src = (supervisor or {}).get("logo")
+    if not src and (supervisor or {}).get("kind") == "other":
+        return ""  # another body's logo stands here once it is uploaded
+    if src and place == "introduction":
+        # A logo of its own on the introduction page takes the frame a logo
+        # has on the agent's page (p.12), against the same right edge and foot.
+        from .composer import AGENT_LOGO
+
+        w, h = AGENT_LOGO
+        x, y = 463.4 - w, 243.3 - h
+    if src:
+        fit = logo_fit(src, w, h, cover)
+        x, y = x + w - fit["width"], y + (h - fit["height"]) / 2
+        w, h, src = fit["width"], fit["height"], fit["src"]
+    else:
+        src = infath_logo(LOGO_COLOURS.get(place.split("-")[0], "#031445"))
+    return Markup(
+        f'<img class="logo supervisor-logo" style="left:{x:.2f}pt;top:{y:.2f}pt;'
+        f'width:{w:.2f}pt;height:{h:.2f}pt" src={quoteattr(src)}>'
+    )

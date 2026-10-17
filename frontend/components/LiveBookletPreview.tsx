@@ -1,7 +1,7 @@
 "use client";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Eye, X } from "lucide-react";
+import { Eye, X, ZoomIn, ZoomOut } from "lucide-react";
 import { api, Detail, send } from "./api";
 import { readProperty } from "./AuctionWorkspace";
 
@@ -9,12 +9,48 @@ type Preview = {
   html: string;
   page: number;
   pages: { kind: string; item: string; step: string }[];
+  // The property being entered: the optional pages its data calls for.
+  auto?: Record<string, boolean> | null;
 };
 // Booklet pages follow the data-entry steps; later steps stay locked until the
 // earlier ones are complete, so the preview never runs ahead of the form.
 const STEPS = ["auction", "items", "closing", "generate"];
 const PAGE_WIDTH = 794; // 595.276 pt in CSS pixels
 const PAGE_HEIGHT = 1123;
+// The page of a property a field of its form prints on (the server falls
+// back to the property's own page when it has no such page).
+function sectionOf(field: HTMLElement) {
+  const name = field.getAttribute("name") || "";
+  const photo = field.dataset.category;
+  if (/^(boundary|deedb)\./.test(name) || name === "property.deeds_differ")
+    return "boundaries";
+  if (name.startsWith("rental.")) return "rentals";
+  if (name === "property.features" || photo === "features") return "features";
+  if (photo === "additional") return "photos";
+  if (["specifications", "technical_information"].includes(name))
+    return "information";
+  return "items";
+}
+// The words of an edited value to look for on the page (kashidas aside).
+const plain = (text: string) =>
+  text
+    .replace(/\u0640/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+function snippetsOf(field: HTMLElement | null) {
+  const value = (field as HTMLInputElement | null)?.value || "";
+  const lines = value.split("\n").map(plain).filter(Boolean);
+  const caret = (field as HTMLTextAreaElement | null)?.selectionStart ?? -1;
+  // The line being typed (else the last), its last few words.
+  const before = caret >= 0 ? value.slice(0, caret).split("\n").length - 1 : -1;
+  const line = plain(value.split("\n")[before] || "") || lines.at(-1) || "";
+  // The last three words, else fewer (a page line may break between them).
+  const words = line.split(" ");
+  return [3, 2, 1]
+    .map((n) => words.slice(-n).join(" "))
+    .filter((text) => text.length >= 3);
+}
+const ZOOMS = [1, 1.5, 2, 3];
 function stepOf(stage: string) {
   if (stage === "excel import") return "items";
   if (stage === "outputs" || stage === "finish") return "generate";
@@ -116,6 +152,11 @@ export default function LiveBookletPreview({
   const [frames, setFrames] = useState<[string, string]>(["", ""]);
   const [front, setFront] = useState(0);
   const [scale, setScale] = useState(0.4);
+  // Larger than the column to read details: the page scrolls in its frame,
+  // following the field being edited.
+  const [zoom, setZoom] = useState(1);
+  const viewport = useRef<HTMLDivElement>(null);
+  const edited = useRef<HTMLElement | null>(null);
   const version = useRef(0);
   const imageVersion = useRef(0);
   const root = useRef<HTMLDivElement>(null);
@@ -139,6 +180,19 @@ export default function LiveBookletPreview({
     root.current?.querySelector<HTMLElement>("form[data-preview-page]")?.dataset
       .previewPage;
   useEffect(() => {
+    const closed = () => {
+      imageVersion.current++;
+      // A stored property stays in view, as stored; a new one leaves it.
+      setDraft((d) => ({
+        ...d,
+        item: d.item?.id ? { id: d.item.id } : undefined,
+        image: undefined,
+      }));
+    };
+    window.addEventListener("preview-item-closed", closed);
+    return () => window.removeEventListener("preview-item-closed", closed);
+  }, []);
+  useEffect(() => {
     const follow = (event: Event) => {
       setPage(null);
       setFocus(String((event as CustomEvent).detail));
@@ -146,6 +200,58 @@ export default function LiveBookletPreview({
     window.addEventListener("booklet-preview-page", follow);
     return () => window.removeEventListener("booklet-preview-page", follow);
   }, []);
+  // A property's field taken up shows the page it prints on.
+  useEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    const entered = (event: FocusEvent) => {
+      const field = event.target as HTMLElement;
+      if (!field.closest('form[data-preview-form="item"]')) return;
+      if (!field.matches("input, textarea, select")) return;
+      edited.current = field;
+      setPage(null);
+      setFocus(sectionOf(field));
+    };
+    element.addEventListener("focusin", entered);
+    return () => element.removeEventListener("focusin", entered);
+  }, []);
+  // Zoomed in, the page scrolls to the text being edited.
+  useEffect(() => {
+    const box = viewport.current;
+    const doc = frameRefs[front].current?.contentDocument;
+    if (!box || !doc?.body || zoom === 1) return;
+    let found: Element | null = null;
+    for (const wanted of snippetsOf(edited.current)) {
+      const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+      for (
+        let node = walker.nextNode();
+        node && !found;
+        node = walker.nextNode()
+      )
+        if (plain(node.textContent || "").includes(wanted))
+          found = node.parentElement;
+      if (found) break;
+    }
+    if (!found) return;
+    // Where it stands on screen (the frame is scaled), brought to the
+    // middle of the viewport: relative moves work in either direction.
+    const at = found.getBoundingClientRect();
+    const frame = frameRefs[front].current!.getBoundingClientRect();
+    const view = box.getBoundingClientRect();
+    box.scrollBy({
+      top:
+        frame.top +
+        (at.top + at.height / 2) * scale -
+        (view.top + view.height / 2),
+      left:
+        frame.left +
+        (at.left + at.width / 2) * scale -
+        (view.left + view.width / 2),
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  }, [preview, front, zoom, scale]);
   useEffect(() => {
     setDraft({});
     setPage(null);
@@ -208,6 +314,11 @@ export default function LiveBookletPreview({
                 "terms",
                 "participation",
                 "contact",
+                "features",
+                "boundaries",
+                "information",
+                "photos",
+                "rentals",
               ].includes(focus)
                 ? focus
                 : "items",
@@ -217,6 +328,12 @@ export default function LiveBookletPreview({
         );
         if (request !== version.current) return;
         // A frame already holding this exact page fires no load event: show it.
+        // Its page settings show which pages switched on by themselves.
+        window.dispatchEvent(
+          new CustomEvent("preview-auto-pages", {
+            detail: result.auto ?? null,
+          }),
+        );
         const same = shown.current.frames.indexOf(result.html);
         if (same >= 0) {
           pending.current = null;
@@ -265,6 +382,7 @@ export default function LiveBookletPreview({
   }
   async function changed(target: HTMLInputElement) {
     setFormComplete(requiredComplete(root.current));
+    if (target.matches?.("input, textarea, select")) edited.current = target;
     const form = target.closest<HTMLFormElement>("form[data-preview-form]");
     if (!form) return;
     const data = new FormData(form);
@@ -301,13 +419,24 @@ export default function LiveBookletPreview({
           property_data: readProperty(data),
         },
       }));
-      setFocus("items");
+      setFocus(sectionOf(target));
     }
     const picker =
       target.type === "file"
         ? target
         : form.querySelector<HTMLInputElement>('input[type="file"]');
-    const file = picker?.files?.[0];
+    // The photograph slots of one kind (additional, the features' own): all
+    // picked in the form are previewed together.
+    const group = picker?.dataset.category;
+    const together =
+      group === "additional" || group === "features"
+        ? Array.from(
+            form.querySelectorAll<HTMLInputElement>(
+              `input[type="file"][data-category="${group}"]`,
+            ),
+          ).flatMap((input) => Array.from(input.files || []))
+        : [];
+    const file = together[0] || picker?.files?.[0];
     if (target.type === "file" && !file) {
       imageVersion.current++;
       setDraft((d) => ({ ...d, image: undefined }));
@@ -318,18 +447,11 @@ export default function LiveBookletPreview({
         const src = await smallImage(file);
         // Additional photographs picked together are all previewed: two of
         // them with features make the property's features page (guide p.17).
-        const more =
-          picker?.dataset.category === "additional"
-            ? await Promise.all(
-                Array.from(picker.files || [])
-                  .slice(1, 12)
-                  .map(smallImage),
-              )
-            : [];
+        const more = await Promise.all(together.slice(1, 12).map(smallImage));
         // With them, the main photograph picked in the same form and not
         // stored yet: the pages depend on it too.
         const pending =
-          picker?.dataset.category === "additional"
+          group === "additional" || group === "features"
             ? form.querySelector<HTMLInputElement>(
                 'input[type="file"][data-category="main"]',
               )?.files?.[0]
@@ -465,34 +587,67 @@ export default function LiveBookletPreview({
         {preview && preview.pages.some((_, i) => locked(i)) && (
           <p className="muted live-preview-locked">{t("lockedHelp")}</p>
         )}
+        <div className="live-preview-zoom">
+          <button
+            type="button"
+            className="icon-button"
+            disabled={zoom === ZOOMS[0]}
+            aria-label={t("zoomOut")}
+            title={t("zoomOut")}
+            onClick={() => setZoom(ZOOMS[Math.max(0, ZOOMS.indexOf(zoom) - 1)])}
+          >
+            <ZoomOut size={16} />
+          </button>
+          <span aria-live="polite">{Math.round(zoom * 100)}%</span>
+          <button
+            type="button"
+            className="icon-button"
+            disabled={zoom === ZOOMS.at(-1)}
+            aria-label={t("zoomIn")}
+            title={t("zoomIn")}
+            onClick={() =>
+              setZoom(
+                ZOOMS[Math.min(ZOOMS.length - 1, ZOOMS.indexOf(zoom) + 1)],
+              )
+            }
+          >
+            <ZoomIn size={16} />
+          </button>
+        </div>
         <div
-          className="live-preview-paper"
-          ref={paper}
-          aria-busy={updating}
-          data-page-kind={preview?.pages[preview.page]?.kind}
+          className="live-preview-viewport"
+          ref={viewport}
+          style={{ "--zoom": zoom } as React.CSSProperties}
         >
-          {frames.map((html, slot) => (
-            <iframe
-              key={slot}
-              ref={frameRefs[slot]}
-              title={t("imageAlt", { number: (preview?.page ?? 0) + 1 })}
-              // Same origin for fonts and photographs; no scripts run inside.
-              sandbox="allow-same-origin"
-              srcDoc={html}
-              aria-hidden={slot !== front}
-              tabIndex={-1}
-              onLoad={() => void loaded(slot)}
-              style={{
-                width: PAGE_WIDTH,
-                height: PAGE_HEIGHT,
-                transform: `scale(${scale})`,
-                visibility: slot === front && preview ? "visible" : "hidden",
-              }}
-            />
-          ))}
-          {!preview && (
-            <div className="live-preview-placeholder">{t("loading")}</div>
-          )}
+          <div
+            className="live-preview-paper"
+            ref={paper}
+            aria-busy={updating}
+            data-page-kind={preview?.pages[preview.page]?.kind}
+          >
+            {frames.map((html, slot) => (
+              <iframe
+                key={slot}
+                ref={frameRefs[slot]}
+                title={t("imageAlt", { number: (preview?.page ?? 0) + 1 })}
+                // Same origin for fonts and photographs; no scripts run inside.
+                sandbox="allow-same-origin"
+                srcDoc={html}
+                aria-hidden={slot !== front}
+                tabIndex={-1}
+                onLoad={() => void loaded(slot)}
+                style={{
+                  width: PAGE_WIDTH,
+                  height: PAGE_HEIGHT,
+                  transform: `scale(${scale})`,
+                  visibility: slot === front && preview ? "visible" : "hidden",
+                }}
+              />
+            ))}
+            {!preview && (
+              <div className="live-preview-placeholder">{t("loading")}</div>
+            )}
+          </div>
         </div>
         {error && (
           <div className="notice error" role="alert">

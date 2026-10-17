@@ -1,2 +1,11 @@
-{#- The original terms artwork is placed in the reserved area after layout. -#}
+{#- Guide p.19: the title, frame and bar as drawn there; each term a justified
+    paragraph after its square bullet (see terms.py). -#}
 {{ art('plain') }}{{ footer() }}
+<img class="art" src="{{ asset('booklet-art/terms-title.svg') }}">
+<img class="art" src="{{ page_shape(shapes()['terms_frame'], '', '#18a2a2', 0.29) }}">
+<img class="art" src="{{ page_shape(shapes()['terms_bar'], '#18a2a2') }}">
+{% set size = page.size or 11.57 %}
+{% for term in page.terms %}
+<div style="position:absolute;left:455.16pt;top:{{ term.bullet - 2.27 }}pt;width:4.54pt;height:4.54pt;background:#18a2a2"></div>
+{% for line in term.lines %}<div class="t r w3" style="{{ T(442.65, line.base, size, width=287.5) }};color:#00365d"><span class="jl{{ ' last' if line.last else '' }}">{{ line.text|nums }}</span></div>
+{% endfor %}{% endfor %}

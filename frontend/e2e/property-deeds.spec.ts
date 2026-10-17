@@ -14,7 +14,7 @@ const env = Object.fromEntries(
       return [l.slice(0, i), l.slice(i + 1)];
     }),
 );
-test("a property takes up to four named deeds, shown on its booklet page", async ({
+test("a property takes up to eight deeds, listed under one label on its booklet page", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -47,28 +47,43 @@ test("a property takes up to four named deeds, shown on its booklet page", async
   await expect(more).toHaveCount(0);
   await expect(form.getByLabel("Deed number", { exact: true })).toHaveCount(1);
   const add = form.getByRole("button", { name: "Add another deed" });
-  for (const number of ["310115041563", "430107012766", "520118033311"]) {
+  const numbers = [
+    "310115041563",
+    "430107012766",
+    "520118033311",
+    "610115041564",
+    "710115041565",
+    "810115041566",
+    "910115041567",
+  ];
+  for (const number of numbers) {
     await add.click();
     await more.last().fill(number);
   }
-  // Four at most, each named.
-  await expect(more).toHaveCount(3);
+  // Eight at most, each named in the form.
+  await expect(more).toHaveCount(7);
   await expect(add).toHaveCount(0);
-  for (const n of [1, 2, 3, 4])
+  for (const n of [1, 2, 3, 4, 5, 6, 7, 8])
     await expect(
       form.getByLabel(`Deed number ${n}`, { exact: true }),
     ).toHaveCount(1);
-  // The booklet page names and lists them as they are typed.
+  // The booklet page lists them as they are typed: under one label, two to a
+  // line ("first - second").
   const preview = page.frameLocator(
     '.live-preview-paper iframe[aria-hidden="false"]',
   );
-  await expect(preview.getByText("رقم الصك الرابع")).toBeVisible();
-  await expect(preview.getByText("520118033311")).toBeVisible();
-  // One can be taken away again; the rest keep their order.
-  await form.getByRole("button", { name: "Remove deed 3" }).click();
+  await expect(
+    // (Each number is kept left to right inside the Arabic line.)
+    preview.getByText(/947603471790\W*-\W*310115041563/),
+  ).toBeVisible();
+  await expect(preview.getByText("910115041567")).toBeVisible();
+  await expect(preview.getByText("رقم الصك الرابع")).toHaveCount(0);
+  // Deeds can be taken away again; the rest keep their order.
+  for (const n of [8, 7, 6, 5, 3])
+    await form.getByRole("button", { name: `Remove deed ${n}` }).click();
   await expect(more).toHaveCount(2);
   await expect(add).toBeVisible();
-  await expect(preview.getByText("رقم الصك الرابع")).toHaveCount(0);
+  await expect(preview.getByText("910115041567")).toHaveCount(0);
   await form
     .getByRole("button", { name: "Save and close", exact: true })
     .click();

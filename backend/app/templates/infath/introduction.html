@@ -1,0 +1,9 @@
+{#- Guide p.11: the supervising body's page — Infath's as the guide sets it (an
+    administrator may change its logo and text), or another body's own. Its
+    logo comes with the page's artwork (see art() in booklet.html). -#}
+{% set sup = project.supervisor or infath %}
+{{ art('introduction') }}
+{% set profile_logo = '' %}
+{% set profile_title = sup.title %}
+{% set profile_contacts = [('x', sup.social), ('web', sup.website), ('phone', sup.phone)] %}
+{% include 'infath/profile.html' %}

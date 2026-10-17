@@ -87,26 +87,33 @@ test("a property's photographs are entered and changed in its own form", async (
     '.live-preview-paper iframe[aria-hidden="false"]',
   );
   await expect(preview.locator('image[href^="data:image/"]')).toHaveCount(1);
-  // With features, the first two additional photographs print in the smaller
-  // windows of the features page (guide p.17): they are cut to that shape,
-  // not to the wide band of the photographs page.
+  // Each additional photograph has its slot (three, for the photographs
+  // page's three bands, guide p.18) and is cut to that band's shape.
   const features = form.locator('[name="property.features"]');
   await form
     .locator('details:has([name="property.features"]) > summary')
     .click();
   await features.fill("قريب من الخدمات\nموقع مميز");
+  await expect(slot("additional")).toHaveCount(3);
   await slot("additional")
+    .nth(0)
     .locator('input[type="file"]')
-    .setInputFiles([photo, photo]);
+    .setInputFiles(photo);
   const stage = page.locator("dialog.image-editor .editor-stage");
   await expect(stage).toBeVisible();
   const shape = await stage.evaluate((e) => {
     const r = e.getBoundingClientRect();
     return r.width / r.height;
   });
-  expect(shape).toBeCloseTo(240.15 / 138.17, 1);
-  await usePhoto(page, 2);
-  // The live preview shows the property's features page with them.
+  expect(shape).toBeCloseTo(499.27 / 181.72, 1);
+  await usePhoto(page);
+  await slot("additional")
+    .nth(1)
+    .locator('input[type="file"]')
+    .setInputFiles(photo);
+  await usePhoto(page);
+  // Without photographs of their own, the features page shows the main one
+  // and these two (the features always have their page, notes p.12).
   await expect(page.locator(".live-preview-paper")).toHaveAttribute(
     "data-page-kind",
     "features",
@@ -127,7 +134,7 @@ test("a property's photographs are entered and changed in its own form", async (
   // Reopened: drop one additional photograph, make the other the main one.
   await card.locator(".property-card").click();
   await expect(slot("main")).toContainText("Added");
-  const thumbs = form.locator(".photo-thumbs li");
+  const thumbs = form.locator('[data-slot="stored"]');
   await expect(thumbs).toHaveCount(2);
   await thumbs
     .nth(0)

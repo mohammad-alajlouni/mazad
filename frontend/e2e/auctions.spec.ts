@@ -67,23 +67,18 @@ for (const flow of ["manual", "excel"])
         await page.getByLabel("Area m²", { exact: true }).fill("1200");
         // Page settings are rarely changed: their section starts closed.
         await page
-          .locator("summary", { hasText: "Property booklet layout and pages" })
+          .locator("summary", { hasText: "Property page settings" })
           .click();
         await page
           .locator('[name="property.booklet_layout"]')
           .selectOption(n === 1 ? "landscape" : "portrait");
-        await page
-          .locator('[name="property.booklet_image_fit"]')
-          .selectOption("contain");
-        await page
-          .locator('[name="booklet.include_information_page"]')
-          .selectOption("false");
-        await page
-          .locator('[name="booklet.include_images_page"]')
-          .selectOption("false");
-        await page
-          .locator('[name="booklet.include_rentals_page"]')
-          .selectOption("false");
+        // The optional pages: switched off here (each its own switch).
+        for (const name of [
+          "Additional information page",
+          "Additional photographs page",
+          "Rental contracts page",
+        ])
+          await page.getByRole("switch", { name }).click();
         await page
           .locator("summary")
           .filter({ hasText: "Property boundaries" })
@@ -114,6 +109,7 @@ for (const flow of ["manual", "excel"])
               .locator(
                 `.property-form [data-slot="${role}"] input[type="file"]`,
               )
+              .first()
               .setInputFiles(path.join(root, "samples/demo-generator.jpg"));
             await usePhoto(page);
           }
@@ -129,7 +125,6 @@ for (const flow of ["manual", "excel"])
         expect(savedItem.property_data.booklet_layout).toBe(
           n === 1 ? "landscape" : "portrait",
         );
-        expect(savedItem.property_data.booklet_image_fit).toBe("contain");
         expect(savedItem.property_data.include_information_page).toBe(false);
         expect(savedItem.property_data.include_images_page).toBe(false);
         expect(savedItem.property_data.include_rentals_page).toBe(false);
@@ -144,9 +139,9 @@ for (const flow of ["manual", "excel"])
         .filter({ hasText: "عقار المتصفح 1" });
       await expect(first.locator("img.property-thumb")).toBeVisible();
       await first.locator(".property-card").click();
-      await expect(page.locator(".property-form .photo-thumbs li")).toHaveCount(
-        1,
-      );
+      await expect(
+        page.locator('.property-form [data-slot="stored"]'),
+      ).toHaveCount(1);
     } else {
       await page
         .getByRole("button", {

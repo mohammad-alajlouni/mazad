@@ -83,6 +83,39 @@ def record_dict(record):
     }
 
 
+def stored_logo(storage, key):
+    """A stored logo as a data URI ("" when there is none or it is missing)."""
+    if not key:
+        return ""
+    try:
+        data = storage.read(key)
+    except (OSError, HTTPException):
+        return ""
+    kind = "png" if key.endswith(".png") else "jpeg"
+    return f"data:image/{kind};base64," + base64.b64encode(data).decode()
+
+
+def supervisor_for(db, auction, images, image_data):
+    """The auction's supervising body for the booklet (see supervisor.py):
+    Infath with an administrator's changes, or the other body and its logo."""
+    from ..models import SystemSetting
+    from .booklet.supervisor import supervisor_of
+
+    row = db.get(SystemSetting, "infath")
+    infath = row.data if row else {}
+    own = next(
+        (
+            image_data(i)
+            for i in reversed(images)
+            if i.category == "supervisor_logo" and not i.item_id
+        ),
+        "",
+    )
+    return supervisor_of(
+        auction, infath, own, stored_logo(LocalStorage(), infath.get("logo_key"))
+    )
+
+
 def snapshot(db, project, linked_photos=False):
     """Project data for rendering. With linked_photos, photographs are URLs the
     browser loads once and caches (live preview); logos stay embedded because
@@ -95,7 +128,11 @@ def snapshot(db, project, linked_photos=False):
     ).all()
 
     def image_data(image):
-        if linked_photos and image.category not in ("agent_logo", "auction_logo"):
+        if linked_photos and image.category not in (
+            "agent_logo",
+            "auction_logo",
+            "supervisor_logo",
+        ):
             return f"/api/images/{image.id}?size=preview"
         return (
             "data:image/png;base64,"
@@ -138,6 +175,9 @@ def snapshot(db, project, linked_photos=False):
         "",
     )
     project_data["images"] = [image_data(i) for i in images if not i.item_id]
+    project_data["supervisor"] = supervisor_for(
+        db, project_data.get("auction"), images, image_data
+    )
     items = []
     for item in db.scalars(
         select(ProjectItem)
@@ -161,6 +201,7 @@ def snapshot(db, project, linked_photos=False):
                 "src": image_data(i),
                 "orientation": i.orientation,
                 "caption": i.caption,
+                "category": i.category,
             }
             for i in own
         ]
@@ -428,30 +469,35 @@ def render_html(
 
     if preview:
         # The browser fetches fonts and artwork once from cacheable URLs.
+        # The layout version names the artwork's edition, so a browser that
+        # cached an earlier one (say, a cover with the logo drawn in) asks again.
+        from .booklet.composer import LAYOUT_VERSION
+
         def asset(name):
-            return "/api/booklet-assets/" + name
+            return f"/api/booklet-assets/{name}?v={LAYOUT_VERSION}"
 
         def identity_asset(name):
-            return "/api/booklet-assets/identity/" + name
-
-    from .booklet.composer import AGENT_LOGO, FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
-    from .booklet.labels import label
+            return f"/api/booklet-assets/identity/{name}?v={LAYOUT_VERSION}"
 
     from ..services.banners import LEGAL_ROOM, LEGAL_SMALL
-    from .social_art import photo_frame
     from .booklet import fit, formatting
     from .booklet.art import (
+        COVER_PHOTO,
+        logo_fit,
         page_shape,
         photo,
-        shape_in,
-        table_lines,
         rentals_column,
+        shape_in,
         shapes,
         summary_column,
-        logo_fit,
+        supervisor_logo,
+        table_lines,
         white_logo,
-        COVER_PHOTO,
     )
+    from .booklet.composer import AGENT_LOGO, FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
+    from .booklet.labels import label
+    from .booklet.supervisor import INFATH
+    from .social_art import photo_frame
 
     return env.get_template(template_file).render(
         **content,
@@ -474,6 +520,8 @@ def render_html(
         logo_fit=logo_fit,
         cover_photo_window=COVER_PHOTO.get,
         agent_logo_box=AGENT_LOGO,
+        supervisor_logo=supervisor_logo,
+        infath=INFATH,
         legal_room=LEGAL_ROOM,
         legal_small=LEGAL_SMALL,
         shapes=shapes,

@@ -109,8 +109,25 @@ def project_detail(id: str, db=Depends(get_db)):
     p = get_project(db, id)
     from ..services.workflow import workflow
 
+    from ..generation.booklet.composer import closing
+
+    ordered = db.scalars(
+        select(ProjectItem)
+        .where(ProjectItem.project_id == id)
+        .order_by(ProjectItem.sequence_number, ProjectItem.created_at)
+    ).all()
+    auction = p.auction or {}
     return {
         "workflow": workflow(db, p),
+        # Each property's share of the auction's closing schedule (shown in its
+        # form, where its own date and time may override it), and the share of
+        # a property added after them.
+        "closings": {
+            "items": {
+                item.id: closing(auction, {}, n) for n, item in enumerate(ordered)
+            },
+            "next": closing(auction, {}, len(ordered)),
+        },
         "project": p,
         "selling_agent": (
             agent.data

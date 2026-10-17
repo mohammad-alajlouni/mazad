@@ -19,7 +19,9 @@ from ..generation.engine import render_html, snapshot
 class PreviewImage(BaseModel):
     model_config = ConfigDict(extra="forbid")
     src: str = Field(max_length=3000000)
-    category: Literal["agent_logo", "auction_logo", "cover", "main", "additional"]
+    category: Literal[
+        "agent_logo", "auction_logo", "cover", "main", "additional", "features"
+    ]
     item_id: str | None = Field(default=None, max_length=100)
     # Additional photographs picked together with this one: together they
     # decide which pages a property gets (the features page needs two).
@@ -45,6 +47,13 @@ class PreviewInput(BaseModel):
         "terms",
         "participation",
         "contact",
+        # A property's own pages: the one the field being edited prints on.
+        "property",
+        "features",
+        "boundaries",
+        "information",
+        "photos",  # its additional photographs' page
+        "rentals",
     ] = "auction"
     page: int | None = Field(default=None, ge=0, le=20000)
     auction: dict[str, Any] = Field(default_factory=dict, max_length=30)
@@ -133,6 +142,23 @@ def preview(db, project, body):
         a["auction_date"] = None
         if a["auction_type"] == "electronic":
             a.update(physical_location="", auction_location_url="")
+    # The supervising body as the unsaved values make it (Infath, or another
+    # body: its details as typed, its logo as stored).
+    from sqlalchemy import select
+
+    from ..generation.engine import stored_logo, supervisor_for
+    from ..models import ProjectImage
+    from .storage import LocalStorage
+
+    logos = db.scalars(
+        select(ProjectImage).where(
+            ProjectImage.project_id == project.id,
+            ProjectImage.category == "supervisor_logo",
+        )
+    ).all()
+    p["supervisor"] = supervisor_for(
+        db, a, logos, lambda image: stored_logo(LocalStorage(), image.key)
+    )
     p["selling_agent"] = draft_values(
         SellingAgentInput, {**p.get("selling_agent", {}), **body.agent}
     )
@@ -141,6 +167,7 @@ def preview(db, project, body):
         p["agent_logo"] = ""
     if body.agent.get("logo_image_id"):
         from sqlalchemy import select
+
         from ..models import ProjectImage
         from .storage import LocalStorage
 
@@ -203,12 +230,23 @@ def preview(db, project, body):
             item = next((i for i in items if i["id"] == owner), None)
             if not item:
                 raise HTTPException(404, "Item not found")
-            photo = {"src": source, "orientation": orientation, "caption": ""}
+            photo = {
+                "src": source,
+                "orientation": orientation,
+                "caption": "",
+                "category": category,
+            }
             others = [
-                dict(zip(("src", "orientation"), transient_image(src)), caption="")
-                for src in (body.image.more if category == "additional" else [])
+                dict(
+                    zip(("src", "orientation"), transient_image(src)),
+                    caption="",
+                    category=category,
+                )
+                for src in (
+                    body.image.more if category in ("additional", "features") else []
+                )
             ]
-            if category == "additional" and body.image.main:
+            if category in ("additional", "features") and body.image.main:
                 src, shape = transient_image(body.image.main)
                 main = {"src": src, "orientation": shape, "caption": ""}
                 item["image_assets"] = [main] + item["image_assets"][1:]
@@ -221,7 +259,15 @@ def preview(db, project, body):
     booklet = compose(p, items)
     pages = booklet["pages"]
     selected = body.page
-    if selected is None and body.image and body.image.category == "additional":
+    if (
+        selected is None
+        and body.image
+        and body.image.category
+        in (
+            "additional",
+            "features",
+        )
+    ):
         selected = next(
             (
                 n
@@ -238,16 +284,26 @@ def preview(db, project, body):
             "images": "property" if focused else "cover",
             "closing": "contact",
             "generate": "cover",
+            "photos": "images",
         }.get(body.stage, body.stage)
-        selected = next(
-            (
-                n
-                for n, page in enumerate(pages)
-                if page["kind"] == kind
-                and (not focused or page.get("item", {}).get("id") == focused)
-            ),
-            0,
-        )
+
+        def first(kind):
+            return next(
+                (
+                    n
+                    for n, page in enumerate(pages)
+                    if page["kind"] == kind
+                    and (not focused or page.get("item", {}).get("id") == focused)
+                ),
+                None,
+            )
+
+        # A page the property does not have (boundaries beside its facts, no
+        # rentals yet...): its own first page.
+        selected = first(kind)
+        if selected is None and focused:
+            selected = first("property")
+        selected = selected or 0
     selected = min(selected, len(pages) - 1)
     content = {
         "project": p,
@@ -272,6 +328,18 @@ def preview(db, project, body):
         "width_pt": 595.276,
         "height_pt": 841.89,
         "saved": False,
+        # The property being entered: the optional pages its data calls for
+        # (shown as switched on by themselves in its page settings).
+        "auto": next(
+            (
+                page.get("auto")
+                for page in pages
+                if page["kind"] == "property"
+                and focused
+                and page["item"].get("id") == focused
+            ),
+            None,
+        ),
     }
 
 
