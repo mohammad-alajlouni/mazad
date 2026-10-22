@@ -13,14 +13,35 @@ SIZES = {
     "2x2": {"layout": "square", "width_mm": 200, "height_mm": 200},
 }
 
-# The banner's announcement box (announcement and court decision together):
-# characters it holds at the full size, per layout, and the slightly smaller
-# setting a longer text is set in: size factor, line height, and how much
-# taller the box becomes (upwards, towards the headline).
-LEGAL_ROOM = {"square": 700, "panoramic": 355, "landscape": 290}
-LEGAL_SMALL = (0.9, 1.3, 1.3)
-# Longest court decision every banner size holds beside a full announcement.
+# Longest court decision a banner campaign accepts (the guide's boards name
+# the court on their supervision line, see BannerConfig.court_name).
 COURT_LIMIT = 200
+
+
+def design_overflows(project, items, banner=None, social=None):
+    """Values longer than their place in the guide's design (see
+    generation/marketing): reported where they are entered."""
+    from ..generation.marketing.compose import review
+
+    found = review(
+        {"auction": project.auction or {}},
+        [
+            {"title": i.title, "property_data": i.property_data, "images": []}
+            for i in items
+        ],
+        banner=banner,
+        social=social,
+    )
+    sections = {"court_name": "template", "headline": "template", "tagline": "template"}
+    return [
+        {
+            **row,
+            "section": sections.get(
+                row["field"], "items" if row["item"] else "auction"
+            ),
+        }
+        for row in found
+    ]
 
 
 def review_banners(db, project):
@@ -127,6 +148,7 @@ def review_banners(db, project):
             need(item.property_data.get(field), field, "items", item.title)
         if config.size not in ("10x3", "15x5"):
             need(item.property_data.get("usage"), "usage", "items", item.title)
+    errors += design_overflows(project, selected, banner=config.model_dump())
     return {
         "valid": not errors,
         "missing": errors,

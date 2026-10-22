@@ -49,9 +49,22 @@ test("social campaign validates media, exports exact pixels and remains separate
   await page
     .getByLabel("Additional companion text (optional)")
     .fill("بيانات تجريبية فقط");
+  // The guide's post shows the headline as it is typed (guide p. 36).
+  const post = page.frameLocator(
+    '.live-preview-paper iframe[aria-hidden="false"]',
+  );
+  await expect(page.locator(".live-preview-paper")).toHaveAttribute(
+    "data-page-kind",
+    "instagram-announcement-white",
+  );
+  await expect(post.locator('[data-slot="headline"]')).toHaveText(
+    "فرص عقارية مميزة",
+  );
   await page.getByRole("button", { name: "Save design and continue" }).click();
   const form = page.locator(".auction-workspace form");
   for (const [field, value] of Object.entries({
+    // The name beside the guide's «مـزاد» (room for a short name).
+    auction_name: "مزاد الريان",
     license_number: "420000053",
     auction_contact_number: "0555000000",
     auction_date: "2026-10-10",

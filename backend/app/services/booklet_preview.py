@@ -127,7 +127,10 @@ def transient_image(value):
         raise HTTPException(422, "Invalid preview image") from exc
 
 
-def preview(db, project, body):
+def drafted(db, project, body):
+    """The project with the form's unsaved values (and a picked photograph):
+    (project data, items, the property being entered, that photograph)."""
+    photo = None
     p, items = snapshot(db, project, linked_photos=True)
     p["auction"] = draft_values(AuctionData, {**p.get("auction", {}), **body.auction})
     a = p["auction"]
@@ -256,6 +259,12 @@ def preview(db, project, body):
                 else item["image_assets"] + [photo] + others
             )
             focused = item["id"]
+    return p, items, focused, photo
+
+
+def preview(db, project, body):
+    p, items, focused, photo = drafted(db, project, body)
+    a = p["auction"]
     booklet = compose(p, items)
     pages = booklet["pages"]
     selected = body.page

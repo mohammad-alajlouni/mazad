@@ -1,0 +1,42 @@
+{
+ "source": {
+  "دليل-التسويق-والهوية-البصرية-للمزادات-V2.pdf": "fd11e308185c2867a7a8e17d3c03d7bd49e674756b6f4e3ccd8b96f2c9563cbf"
+ },
+ "files": {
+  "board-landscape-electronic.pdf": "2f964715f5900e4fc4ffb42e5a31ee9e23b77fc12240a2947c54a4df167fbe50",
+  "board-landscape-electronic.png": "6ecbf1508fb763aaac5f33d83bfbb5e5c6273ce9425494d08a411c520a119711",
+  "board-landscape-physical.pdf": "b88bdac09fc627b65fc73ca2e015acee7d6ef5ec17da95f5312f2f567c9adb81",
+  "board-landscape-physical.png": "f7a9aa7b29e70eb51460d0a12b11fa730a655e326a93af3fbe191d7ca01162f5",
+  "board-panoramic-electronic.pdf": "f6b99600784c45da09a3a70939c60a6e47b65be914026975b0af3b45daa674c1",
+  "board-panoramic-electronic.png": "4e3cea3afb28a21970f866c2321c628a6680bbb33fbffc366efc350e2c50f6ab",
+  "board-panoramic-physical.pdf": "7e378305af0d2313232ba958bd34a99b6bc575a689437f1f1528cb70de830640",
+  "board-panoramic-physical.png": "ddcc8c165257b341ac246c6030b994aef6d80bf4cb50b364f3612d42aa2c3506",
+  "board-square-electronic.pdf": "cc52f9fc15fcd8ce44da7a79b8ee4107ef46ea4a55708d067e250a86d605b587",
+  "board-square-electronic.png": "6959a009c397856131a011f87c661bfd61818a967d17f11e9ffca647f1c2bf22",
+  "board-square-physical.pdf": "cbcf85f5b7a068f3682c14333e31b8699560c812e08026a8e4f3a5d0a82b7cd2",
+  "board-square-physical.png": "37ed9629793f8cb06ca88300e80d8eb085e69a85e210a51e136a214172c297a7",
+  "instagram-announcement-teal.pdf": "ca95ea65719d38c76549ae3e1b5c1e7f9952a59c9bbed16993aaafb346f34f27",
+  "instagram-announcement-teal.png": "73994bb839a27e8816d6691b6ebe1ed60237167220c9035c1558354835d10e95",
+  "instagram-announcement-white.pdf": "304694cedf7c4509147e71b47b11671afc259892a6a8b8161399adc7e22915d0",
+  "instagram-announcement-white.png": "4a66e31bec0979d91e185c716dad20e39b95702e3bd645202ab18f42233e2142",
+  "instagram-property-teal.pdf": "fd471527725d2fa0031067b0ee3252ce167642acfcd08291c6462d34cc39dd0c",
+  "instagram-property-teal.png": "5eb0edae10b23c01c1de85457d2edb3f4c028465e44eb88888331a26614d7037",
+  "instagram-property-white.pdf": "92634d038ff7357661c68f1d5be84bebb601e0d5a379ecf207834b55521d8f3d",
+  "instagram-property-white.png": "af4149bb4ff123632581d6db571d73588a6bba83f0e00bf457c9aee76981faad",
+  "layout.json": "cc0f1dab51fca5158a949aabd45cfa903ad4505a1c564783dfba42026f0069bd",
+  "story-announcement-navy.pdf": "79c5896ff3c7c4e070d7950f3f7f402efec341e605474cf0bdde7c5341aad893",
+  "story-announcement-navy.png": "e25bcb18e74bb7e7ad929486d6b4c39c33e80240dce271cd9114d9911c794472",
+  "story-announcement-teal.pdf": "bb51c00a4b9da9b6ecbf21fa8e812861ea960089e07baa989066f1c5dd6e3921",
+  "story-announcement-teal.png": "f409a4bb8703b150820715b8954438c7bd274c4b3b77b759b0d4a09115dad9f3",
+  "story-announcement-white.pdf": "93dd698dc66d3747ca9eeee20b27125e00762237589827deda30f0c92ff806d0",
+  "story-announcement-white.png": "ae0c364fd6431c659047effeb37c9e77ae45f2424087398c56a6c40de5264889",
+  "x-announcement-teal.pdf": "4cca7727911d883d3dd482363752a32037c6f97d17f2cb32094e19b44f8359b5",
+  "x-announcement-teal.png": "d3cd48af7a247aa41c68b375ffdedef0e42bf02a45aca0aaf8ca6a0c7e974480",
+  "x-announcement-white.pdf": "83e53d161db593b9e932bb56351968efd4340201ddc2b568b7296daadce9e4cb",
+  "x-announcement-white.png": "30f01c3346cfa0dd17582aeba04fab73618861f8ab6d7c5985e5f5ffd67fb0bb",
+  "x-property-teal.pdf": "afdc67f680e1416ce4b1163d09b4350112754ad3a261bb135cfc4b60924a9e3c",
+  "x-property-teal.png": "f68f18d23fb6ec2b212925dcc615f1850813fbe687fd565f81932129ac35aeff",
+  "x-property-white.pdf": "9a0bc99bde7acbd490751888561d4fe84c28debfea734d311545d79706ce623e",
+  "x-property-white.png": "adca770307eb0b5a7e07ca6e3b8e1f7a741d3b889fdb9fea1a51779c2c98b0b6"
+ }
+}

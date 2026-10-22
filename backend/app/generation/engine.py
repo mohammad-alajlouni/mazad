@@ -296,7 +296,12 @@ def build_content(db, project, kind, output_language=None):
     if kind == "banners" and project.workspace_type in ("project", "banners"):
         from ..services.banners import SIZES
 
-        content["banner"] = {**SIZES[config.size], "size": config.size, "scale": "1:10"}
+        content["banner"] = {
+            **SIZES[config.size],
+            "size": config.size,
+            "scale": "1:10",
+            "court_name": config.court_name,
+        }
     branding = db.get(SystemSetting, "global")
     content["branding"] = dict(branding.data) if branding else {}
     language = (
@@ -388,10 +393,12 @@ def render(db, output):
         output.content = {**output.content, "booklet": content["booklet"]}
     if output.output_type == "banners" and content["project"].get("auction"):
         template_file = "infath/banners.html"
-    if content.get("banner"):
-        template_file = "infath/board.html"
-    if content.get("social"):
-        template_file = "infath/social.html"
+    if content.get("banner") or content.get("social"):
+        # The guide's boards and posts (generation/marketing).
+        from .marketing.compose import marketing_content
+
+        template_file = "infath/marketing.html"
+        content = {**content, "marketing": marketing_content(content)}
     if content.get("booklet"):
         template_file = "infath/booklet.html"
     if content.get("forms"):
@@ -500,7 +507,6 @@ def render_html(
         def identity_asset(name):
             return f"/api/booklet-assets/identity/{name}?v={LAYOUT_VERSION}"
 
-    from ..services.banners import LEGAL_ROOM, LEGAL_SMALL
     from .booklet import fit, formatting
     from .booklet.art import (
         COVER_PHOTO,
@@ -519,7 +525,6 @@ def render_html(
     from .booklet.composer import AGENT_LOGO, FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
     from .booklet.labels import label
     from .booklet.supervisor import INFATH
-    from .social_art import photo_frame
 
     return env.get_template(template_file).render(
         **content,
@@ -531,7 +536,6 @@ def render_html(
         asset=asset,
         identity=identity,
         identity_asset=identity_asset,
-        photo_frame=photo_frame,
         photo=photo,
         page_shape=page_shape,
         shape_in=shape_in,
@@ -545,8 +549,6 @@ def render_html(
         supervisor_logo=supervisor_logo,
         infath=INFATH,
         infath_logo=infath_logo,
-        legal_room=LEGAL_ROOM,
-        legal_small=LEGAL_SMALL,
         shapes=shapes,
         fmt=formatting,
         fit=fit,

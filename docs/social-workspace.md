@@ -54,6 +54,6 @@
 ![سناب](social-examples/story-announcement-navy.png)
 
 - البيانات: `social_schemas.py` و`services/social.py`؛ قاعدة البيانات: الترحيل `0005` يحافظ على نوع وبيانات الكتيّبات والبنرات السابقة.
-- القالب: `templates/infath/social.html`؛ نافذة الصورة المتجهة: `generation/social_art.py`.
+- التصميم: منشورات الدليل نفسها (الصفحات 35–37) مستخرجة متّجهات بلا قيمها التجريبية (`scripts/extract_marketing_art.py`)، تُركَّب عليها القيم في أماكن عيّنات الدليل (`generation/marketing/compose.py` و`templates/infath/marketing.html`)، والصورة داخل إطار الدليل نفسه. المعاينة الحيّة: `MarketingPreview.tsx`.
 - الواجهة: `BannerWorkspace.tsx` يعيد استخدام خطوات الحملة حسب النوع، و`SocialTemplateFields.tsx` لإعدادات المنشورات. البيانات والمخرجات والقوائم مستقلة.
 - الاختبارات: `test_social.py` يغطي التصاميم الـ11 مع الأنواع الثلاثة، الإنجليزية، الأبعاد الفعلية، النص النظامي، اختيار الصور والعقارات، خطأ تجاوز المساحة، الاعتماد وحفظ النسخ. `test_preflight.py` يختبر رفض المقاس الخاطئ وقص النص. `e2e/social.spec.ts` يغطي الاستخدام والتنزيل الفعلي للأبعاد وفصل الأقسام والعربية والهاتف.

@@ -60,26 +60,27 @@ def test_social_dimensions_and_content(admin, format, post_kind, theme, kind):
     raw = admin.get("/api/files/" + png["id"]).content
     im = Image.open(BytesIO(raw))
     assert im.size == (1080, FORMATS[format]["height_px"])
-    if format == "x":
-        # Inspect pixels, not PDF text extraction: a leaked SVG clip can hide
-        # text that remains present in the PDF's searchable text layer.
-        foreground = (0, 20, 71) if theme == "white" else (255, 255, 255)
-        for region in [(907, 40, 1032, 136), (48, 556, 613, 638)]:
-            # The native navy logo uses its own source color.
-            expected = (0, 54, 93) if theme == "white" and region[0] == 907 else foreground
-            pixels = im.convert("RGB").crop(region).getdata()
-            assert (
-                sum(max(abs(c - e) for c, e in zip(p, expected)) < 12 for p in pixels)
-                > 300
-            )
     with pymupdf.open(stream=pdf(admin, o), filetype="pdf") as doc:
         assert len(doc) == 1
-        text = doc[0].get_text()
-        assert "0555000000" in text
+        page = doc[0]
+        text = page.get_text()
+        # The guide's own design is placed beneath the values (its fixed
+        # wording is part of it), with the photograph in its frame.
+        assert "ﻣـﺰاد" in text or "مـزاد" in text
+        assert page.get_images()
+        assert "آفاق" in text
+        # The phone stands where the guide puts one: the Instagram
+        # announcement and the story.
+        has_phone = format == "story" or (
+            format == "instagram" and post_kind == "announcement"
+        )
+        assert ("0555000000" in text.replace(" ", "")) == has_phone
         if post_kind == "property":
             assert "0011" in text
-        if kind != "physical":
-            assert "2026-10-12" in text
+        if format == "x":
+            assert "أكتوبر" in text
+        else:
+            assert "2026/10/10" in text
     txt = next(f for f in o["files"] if f["media_type"].startswith("text/"))
     caption = admin.get("/api/files/" + txt["id"]).text
     assert "420000053" in caption and "إعلان تجريبي للمعاينة فقط" in caption
@@ -184,7 +185,7 @@ def test_social_english_and_schedule_caption(admin, format):
         f"/api/projects/{p}/social-config",
         json={
             "format": format,
-            "headline": "Property opportunities",
+            "headline": "Prime lots",
             "tagline": "Auction preview",
         },
     )
@@ -202,8 +203,13 @@ def test_social_english_and_schedule_caption(admin, format):
 def test_social_overflow_rolls_back_and_selection_count(admin):
     p, i = social(admin)
     admin.put(f"/api/projects/{p}/social-config", json={"headline": "W" * 48})
+    # Longer than the guide's headline holds: reported before generating.
+    review = admin.get(f"/api/projects/{p}/social-review").json()
+    assert {"field": "headline", "item": None, "section": "template"} in [
+        {k: v for k, v in row.items() if k != "limit"} for row in review["missing"]
+    ]
     r = admin.post(f"/api/projects/{p}/generate", json={"types": ["social_content"]})
-    assert r.status_code == 422 and r.json()["code"] == "LAYOUT_PREFLIGHT_FAILED"
+    assert r.status_code == 422 and r.json()["code"] == "COMPLETE_SOCIAL_REVIEW"
     assert admin.get(f"/api/projects/{p}").json()["outputs"] == []
     second = add(admin, p, property_input(2))
     admin.put(

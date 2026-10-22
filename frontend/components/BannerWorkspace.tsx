@@ -24,6 +24,7 @@ import {
   WorkflowProblems,
 } from "./workflowValidation";
 import { useConfirm } from "./Confirmation";
+import MarketingPreview from "./MarketingPreview";
 
 type Template = {
   id: string;
@@ -137,6 +138,10 @@ export default function BannerWorkspace({
   const [templates, setTemplates] = useState<Template[]>([]),
     [check, setCheck] = useState<Review | null>(null);
   const [size, setSize] = useState(detail.project.banner_config?.size || "4x2");
+  // The court that supervises with Infath, named on the guide's boards.
+  const [court, setCourt] = useState(
+    detail.project.banner_config?.court_name || "",
+  );
   const [ids, setIds] = useState<string[]>(
     (isSocial ? detail.project.social_config : detail.project.banner_config)
       ?.property_ids || [],
@@ -224,233 +229,264 @@ export default function BannerWorkspace({
           ))}
         </nav>
       </section>
-      {step === "template" && (
-        <form
-          data-stage-form
-          className="panel form-panel"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void run(async () => {
-              await api(`/projects/${detail.project.id}/${mode}-config`, {
-                method: "PUT",
-                body: send(
-                  isSocial
-                    ? { ...social, property_ids: ids }
-                    : { size, property_ids: ids },
-                ),
-              });
-              await reloadProject();
-              setStep(shared ? "generate" : "auction");
-            }, at("saved"));
-          }}
+      {step !== "outputs" && (
+        <MarketingPreview
+          detail={detail}
+          kind={isSocial ? "social" : "banner"}
+          config={
+            isSocial
+              ? { ...social, property_ids: ids }
+              : { size, property_ids: ids, court_name: court }
+          }
         >
-          <h2>{t("chooseTemplate")}</h2>
-          <p>{t("referenceHelp")}</p>
-          {isSocial ? (
-            <SocialTemplateFields value={social} onChange={setSocial} />
-          ) : (
-            <div className="banner-template-grid">
-              {["panoramic", "landscape", "square"].map((layout) => (
-                <article key={layout} className="banner-template-card">
-                  <h3>{t(`layouts.${layout}`)}</h3>
-                  <a
-                    href={`/banner-references/${layout}.png`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <img
-                      src={`/banner-references/${layout}.png`}
-                      alt={t("referenceImage", {
-                        layout: t(`layouts.${layout}`),
-                      })}
-                    />
-                  </a>
-                  <p>
-                    {t("guidePage", {
-                      page:
-                        layout === "panoramic"
-                          ? 28
-                          : layout === "landscape"
-                            ? 30
-                            : 32,
-                    })}
-                  </p>
-                  {templates
-                    .filter((v) => v.layout === layout)
-                    .map((v) => (
-                      <label className="checkbox-label" key={v.id}>
-                        <input
-                          type="radio"
-                          name="size"
-                          value={v.id}
-                          checked={size === v.id}
-                          onChange={() => setSize(v.id)}
+          {step === "template" && (
+            <form
+              data-stage-form
+              className="panel form-panel"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void run(async () => {
+                  await api(`/projects/${detail.project.id}/${mode}-config`, {
+                    method: "PUT",
+                    body: send(
+                      isSocial
+                        ? { ...social, property_ids: ids }
+                        : { size, property_ids: ids, court_name: court },
+                    ),
+                  });
+                  await reloadProject();
+                  setStep(shared ? "generate" : "auction");
+                }, at("saved"));
+              }}
+            >
+              <h2>{t("chooseTemplate")}</h2>
+              <p>{t("referenceHelp")}</p>
+              {isSocial ? (
+                <SocialTemplateFields value={social} onChange={setSocial} />
+              ) : (
+                <div className="banner-template-grid">
+                  {["panoramic", "landscape", "square"].map((layout) => (
+                    <article key={layout} className="banner-template-card">
+                      <h3>{t(`layouts.${layout}`)}</h3>
+                      <a
+                        href={`/banner-references/${layout}.png`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <img
+                          src={`/banner-references/${layout}.png`}
+                          alt={t("referenceImage", {
+                            layout: t(`layouts.${layout}`),
+                          })}
                         />
-                        <bdi>{v.id.replace("x", " × ")} m</bdi>
-                      </label>
-                    ))}
-                </article>
-              ))}
-            </div>
-          )}
-          <p className="notice">{t("printScale")}</p>
-          {!!detail.items.length && (
-            <details>
-              <summary>{t("selectProperties")}</summary>
-              <p>{t("allProperties")}</p>
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => {
-                  setIds([]);
-                  setDirty(true);
-                }}
-              >
-                {t("resetSelection")}
-              </button>
-              {detail.items.map((item) => (
-                <label className="checkbox-label" key={item.id}>
+                      </a>
+                      <p>
+                        {t("guidePage", {
+                          page:
+                            layout === "panoramic"
+                              ? 28
+                              : layout === "landscape"
+                                ? 30
+                                : 32,
+                        })}
+                      </p>
+                      {templates
+                        .filter((v) => v.layout === layout)
+                        .map((v) => (
+                          <label className="checkbox-label" key={v.id}>
+                            <input
+                              type="radio"
+                              name="size"
+                              value={v.id}
+                              checked={size === v.id}
+                              onChange={() => setSize(v.id)}
+                            />
+                            <bdi>{v.id.replace("x", " × ")} m</bdi>
+                          </label>
+                        ))}
+                    </article>
+                  ))}
+                </div>
+              )}
+              {!isSocial && (
+                <label>
+                  {t("fields.court_name")}
                   <input
-                    type="checkbox"
-                    checked={ids.includes(item.id)}
-                    onChange={(event) =>
-                      setIds(
-                        event.target.checked
-                          ? [...ids, item.id]
-                          : ids.filter((id) => id !== item.id),
-                      )
-                    }
+                    name="court_name"
+                    value={court}
+                    maxLength={60}
+                    onChange={(event) => setCourt(event.target.value)}
                   />
-                  {item.title}
+                  <small className="muted">{t("courtHelp")}</small>
                 </label>
-              ))}
-            </details>
+              )}
+              <p className="notice">{t("printScale")}</p>
+              {!!detail.items.length && (
+                <details>
+                  <summary>{t("selectProperties")}</summary>
+                  <p>{t("allProperties")}</p>
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() => {
+                      setIds([]);
+                      setDirty(true);
+                    }}
+                  >
+                    {t("resetSelection")}
+                  </button>
+                  {detail.items.map((item) => (
+                    <label className="checkbox-label" key={item.id}>
+                      <input
+                        type="checkbox"
+                        checked={ids.includes(item.id)}
+                        onChange={(event) =>
+                          setIds(
+                            event.target.checked
+                              ? [...ids, item.id]
+                              : ids.filter((id) => id !== item.id),
+                          )
+                        }
+                      />
+                      {item.title}
+                    </label>
+                  ))}
+                </details>
+              )}
+              <button className="primary">{t("saveTemplate")}</button>
+            </form>
           )}
-          <button className="primary">{t("saveTemplate")}</button>
-        </form>
-      )}
-      {step === "auction" && (
-        <AuctionWorkspace
-          detail={detail}
-          run={run}
-          reload={reloadProject}
-          bannerMode
-          socialMode={isSocial}
-          onSaved={() => setStep("items")}
-        />
-      )}
-      {step === "items" && (
-        <PropertyManager
-          detail={detail}
-          run={run}
-          reload={reloadProject}
-          editing={editor}
-          setEditing={setEditor}
-          onImport={() => void go("excel")}
-        />
-      )}
-      {step === "excel" && (
-        <ExcelUpload
-          projectId={detail.project.id}
-          run={run}
-          onDone={() => {
-            void reloadProject();
-            setStep("items");
-          }}
-        />
-      )}
-      {step === "images" && (
-        <>
-          <section className="panel">
-            <h2>{t("logos")}</h2>
-            <p>{t("logosHelp")}</p>
-          </section>
-          <ImageUpload
-            detail={detail}
-            run={run}
-            onDone={() => void reloadProject()}
-          />
-        </>
-      )}
-      {step === "generate" && (
-        <section className="panel form-panel">
-          <h2>{t("review")}</h2>
-          <p>{t("printScale")}</p>
-          {check && (
+          {step === "auction" && (
+            <AuctionWorkspace
+              detail={detail}
+              run={run}
+              reload={reloadProject}
+              bannerMode
+              socialMode={isSocial}
+              onSaved={() => setStep("items")}
+            />
+          )}
+          {step === "items" && (
+            <PropertyManager
+              detail={detail}
+              run={run}
+              reload={reloadProject}
+              editing={editor}
+              setEditing={setEditor}
+              onImport={() => void go("excel")}
+            />
+          )}
+          {step === "excel" && (
+            <ExcelUpload
+              projectId={detail.project.id}
+              run={run}
+              onDone={() => {
+                void reloadProject();
+                setStep("items");
+              }}
+            />
+          )}
+          {step === "images" && (
             <>
-              <p className={check.valid ? "notice" : "notice error"}>
-                {check.valid
-                  ? t("ready", { count: check.count })
-                  : t("missing")}
-              </p>
-              {check.missing.map((issue, index) => (
-                <button
-                  className="banner-missing"
-                  key={index}
-                  onClick={() =>
-                    ["agent_name", "agent_logo"].includes(issue.field)
-                      ? window.dispatchEvent(new Event("open-account-profile"))
-                      : void go(issue.section)
-                  }
-                >
-                  {issue.item ? `${issue.item}: ` : ""}
-                  {issue.limit
-                    ? t("tooLong", {
-                        field: ["agent_name", "headline"].includes(issue.field)
-                          ? t(`fields.${issue.field}`)
-                          : at(issue.field),
-                        limit: issue.limit,
-                      })
-                    : [
-                          "properties",
-                          "agent_name",
-                          "property_selection",
-                          "property_limit",
-                          "headline",
-                          "campaign_image",
-                          "main_image",
-                        ].includes(issue.field)
-                      ? t(`fields.${issue.field}`)
-                      : at(issue.field)}{" "}
-                  →
-                </button>
-              ))}
+              <section className="panel">
+                <h2>{t("logos")}</h2>
+                <p>{t("logosHelp")}</p>
+              </section>
+              <ImageUpload
+                detail={detail}
+                run={run}
+                onDone={() => void reloadProject()}
+              />
             </>
           )}
-          <label>
-            {tr("common.outputLanguage")}
-            <select
-              value={language}
-              onChange={(event) => setLanguage(event.target.value)}
-            >
-              <option value="ar">العربية</option>
-              <option value="en">English</option>
-            </select>
-          </label>
-          <button
-            className="primary"
-            disabled={busy || !check?.valid}
-            onClick={() =>
-              void run(async () => {
-                const results = await api<Output[]>(
-                  `/projects/${detail.project.id}/generate`,
-                  {
-                    method: "POST",
-                    body: send({
-                      types: [outputType],
-                      output_language: language,
-                    }),
-                  },
-                );
-                await reloadProject();
-                setStep("outputs");
-                setReview(results[0]);
-              }, tr("ui.drafts_generated_and_ready_for_review"))
-            }
-          >
-            {t("generate")}
-          </button>
-        </section>
+          {step === "generate" && (
+            <section className="panel form-panel">
+              <h2>{t("review")}</h2>
+              <p>{t("printScale")}</p>
+              {check && (
+                <>
+                  <p className={check.valid ? "notice" : "notice error"}>
+                    {check.valid
+                      ? t("ready", { count: check.count })
+                      : t("missing")}
+                  </p>
+                  {check.missing.map((issue, index) => (
+                    <button
+                      className="banner-missing"
+                      key={index}
+                      onClick={() =>
+                        ["agent_name", "agent_logo"].includes(issue.field)
+                          ? window.dispatchEvent(
+                              new Event("open-account-profile"),
+                            )
+                          : void go(issue.section)
+                      }
+                    >
+                      {issue.item ? `${issue.item}: ` : ""}
+                      {issue.limit
+                        ? t("tooLong", {
+                            field: [
+                              "agent_name",
+                              "headline",
+                              "tagline",
+                              "court_name",
+                            ].includes(issue.field)
+                              ? t(`fields.${issue.field}`)
+                              : at(issue.field),
+                            limit: issue.limit,
+                          })
+                        : [
+                              "properties",
+                              "agent_name",
+                              "property_selection",
+                              "property_limit",
+                              "headline",
+                              "campaign_image",
+                              "main_image",
+                            ].includes(issue.field)
+                          ? t(`fields.${issue.field}`)
+                          : at(issue.field)}{" "}
+                      →
+                    </button>
+                  ))}
+                </>
+              )}
+              <label>
+                {tr("common.outputLanguage")}
+                <select
+                  value={language}
+                  onChange={(event) => setLanguage(event.target.value)}
+                >
+                  <option value="ar">العربية</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+              <button
+                className="primary"
+                disabled={busy || !check?.valid}
+                onClick={() =>
+                  void run(async () => {
+                    const results = await api<Output[]>(
+                      `/projects/${detail.project.id}/generate`,
+                      {
+                        method: "POST",
+                        body: send({
+                          types: [outputType],
+                          output_language: language,
+                        }),
+                      },
+                    );
+                    await reloadProject();
+                    setStep("outputs");
+                    setReview(results[0]);
+                  }, tr("ui.drafts_generated_and_ready_for_review"))
+                }
+              >
+                {t("generate")}
+              </button>
+            </section>
+          )}
+        </MarketingPreview>
       )}
       {step === "outputs" && (
         <section className="panel form-panel">

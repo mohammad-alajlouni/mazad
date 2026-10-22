@@ -781,10 +781,14 @@
       "properties": "Add at least one property",
       "agent_name": "Selling agent name",
       "property_selection": "Correct property selection",
-      "property_limit": "Select no more than 100 properties"
+      "property_limit": "Select no more than 100 properties",
+      "headline": "Marketing headline",
+      "tagline": "Tagline",
+      "court_name": "Court supervising with Infath"
     },
     "tooLong": "{field}: shorten to {limit} characters to fit the board.",
-    "auctionHelp": "Use the saved auction details, including the legal announcement, booklet link, contact number and schedule."
+    "auctionHelp": "Use the saved auction details, including the legal announcement, booklet link, contact number and schedule.",
+    "courtHelp": "Shown in the board's supervision line as in the guide: “Supervised by the Support and Liquidation Center - Infath, and …”. Leave empty to end the line at Infath."
   },
   "social": {
     "home": "Social posts",
@@ -830,7 +834,9 @@
       "property_limit": "Select at most 30 properties",
       "headline": "Marketing headline",
       "campaign_image": "Auction announcement photo",
-      "main_image": "Property main photo"
+      "main_image": "Property main photo",
+      "tagline": "Tagline",
+      "court_name": "Court supervising with Infath"
     },
     "tooLong": "{field}: shorten to {limit} characters to fit the board.",
     "auctionHelp": "Enter the schedule, contact, licence and legal announcement exactly as supplied. The companion text includes the legal announcement and licence and should be reviewed and published with the images.",
@@ -1388,5 +1394,29 @@
     "defects": "Defects",
     "features": "Features",
     "features_hint": "Empty: the booklet's features."
+  },
+  "liveMarketing": {
+    "open": "Preview",
+    "close": "Close preview",
+    "boardTitle": "Live board preview",
+    "postTitle": "Live post preview",
+    "help": "The approved design from the auctions marketing and visual identity guide with your current values; it updates as you type.",
+    "updating": "Updating…",
+    "current": "Preview up to date",
+    "failed": "Update failed",
+    "loading": "Preparing preview…",
+    "empty": "Add a property to see the preview.",
+    "page": "Preview page",
+    "previous": "Previous page",
+    "next": "Next page",
+    "announcement": "Auction announcement",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "imageAlt": "Preview of page {number}",
+    "retry": "Retry",
+    "retryHelp": "The displayed preview is outdated. The latest change could not be rendered.",
+    "overflow": "These values are longer than their place in the approved design (shown at the smallest allowed size). Shorten them before generating:",
+    "boardNote": "Temporary preview at 1:10. Export places the guide's original design (vectors) beneath the values.",
+    "postNote": "Temporary preview at the post's real size. Export places the guide's original design beneath the values."
   }
 }

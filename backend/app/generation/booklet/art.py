@@ -328,7 +328,7 @@ def original_pdf_artwork(pdf, content, document=None):
     """
     import pymupdf
 
-    if not content.get("booklet") and not content.get("forms"):
+    if not any(content.get(k) for k in ("booklet", "forms", "marketing")):
         return pdf
     stamps = vector_boxes(document) if document is not None else []
     sources = {}
@@ -350,10 +350,11 @@ def original_pdf_artwork(pdf, content, document=None):
             for name, x0, y0, x1, y1 in reversed(stamps[n] if n < len(stamps) else []):
                 output[n].show_pdf_page(
                     pymupdf.Rect(x0, y0, x1, y1),
-                    # The official forms' pages are named by their own path.
+                    # The official forms' pages, the guide's boards and posts
+                    # are named by their own path.
                     source(
                         f"{name}.pdf"
-                        if name.startswith("forms/")
+                        if name.startswith(("forms/", "marketing/"))
                         else f"booklet-art/vector/{name}.pdf"
                     ),
                     0,

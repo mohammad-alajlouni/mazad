@@ -1,0 +1,570 @@
+"""The guide's boards and social posts, with the auction's values.
+
+«دليل التسويق والهوية البصرية للمزادات» (V2) shows each design once, with
+sample values (pp. 28-37). scripts/extract_marketing_art.py took each design
+out of the guide as it is, without its samples, and measured every sample:
+its font, size, colour, baseline, alignment and room (layout.json). A page
+here is that design, unchanged, with the auction's values set exactly where
+and as the guide sets its samples: the same font and size (smaller only when
+a value is longer than the room the guide gives it), the same colour, on the
+same baseline and edge.
+"""
+
+import json
+import re
+from functools import lru_cache
+
+from ..booklet.assets import ASSETS
+from ..booklet.formatting import MONTHS_AR, as_date, as_time, number
+
+ART = ASSETS / "marketing"
+# The guide's fonts, by the name it embeds. Its date in the Instagram post and
+# the story is set in LamaSans SemiBold, a weight the identity does not ship:
+# Medium, the nearest, stands in.
+FONT_FILES = {
+    "RuaqArabic-Light": "identity/RuaqArabic-Light.ttf",
+    "RuaqArabic-Medium": "identity/RuaqArabic-Medium.ttf",
+    "RuaqArabic-Bold": "identity/RuaqArabic-Bold.ttf",
+    "LamaSans-Light": "identity/LamaSans-Light.ttf",
+    "LamaSans-Regular": "LamaSans-Regular.otf",
+    "LamaSans-Medium": "identity/LamaSans-Medium.ttf",
+    "LamaSans-SemiBold": "identity/LamaSans-Medium.ttf",
+    "LamaSans-Bold": "LamaSans-Bold.otf",
+    "LamaSans-Black": "identity/LamaSans-Black.ttf",
+}
+DEFAULT_FONT = {
+    ("r", 400): "RuaqArabic-Light",
+    ("r", 500): "RuaqArabic-Medium",
+    ("r", 700): "RuaqArabic-Bold",
+    ("l", 400): "LamaSans-Light",
+    ("l", 500): "LamaSans-Medium",
+    ("l", 700): "LamaSans-Bold",
+    ("l", 900): "LamaSans-Black",
+}
+# A value longer than the guide's room is set smaller, down to this share of
+# the guide's size; beyond it the value is reported at data entry.
+SMALLEST = 0.6
+MARGIN = 1.03  # shaping differences between the measurer and the page
+# The guide's day names (its boards write الاثنين without hamza).
+WEEKDAYS = ("الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد")
+# Figures and Latin words, which the guide (and Ruaq, without Latin
+# letters) leaves to Lama.
+FIGURES = re.compile(r"[0-9A-Za-z]+(?:[:/.,٫'_\-]*[ ]?[0-9A-Za-z]+)*")
+
+
+@lru_cache(maxsize=1)
+def layout():
+    return json.loads((ART / "layout.json").read_text())
+
+
+@lru_cache(maxsize=16)
+def font(name):
+    from PIL import ImageFont
+
+    return ImageFont.truetype(str(ASSETS / FONT_FILES[name]), 100)
+
+
+@lru_cache(maxsize=32)
+def dark_behind(name, box):
+    """Whether the design is dark under a box (a white logo stands there)."""
+    from PIL import Image, ImageStat
+
+    image = Image.open(ART / f"{name}.png").convert("L")
+    k = image.width / layout()[name]["size"][0]
+    x0, y0, x1, y1 = (round(v * k) for v in box)
+    return ImageStat.Stat(image.crop((x0, y0, x1, y1))).mean[0] < 128
+
+
+def board_template(size, auction_type):
+    from ...services.banners import SIZES
+
+    kind = "electronic" if auction_type == "electronic" else "physical"
+    return f"board-{SIZES[size]['layout']}-{kind}"
+
+
+def post_template(config):
+    if config["format"] == "story":
+        return f"story-announcement-{config['theme']}"
+    name = "instagram" if config["format"] == "instagram" else "x"
+    return f"{name}-{config['post_kind']}-{config['theme']}"
+
+
+# Values, written as the guide writes its samples.
+
+
+def slash(day):
+    return f"{day.year}/{day.month:02d}/{day.day:02d}" if day else ""
+
+
+def hours(value, minutes=False, short=False):
+    """04 مساء (the physical boards), 10:00 م (the electronic ones)."""
+    moment = as_time(value)
+    if not moment:
+        return ""
+    hour = moment.hour % 12 or 12
+    figure = (
+        f"{hour:02d}:{moment.minute:02d}" if minutes or moment.minute else f"{hour:02d}"
+    )
+    if short:
+        return f"{figure} {'ص' if moment.hour < 12 else 'م'}"
+    return f"{figure} {'صباحا' if moment.hour < 12 else 'مساء'}"
+
+
+def days(a):
+    if a.get("auction_type") == "electronic":
+        start = as_date(a.get("auction_start_date"))
+        return start, as_date(a.get("auction_end_date")) or start
+    day = as_date(a.get("auction_date")) or as_date(a.get("auction_start_date"))
+    return day, day
+
+
+def day_line(a):
+    """الخميس 11 - 14 مارس 2024, as the X post writes it."""
+    start, end = days(a)
+    if not start:
+        return ""
+    month = MONTHS_AR[start.month - 1]
+    if not end or end == start:
+        text = f"{start.day} {month} {start.year}"
+    elif (start.year, start.month) == (end.year, end.month):
+        text = f"{start.day} - {end.day} {month} {start.year}"
+    else:
+        text = f"{start.day} {month} - {end.day} {MONTHS_AR[end.month - 1]} {end.year}"
+    return f"{WEEKDAYS[start.weekday()]} {text}"
+
+
+def place(a):
+    if a.get("auction_type") == "electronic":
+        return a.get("electronic_platform_name") or ""
+    return a.get("physical_location") or ""
+
+
+def bare_name(a):
+    """The auction's name beside the guide's fixed «مـزاد» (and after «في
+    مزاد»): a name that starts with the word itself does not repeat it."""
+    name = (a.get("auction_name") or "").strip()
+    return re.sub(r"^مزاد\s+", "", name) or name
+
+
+def area(value):
+    text = number(value)
+    return f"{text} متر مربع" if text else ""
+
+
+def supervision(a, court):
+    """بإشراف مركز الإسناد والتصفية - إنفاذ، و <the court>: the guide's line,
+    with the court in place of its dots (the line ends at Infath without
+    one)."""
+    if a.get("supervisor") == "other" and a.get("supervisor_title"):
+        body = f"بإشراف {a['supervisor_title']}"
+    else:
+        body = "بإشراف مركز الإسناد والتصفية - إنفاذ"
+    return f"{body}، و{court}" if court else body
+
+
+def values(project, item, count, extra):
+    """Every slot's value for one page (item is None on an announcement)."""
+    a = project.get("auction") or {}
+    d = (item or {}).get("property_data") or {}
+    start, end = days(a)
+    start_time, end_time = a.get("start_time"), a.get("end_time")
+    times = " - ".join(t for t in (hours(start_time, True), hours(end_time, True)) if t)
+    return {
+        "property_type": d.get("property_type") or "",
+        "supervision": supervision(a, extra.get("court_name")),
+        "phone": a.get("auction_contact_number") or "",
+        "phone_text": a.get("auction_contact_number") or "",
+        "date": slash(start),
+        "time": hours(start_time),
+        "day_label": f"يوم {WEEKDAYS[start.weekday()]}" if start else "",
+        "start_label": f"يبدأ {WEEKDAYS[start.weekday()]}" if start else "",
+        "start_date": slash(start),
+        "start_time": f"الساعة {hours(start_time, True, True)}" if start_time else "",
+        "end_label": f"ينتهي {WEEKDAYS[end.weekday()]}" if end else "",
+        "end_date": slash(end),
+        "end_time": f"الساعة {hours(end_time, True, True)}" if end_time else "",
+        "place": place(a),
+        "auction_name": bare_name(a),
+        "license": a.get("license_number") or "",
+        "district": d.get("district") or "",
+        "usage": d.get("usage") or "",
+        "area": area(d.get("area")),
+        "plan_number": d.get("plan_number") or "",
+        "plot_number": d.get("plot_number") or "",
+        "deed": d.get("deed_number") or "",
+        "execution": d.get("execution_request_number") or "",
+        "city": d.get("city") or "",
+        "count": str(count),
+        "time_line": times,
+        "date_line": day_line(a),
+        "place_line": f"المكان/ {place(a)}" if place(a) else "",
+        "headline": extra.get("headline") or "",
+        "tagline": extra.get("tagline") or "",
+        "auction_line": f"في مزاد {bare_name(a)}" if bare_name(a) else "",
+    }
+
+
+# Setting a value in its slot.
+
+
+def main_font(slot):
+    return slot.get("font") or DEFAULT_FONT[(slot["family"], slot["weight"])]
+
+
+def runs(text, slot):
+    """The value in runs of one font, (text, font, size, spacing): figures in
+    Lama, as the guide sets them (unless the slot's figures are Ruaq's, as the
+    phone's and the licence's are), each with the guide's tracking."""
+    main = main_font(slot)
+    spacing = slot.get("spacing", slot.get("tracking", 0) * slot["size"])
+    if slot["family"] == "l" or slot.get("digits") == "r":
+        return [(text, main, slot["size"], spacing)]
+    figures = slot.get("lama_font") or "LamaSans-Medium"
+    size = slot.get("lama_size") or slot["size"]
+    tracked = slot.get("lama_tracking", 0) * size
+    out, at = [], 0
+    for match in FIGURES.finditer(text):
+        if match.start() > at:
+            out.append((text[at : match.start()], main, slot["size"], spacing))
+        out.append((match.group(), figures, size, tracked))
+        at = match.end()
+    if at < len(text):
+        out.append((text[at:], main, slot["size"], spacing))
+    return out
+
+
+def width(text, slot, scale=1.0):
+    """The value's width in the guide's points at scale."""
+    parts = runs(text, slot)
+    total = sum(
+        font(name).getlength(part) / 100 * size * MARGIN + spacing * len(part)
+        for part, name, size, spacing in parts
+    )
+    words = slot.get("word_spacing", 0) * slot["size"] * text.count(" ")
+    return (total + words - parts[-1][3]) * scale
+
+
+def wrap(text, slot, scale, lines):
+    """Words broken into at most `lines` lines of the slot's room, or None."""
+    out = [""]
+    for word in text.split():
+        trial = f"{out[-1]} {word}".strip()
+        if width(trial, slot, scale) <= slot["maxw"] or not out[-1]:
+            out[-1] = trial
+        elif len(out) < lines:
+            out.append(word)
+        else:
+            return None
+    if any(width(line, slot, scale) > slot["maxw"] for line in out):
+        return None
+    return out
+
+
+def fitted(text, slot):
+    """(lines, scale, fits): the value on the slot's lines, as large as the
+    guide sets it or smaller to fit, down to SMALLEST."""
+    count = len(slot["bases"])
+    scale = 1.0
+    while True:
+        lines = wrap(text, slot, scale, count) if count > 1 else [text]
+        if lines and (count > 1 or width(text, slot, scale) <= slot["maxw"]):
+            return lines, scale, True
+        if scale <= SMALLEST:
+            return (lines or [text]), SMALLEST, False
+        scale = max(SMALLEST, round(scale - 0.02, 2))
+
+
+def text_block(name, slot, value, geometry):
+    k, ky, ox, oy = geometry
+    lines, scale, fits = fitted(value, slot)
+    bases = slot["bases"]
+    if len(lines) < len(bases):
+        # Fewer lines than the guide's: they keep the middle of its lines.
+        middle = (bases[0] + bases[-1]) / 2
+        step = bases[1] - bases[0] if len(bases) > 1 else 0
+        first = middle - step * (len(lines) - 1) / 2
+        bases = [first + step * n for n in range(len(lines))]
+    size = slot["size"] * scale
+    return {
+        "key": slot["key"],
+        "fits": fits,
+        "align": slot["align"],
+        "x": round(ox + slot["x"] * k, 3),
+        "lines": [
+            {"text": line, "base": round(oy + base * ky, 3)}
+            for line, base in zip(lines, bases, strict=True)
+        ],
+        "font": main_font(slot),
+        "family": slot["family"],
+        "size": round(size * k, 3),
+        "runs": [
+            [
+                {
+                    "text": part,
+                    "font": f,
+                    "size": round(s * scale * k, 3),
+                    "spacing": round(sp * scale * k, 3),
+                }
+                for part, f, s, sp in runs(line, slot)
+            ]
+            for line in lines
+        ],
+        "color": slot["color"],
+        "word_spacing": round(slot.get("word_spacing", 0) * size * k, 3),
+        "spacing": round(
+            slot.get("spacing", slot.get("tracking", 0) * slot["size"]) * scale * k, 3
+        ),
+        "width": round(slot["maxw"] * k, 3),
+    }
+
+
+def qr_path(url):
+    """The booklet link's QR code as a path of modules (no quiet zone: the
+    guide's box is the code's own edge), and its module count."""
+    import qrcode
+
+    from ..booklet.codes import qr
+
+    qr(url)  # validates the destination
+    code = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=0)
+    code.add_data(url)
+    code.make(fit=True)
+    rows = code.get_matrix()
+    d = "".join(
+        f"M{x} {y}h1v1h-1z"
+        for y, row in enumerate(rows)
+        for x, dark in enumerate(row)
+        if dark
+    )
+    return d, len(rows)
+
+
+def page(name, size, value_of, images):
+    """One output page: name's design across size (points), its slots set.
+
+    The design fills the page's width; a page of another proportion (the
+    15 x 5 m board) has it centred on its white. A difference under 1 % (the
+    guide's drawings are not cut to the exact ratio) is taken up by the
+    design itself.
+    """
+    design = layout()[name]
+    aw, ah = design["size"]
+    pw, ph = size
+    k = pw / aw
+    if abs(ph / (ah * k) - 1) < 0.01:
+        ky, oy = ph / ah, 0.0
+    else:
+        ky, oy = k, (ph - ah * k) / 2
+    geometry = (k, ky, 0.0, oy)
+    out = {
+        "name": name,
+        "size": [round(pw, 3), round(ph, 3)],
+        "art": [0.0, round(oy, 3), round(pw, 3), round(ah * ky, 3)],
+        "texts": [],
+        "qr": None,
+        "logo": None,
+        "photo": None,
+        "accent": [],
+    }
+
+    def box(b):
+        x0, y0, x1, y1 = b
+        return [
+            round(x0 * k, 3),
+            round(oy + y0 * ky, 3),
+            round((x1 - x0) * k, 3),
+            round((y1 - y0) * ky, 3),
+        ]
+
+    for slot in design["slots"]:
+        kind, key = slot["kind"], slot["key"]
+        if kind == "text":
+            value = value_of.get(key, "")
+            if value:
+                out["texts"].append(text_block(name, slot, value, geometry))
+        elif kind == "qr" and images.get("qr"):
+            d, n = qr_path(images["qr"])
+            out["qr"] = {"box": box(slot["box"]), "path": d, "modules": n}
+        elif kind == "image" and images.get("logo"):
+            from ..booklet.art import logo_fit
+
+            x, y, w, h = box(slot["box"])
+            white = dark_behind(name, tuple(slot["box"]))
+            fit = logo_fit(images["logo"], w, h, white)
+            out["logo"] = {
+                "src": fit["src"],
+                "box": [
+                    round(x + (w - fit["width"]) / 2, 3),
+                    round(y + (h - fit["height"]) / 2, 3),
+                    fit["width"],
+                    fit["height"],
+                ],
+            }
+        elif kind == "photo" and images.get("photo"):
+            out["photo"] = {
+                "src": images["photo"],
+                "frame": slot["box"],
+                "clip": slot["path"],
+            }
+        elif kind == "accent":
+            out["accent"].append({"path": slot["path"], "color": slot["color"]})
+    out["view"] = [aw, ah]
+    return out
+
+
+def banner_pages(project, items, config):
+    """One board per property, in the size chosen, as the guide's p. 28-33."""
+    from ...services.banners import SIZES
+
+    a = project.get("auction") or {}
+    name = board_template(config["size"], a.get("auction_type"))
+    spec = SIZES[config["size"]]
+    size = (spec["width_mm"] * 72 / 25.4, spec["height_mm"] * 72 / 25.4)
+    images = {"qr": a.get("booklet_url"), "logo": project.get("agent_logo")}
+    return [
+        page(name, size, values(project, item, len(items), config), images)
+        | {"item": item.get("title") or ""}
+        for item in items
+    ]
+
+
+def photo_of(item):
+    """A property's main photograph (its first, the main one leading)."""
+    assets = item.get("image_assets") or []
+    return (assets[0].get("src") if assets else "") or (item.get("images") or [""])[0]
+
+
+def social_pages(project, items, config, width_px, height_px):
+    """The guide's post (p. 35-37): one announcement, or one per property."""
+    name = post_template(config)
+    size = (width_px * 0.75, height_px * 0.75)
+    base = {"logo": project.get("agent_logo")}
+    if config["post_kind"] == "property" and config["format"] != "story":
+        return [
+            page(
+                name,
+                size,
+                values(project, item, len(items), config),
+                base | {"photo": photo_of(item)},
+            )
+            | {"item": item.get("title") or ""}
+            for item in items
+        ]
+    cover = project.get("cover_image") or next(
+        (photo_of(i) for i in items if photo_of(i)), ""
+    )
+    return [
+        page(
+            name,
+            size,
+            values(project, None, len(items), config),
+            base | {"photo": cover},
+        )
+        | {"item": ""}
+    ]
+
+
+def overflows(pages):
+    """Values longer than their room even at the smallest size: (page, key)."""
+    return [
+        {"page": n, "item": p.get("item", ""), "field": t["key"]}
+        for n, p in enumerate(pages)
+        for t in p["texts"]
+        if not t["fits"]
+    ]
+
+
+def marketing_content(content):
+    """The pages of a banners or social output (content as build_content
+    stores it), and the fonts they use."""
+    project, items = content["project"], content["items"]
+    if content.get("social"):
+        s = content["social"]
+        pages = social_pages(project, items, s, s["width_px"], s["height_px"])
+    else:
+        pages = banner_pages(project, items, content["banner"])
+    used = {
+        name
+        for p in pages
+        for t in p["texts"]
+        for name in [t["font"], *(r["font"] for line in t["runs"] for r in line)]
+    }
+    return {"pages": pages, "fonts": {n: FONT_FILES[n] for n in sorted(used)}}
+
+
+# Slots and the entries they show, for the messages at data entry.
+FIELDS = {
+    "property_type": "property_type",
+    "district": "district",
+    "usage": "usage",
+    "area": "area",
+    "plan_number": "plan_number",
+    "plot_number": "plot_number",
+    "deed": "deed_number",
+    "execution": "execution_request_number",
+    "city": "city",
+    "auction_name": "auction_name",
+    "auction_line": "auction_name",
+    "license": "license_number",
+    "phone": "auction_contact_number",
+    "phone_text": "auction_contact_number",
+    "headline": "headline",
+    "tagline": "tagline",
+    "supervision": "court_name",
+}
+
+
+ITEM_FIELDS = {
+    "property_type",
+    "district",
+    "usage",
+    "area",
+    "plan_number",
+    "plot_number",
+    "deed_number",
+    "execution_request_number",
+    "city",
+}
+
+
+def field_of(key, auction):
+    """The entry a slot shows (None for values the booklet writes itself)."""
+    if key in ("place", "place_line"):
+        return (
+            "electronic_platform_name"
+            if auction.get("auction_type") == "electronic"
+            else "physical_location"
+        )
+    return FIELDS.get(key)
+
+
+def review(project, items, banner=None, social=None):
+    """Values too long for their place in the guide's design even at the
+    smallest size: (field, item title or None, characters that fit)."""
+    a = project.get("auction") or {}
+    if social:
+        pages = social_pages({**project, "agent_logo": ""}, items, social, 1080, 1080)
+        name = post_template(social)
+    else:
+        pages = banner_pages({**project, "agent_logo": ""}, items, banner)
+        name = board_template(banner["size"], a.get("auction_type"))
+    slots = {s["key"]: s for s in layout()[name]["slots"]}
+    found = []
+    for p in pages:
+        for t in p["texts"]:
+            field = field_of(t["key"], a)
+            if t["fits"] or not field:
+                continue
+            text = " ".join(line["text"] for line in t["lines"])
+            room = slots[t["key"]]["maxw"] * len(slots[t["key"]]["bases"])
+            fit = int(len(text) * room / width(text, slots[t["key"]], SMALLEST))
+            entry = {
+                "field": field,
+                "item": p.get("item") or None,
+                "limit": max(1, fit),
+            }
+            if field not in ITEM_FIELDS:
+                entry["item"] = None
+            if entry not in found:
+                found.append(entry)
+    return found

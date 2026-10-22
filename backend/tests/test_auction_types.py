@@ -26,7 +26,7 @@ def test_type_fields_readiness_and_all_publications(admin, kind):
         )
     assert (
         admin.put(
-            f"/api/projects/{p}/social-config", json={"headline": "Auction opportunity"}
+            f"/api/projects/{p}/social-config", json={"headline": "فرص مميزة"}
         ).status_code
         == 200
     )
@@ -68,7 +68,12 @@ def test_type_fields_readiness_and_all_publications(admin, kind):
             page.get_pixmap(matrix=pymupdf.Matrix(1, 1)).save(
                 out / f"{kind}-{output['output_type']}.png"
             )
-            assert ("PLATFORM_TEST" in text) == (kind != "physical")
+            if output["output_type"] == "project_booklet":
+                assert ("PLATFORM_TEST" in text) == (kind != "physical")
+            else:
+                # The guide's boards and posts for physical and hybrid
+                # auctions name the venue; the electronic ones the platform.
+                assert ("PLATFORM_TEST" in text) == (kind == "electronic")
             assert ("VENUE_TEST" in text) == (kind != "electronic")
         with SessionLocal() as db:
             a = db.get(GeneratedOutput, output["id"]).content["project"]["auction"]

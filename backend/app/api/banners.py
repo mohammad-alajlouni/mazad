@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from ..auth import current_user
 from ..db import get_db
 from ..banner_schemas import BannerConfig
@@ -44,3 +44,15 @@ def configure(id: str, body: BannerConfig, db=Depends(get_db)):
     invalidate(db, project, output_types={"banners"})
     db.commit()
     return project.banner_config
+
+
+from ..services.marketing_preview import MarketingPreviewInput, preview  # noqa: E402
+
+
+@router.post("/projects/{id}/marketing-preview")
+def marketing_preview(
+    id: str, body: MarketingPreviewInput, response: Response, db=Depends(get_db)
+):
+    """The board or post being prepared, as the forms stand (unsaved)."""
+    response.headers["Cache-Control"] = "no-store, private"
+    return preview(db, get_project(db, id), body)

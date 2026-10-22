@@ -10,8 +10,8 @@ FORMATS = {
 }
 
 
-def social_configuration(project):
-    data = dict(project.social_config or {})
+def social_configuration(project, draft=None):
+    data = dict(project.social_config or {} if draft is None else draft)
     if project.workspace_type == "project" and not data.get("headline"):
         name = (project.auction or {}).get("auction_name", "")
         data["headline"] = (
@@ -99,6 +99,10 @@ def review_social(db, project):
                 "images",
                 item=item.title,
             )
+    if selected:
+        from .banners import design_overflows
+
+        errors += design_overflows(project, selected, social=config.model_dump())
     return {
         "valid": not errors,
         "missing": errors,

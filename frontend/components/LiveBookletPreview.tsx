@@ -102,7 +102,7 @@ type Draft = {
   };
 };
 
-async function smallImage(file: File) {
+export async function smallImage(file: File) {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(
     1,

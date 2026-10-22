@@ -47,6 +47,8 @@ for (const locale of ["ar", "en"] as const)
       "project",
       {},
       {
+        // A name the guide's boards and posts hold beside «مـزاد».
+        auction_name: "مزاد الريان",
         auction_date: "2026-10-10",
         start_time: "16:00",
         physical_location: "الرياض",

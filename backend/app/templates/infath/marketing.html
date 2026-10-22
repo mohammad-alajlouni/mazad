@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+{#- The guide's boards and social posts (generation/marketing/compose.py):
+    each page is the guide's design (placed beneath the text as vectors on
+    export, its picture in the live preview) with the auction's values set
+    where and as the guide sets its samples. -#}
+<style>
+{% for name, file in marketing.fonts.items() %}@font-face{font-family:'{{ name }}';src:url('{{ asset(file) }}')}
+{% endfor %}
+{% set first = marketing.pages[0] %}
+@page{size:{{ first.size[0] }}pt {{ first.size[1] }}pt;margin:0}
+*{box-sizing:border-box}
+body{margin:0}
+.page{position:relative;overflow:hidden;break-after:page}
+.page:last-child{break-after:auto}
+.art,.vec,.layer,.t{position:absolute}
+.t{white-space:nowrap;margin:0}
+.t span{line-height:0}
+</style>
+</head>
+<body>
+{#- One line whose baseline sits on `base` (Ruaq's line box puts the baseline
+    0.366 em below its middle, Lama's 0.255 em; every weight alike). -#}
+{% macro line(t, l, runs, w) -%}
+{%- set L = t.size * (1.874 if t.family == 'r' else 1.01) -%}
+{%- set top = l.base - L / 2 - t.size * (0.366 if t.family == 'r' else 0.255) -%}
+<p class="t" dir="rtl" data-slot="{{ t.key }}" style="top:{{ '%.3f' % top }}pt;font-family:'{{ t.font }}';font-size:{{ t.size }}pt;line-height:{{ '%.3f' % L }}pt;color:{{ t.color }};
+{%- if t.spacing %}letter-spacing:{{ t.spacing }}pt;{% endif %}
+{%- if t.word_spacing %}word-spacing:{{ t.word_spacing }}pt;{% endif %}
+{%- if t.align == 'right' %}right:{{ '%.3f' % (w - t.x - t.spacing) }}pt;text-align:right
+{%- elif t.align == 'center' %}left:{{ '%.3f' % (t.x - 500 + t.spacing / 2) }}pt;width:1000pt;text-align:center
+{%- else %}left:{{ t.x }}pt;text-align:left{% endif %}">
+{%- for r in runs %}{% if r.font == t.font %}{{ r.text }}{% else %}<span style="font-family:'{{ r.font }}';font-size:{{ r.size }}pt;letter-spacing:{{ r.spacing }}pt">{{ '⁦' ~ r.text ~ '⁩' }}</span>{% endif %}{% endfor -%}
+</p>
+{%- endmacro %}
+{% for p in marketing.pages %}{% set w, h = p.size %}{% set ax, ay, aw, ah = p.art %}{% set vw, vh = p.view %}
+<section class="page" data-kind="{{ p.name }}" style="width:{{ w }}pt;height:{{ h }}pt">
+{% if preview %}<img class="art" alt="" src="{{ asset('marketing/' ~ p.name ~ '.png') }}" style="left:{{ ax }}pt;top:{{ ay }}pt;width:{{ aw }}pt;height:{{ ah }}pt">
+{% else %}<div class="vec" data-vector="marketing/{{ p.name }}" style="left:{{ ax }}pt;top:{{ ay }}pt;width:{{ aw }}pt;height:{{ ah }}pt"></div>{% endif %}
+{% if p.photo or p.accent %}<svg class="layer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ vw }} {{ vh }}" preserveAspectRatio="none" style="left:{{ ax }}pt;top:{{ ay }}pt;width:{{ aw }}pt;height:{{ ah }}pt">
+{%- if p.photo %}{% set x0, y0, x1, y1 = p.photo.frame %}<defs><clipPath id="photo-{{ loop.index }}"><path d="{{ p.photo.clip }}"/></clipPath></defs><image clip-path="url(#photo-{{ loop.index }})" href="{{ p.photo.src }}" x="{{ x0 }}" y="{{ y0 }}" width="{{ x1 - x0 }}" height="{{ y1 - y0 }}" preserveAspectRatio="xMidYMid slice"/>{% endif %}
+{%- for a in p.accent %}<path d="{{ a.path }}" fill="{{ a.color }}"/>{% endfor -%}
+</svg>{% endif %}
+{% if p.qr %}{% set x, y, qw, qh = p.qr.box %}<svg class="layer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ p.qr.modules }} {{ p.qr.modules }}" shape-rendering="crispEdges" style="left:{{ x }}pt;top:{{ y }}pt;width:{{ qw }}pt;height:{{ qh }}pt"><path d="{{ p.qr.path }}" fill="#ffffff"/></svg>{% endif %}
+{% if p.logo %}{% set x, y, lw, lh = p.logo.box %}<img class="layer" alt="" src="{{ p.logo.src }}" style="left:{{ x }}pt;top:{{ y }}pt;width:{{ lw }}pt;height:{{ lh }}pt">{% endif %}
+{% for t in p.texts %}{% for l in t.lines %}{{ line(t, l, t.runs[loop.index0], w) }}
+{% endfor %}{% endfor %}
+</section>
+{% endfor %}
+</body>
+</html>

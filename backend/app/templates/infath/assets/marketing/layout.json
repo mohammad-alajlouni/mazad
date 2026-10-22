@@ -1,0 +1,3975 @@
+{
+ "board-panoramic-physical": {
+  "size": [
+   562.765,
+   168.265
+  ],
+  "slots": [
+   {
+    "key": "qr",
+    "kind": "qr",
+    "box": [
+     22.112,
+     25.523,
+     55.312,
+     58.723
+    ]
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "center",
+    "x": 63.561,
+    "bases": [
+     76.382
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.664,
+    "color": "#ffffff",
+    "maxw": 78,
+    "sample": "فيلا سكنية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "supervision",
+    "kind": "text",
+    "align": "right",
+    "x": 468.367,
+    "bases": [
+     75.793
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.243,
+    "color": "#ffffff",
+    "maxw": 380.68,
+    "sample": "إنفاذ، و .......................- بإشراف مركز الإسناد والتصفية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "phone",
+    "kind": "text",
+    "align": "right",
+    "x": 550.397,
+    "bases": [
+     123.936
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 30.45,
+    "color": "#121a45",
+    "spacing": 9.377,
+    "lama_size": 30.45,
+    "digits": "r",
+    "maxw": 215
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "right",
+    "x": 317.69,
+    "bases": [
+     107.713
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.482,
+    "color": "#121a45",
+    "maxw": 57.56,
+    "sample": "2023/11/01",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0389,
+    "lama_size": 5.482,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0389
+   },
+   {
+    "key": "time",
+    "kind": "text",
+    "align": "right",
+    "x": 316.983,
+    "bases": [
+     120.523
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 6.539,
+    "color": "#121a45",
+    "maxw": 44.19,
+    "sample": "04 مساء",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 5.482,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "word_spacing": 0.1784
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "center",
+    "x": 251.41,
+    "bases": [
+     120.062
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 6.336,
+    "color": "#121a45",
+    "maxw": 70,
+    "sample": "قاعة جدة البحر",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 179.586,
+    "bases": [
+     120.062
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 8.528,
+    "color": "#00365d",
+    "maxw": 40,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     82.812,
+     108.423,
+     137.812,
+     128.423
+    ]
+   },
+   {
+    "key": "license",
+    "kind": "text",
+    "align": "center",
+    "x": 44.055,
+    "bases": [
+     120.502
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 9.021,
+    "color": "#434245",
+    "maxw": 62,
+    "sample": "4 2 0 00 00 1 07",
+    "font": "RuaqArabic-Medium",
+    "digits": "r",
+    "spacing": 1.382
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "center",
+    "x": 455.493,
+    "bases": [
+     161.143
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 7.755,
+    "color": "#121a45",
+    "maxw": 46,
+    "sample": "النور",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "center",
+    "x": 398.869,
+    "bases": [
+     161.663
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 7.755,
+    "color": "#121a45",
+    "maxw": 56.22,
+    "sample": "9271.71 متر مربع",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 7.755,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0061
+   },
+   {
+    "key": "plan_number",
+    "kind": "text",
+    "align": "center",
+    "x": 337.676,
+    "bases": [
+     162.343
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 7.755,
+    "color": "#121a45",
+    "maxw": 51,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 7.755,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "plot_number",
+    "kind": "text",
+    "align": "center",
+    "x": 281.228,
+    "bases": [
+     162.343
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 7.755,
+    "color": "#121a45",
+    "maxw": 51,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 7.755,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "center",
+    "x": 207.275,
+    "bases": [
+     162.143
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 7.755,
+    "color": "#121a45",
+    "maxw": 73,
+    "sample": "430107012766",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0161,
+    "lama_size": 7.755,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0161
+   },
+   {
+    "key": "execution",
+    "kind": "text",
+    "align": "center",
+    "x": 115.461,
+    "bases": [
+     162.093
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 7.755,
+    "color": "#121a45",
+    "maxw": 87,
+    "sample": "154584687412365",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0074,
+    "lama_size": 7.755,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0074
+   }
+  ]
+ },
+ "board-panoramic-electronic": {
+  "size": [
+   562.765,
+   168.265
+  ],
+  "slots": [
+   {
+    "key": "qr",
+    "kind": "qr",
+    "box": [
+     21.412,
+     26.123,
+     51.613,
+     56.322
+    ]
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "center",
+    "x": 62.102,
+    "bases": [
+     76.143
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 11.583,
+    "color": "#ffffff",
+    "maxw": 76,
+    "sample": "فيلا سكنية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "supervision",
+    "kind": "text",
+    "align": "right",
+    "x": 465.095,
+    "bases": [
+     76.442
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 11.034,
+    "color": "#ffffff",
+    "maxw": 371.54,
+    "sample": "إنفاذ، و .......................- بإشراف مركز الإسناد والتصفية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "phone",
+    "kind": "text",
+    "align": "right",
+    "x": 553.332,
+    "bases": [
+     116.97
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 28.694,
+    "color": "#121a45",
+    "spacing": 8.835,
+    "lama_size": 28.694,
+    "digits": "r",
+    "maxw": 200
+   },
+   {
+    "key": "start_label",
+    "kind": "text",
+    "align": "right",
+    "x": 352.34,
+    "bases": [
+     103.433
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.334,
+    "color": "#121a45",
+    "maxw": 42,
+    "sample": "يبدأ الاثنين",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "start_date",
+    "kind": "text",
+    "align": "right",
+    "x": 351.857,
+    "bases": [
+     109.853
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 4.89,
+    "color": "#121a45",
+    "maxw": 42,
+    "sample": "2024/11/01",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0376,
+    "lama_size": 4.89,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0376
+   },
+   {
+    "key": "start_time",
+    "kind": "text",
+    "align": "right",
+    "x": 352.027,
+    "bases": [
+     115.093
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.334,
+    "color": "#121a45",
+    "maxw": 42,
+    "sample": "الساعة 10:00 م",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 4.89,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "word_spacing": 0.0909
+   },
+   {
+    "key": "end_label",
+    "kind": "text",
+    "align": "right",
+    "x": 296.911,
+    "bases": [
+     103.312
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.334,
+    "color": "#121a45",
+    "maxw": 50.06,
+    "sample": "ينتهي الخميس",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "end_date",
+    "kind": "text",
+    "align": "right",
+    "x": 296.59,
+    "bases": [
+     109.903
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 4.89,
+    "color": "#121a45",
+    "maxw": 47.71,
+    "sample": "2024/11/04",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0342,
+    "lama_size": 4.89,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0342
+   },
+   {
+    "key": "end_time",
+    "kind": "text",
+    "align": "right",
+    "x": 296.598,
+    "bases": [
+     115.072
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.334,
+    "color": "#121a45",
+    "maxw": 42,
+    "sample": "الساعة 06:00 م",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 4.89,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "word_spacing": 0.1737
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "center",
+    "x": 240.753,
+    "bases": [
+     116.072
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.238,
+    "color": "#121a45",
+    "maxw": 60,
+    "sample": "قاعة جدة البحر",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 176.207,
+    "bases": [
+     116.123
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 8.484,
+    "color": "#00365d",
+    "maxw": 39.03,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     79.812,
+     104.423,
+     134.812,
+     123.423
+    ]
+   },
+   {
+    "key": "license",
+    "kind": "text",
+    "align": "center",
+    "x": 41.378,
+    "bases": [
+     119.543
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.975,
+    "color": "#434245",
+    "maxw": 62,
+    "sample": "4 2 0 00 00 1 07",
+    "font": "RuaqArabic-Medium",
+    "digits": "r",
+    "spacing": 1.375
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "center",
+    "x": 470.449,
+    "bases": [
+     158.553
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.284,
+    "color": "#121a45",
+    "maxw": 50,
+    "sample": "النور",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "center",
+    "x": 409.962,
+    "bases": [
+     159.103
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.284,
+    "color": "#121a45",
+    "maxw": 60.06,
+    "sample": "9271.71 متر مربع",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 8.284,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0061
+   },
+   {
+    "key": "plan_number",
+    "kind": "text",
+    "align": "center",
+    "x": 344.595,
+    "bases": [
+     159.843
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 8.284,
+    "color": "#121a45",
+    "maxw": 55,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 8.284,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "plot_number",
+    "kind": "text",
+    "align": "center",
+    "x": 284.296,
+    "bases": [
+     159.843
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 8.284,
+    "color": "#121a45",
+    "maxw": 55,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 8.284,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "center",
+    "x": 205.3,
+    "bases": [
+     159.623
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 8.284,
+    "color": "#121a45",
+    "maxw": 78,
+    "sample": "430107012766",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0161,
+    "lama_size": 8.284,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0161
+   },
+   {
+    "key": "execution",
+    "kind": "text",
+    "align": "center",
+    "x": 107.222,
+    "bases": [
+     159.572
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 8.284,
+    "color": "#121a45",
+    "maxw": 93,
+    "sample": "154584687412365",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0074,
+    "lama_size": 8.284,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0074
+   }
+  ]
+ },
+ "board-landscape-physical": {
+  "size": [
+   437.311,
+   218.321
+  ],
+  "slots": [
+   {
+    "key": "qr",
+    "kind": "qr",
+    "box": [
+     23.511,
+     26.71,
+     76.511,
+     79.611
+    ]
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "center",
+    "x": 83.309,
+    "bases": [
+     115.421
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 17.811,
+    "color": "#ffffff",
+    "maxw": 100.05,
+    "sample": "فيـلا سكـنية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "supervision",
+    "kind": "text",
+    "align": "right",
+    "x": 341.535,
+    "bases": [
+     120.49
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.243,
+    "color": "#ffffff",
+    "maxw": 206.82,
+    "sample": "إنفاذ، و .......................- بإشراف مركز الإسناد والتصفية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "day_label",
+    "kind": "text",
+    "align": "right",
+    "x": 395.483,
+    "bases": [
+     84.56
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.988,
+    "color": "#ffffff",
+    "maxw": 39.18,
+    "sample": "يوم الأربعاء",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.2026
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "right",
+    "x": 395.188,
+    "bases": [
+     91.671
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.019,
+    "color": "#ffffff",
+    "maxw": 38.82,
+    "sample": "2023/11/01",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0389,
+    "lama_size": 5.019,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0389
+   },
+   {
+    "key": "time",
+    "kind": "text",
+    "align": "right",
+    "x": 395.726,
+    "bases": [
+     109.8
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 7.346,
+    "color": "#ffffff",
+    "maxw": 39.36,
+    "sample": "04 مساء",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 7.187,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.023,
+    "word_spacing": 0.0774
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 396.786,
+    "bases": [
+     131.31
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.659,
+    "color": "#ffffff",
+    "maxw": 40.46,
+    "sample": "قاعة جدة البحر",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "phone",
+    "kind": "text",
+    "align": "left",
+    "x": 21.278,
+    "bases": [
+     172.898
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 29.399,
+    "color": "#121a45",
+    "spacing": 9.053,
+    "lama_size": 29.399,
+    "digits": "r",
+    "maxw": 186.8
+   },
+   {
+    "key": "license",
+    "kind": "text",
+    "align": "center",
+    "x": 255.589,
+    "bases": [
+     174.14
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 9.848,
+    "color": "#434245",
+    "maxw": 62.23,
+    "sample": "4 2 0 00 00 1 07",
+    "font": "RuaqArabic-Medium",
+    "digits": "r",
+    "spacing": 1.509
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 400.986,
+    "bases": [
+     172.45
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 8.482,
+    "color": "#00365d",
+    "maxw": 39.91,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     302.711,
+     157.31,
+     358.711,
+     175.31
+    ]
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "center",
+    "x": 357.752,
+    "bases": [
+     207.26
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 6.268,
+    "color": "#121a45",
+    "maxw": 40,
+    "sample": "النور",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "usage",
+    "kind": "text",
+    "align": "center",
+    "x": 309.283,
+    "bases": [
+     208.231
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 6.268,
+    "color": "#121a45",
+    "maxw": 40,
+    "sample": "تجـــاري",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "center",
+    "x": 263.256,
+    "bases": [
+     207.68
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 6.268,
+    "color": "#121a45",
+    "maxw": 45.44,
+    "sample": "9271.71 متر مربع",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 6.268,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0061
+   },
+   {
+    "key": "plan_number",
+    "kind": "text",
+    "align": "center",
+    "x": 216.662,
+    "bases": [
+     208.231
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 6.268,
+    "color": "#121a45",
+    "maxw": 40,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 6.268,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "plot_number",
+    "kind": "text",
+    "align": "center",
+    "x": 169.373,
+    "bases": [
+     208.231
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 6.268,
+    "color": "#121a45",
+    "maxw": 40,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 6.268,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "center",
+    "x": 121.795,
+    "bases": [
+     208.07
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 6.268,
+    "color": "#121a45",
+    "maxw": 45.85,
+    "sample": "430107012766",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0161,
+    "lama_size": 6.268,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0161
+   },
+   {
+    "key": "execution",
+    "kind": "text",
+    "align": "center",
+    "x": 74.42,
+    "bases": [
+     208.031
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.036,
+    "color": "#01375c",
+    "maxw": 40.68,
+    "sample": "154584687412365",
+    "font": "LamaSans-Medium",
+    "tracking": -0.0558,
+    "lama_size": 5.036,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": -0.0558
+   }
+  ]
+ },
+ "board-landscape-electronic": {
+  "size": [
+   380.161,
+   189.741
+  ],
+  "slots": [
+   {
+    "key": "qr",
+    "kind": "qr",
+    "box": [
+     22.37,
+     30.19,
+     61.57,
+     69.39
+    ]
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "center",
+    "x": 75.701,
+    "bases": [
+     103.971
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 13.733,
+    "color": "#ffffff",
+    "maxw": 95,
+    "sample": "فيلا سكنية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "supervision",
+    "kind": "text",
+    "align": "right",
+    "x": 275.719,
+    "bases": [
+     107.55
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 6.691,
+    "color": "#ffffff",
+    "maxw": 163.37,
+    "sample": "إنفاذ، و ..............- بإشراف مركز الإسناد والتصفية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "start_label",
+    "kind": "text",
+    "align": "right",
+    "x": 344.182,
+    "bases": [
+     74.25
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.488,
+    "color": "#ffffff",
+    "maxw": 36,
+    "sample": "يبدأ الاثنين",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "start_date",
+    "kind": "text",
+    "align": "right",
+    "x": 328.404,
+    "bases": [
+     74.471
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.935,
+    "color": "#ffffff",
+    "maxw": 41.4,
+    "sample": "2024/11/01",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0376,
+    "lama_size": 3.935,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0376
+   },
+   {
+    "key": "start_time",
+    "kind": "text",
+    "align": "right",
+    "x": 344.203,
+    "bases": [
+     79.781
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.488,
+    "color": "#ffffff",
+    "maxw": 57.08,
+    "sample": "الساعة 10:00 م",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 3.935,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "word_spacing": 0.091
+   },
+   {
+    "key": "end_label",
+    "kind": "text",
+    "align": "right",
+    "x": 344.182,
+    "bases": [
+     89.221
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.488,
+    "color": "#ffffff",
+    "maxw": 36,
+    "sample": "ينتهي الخميس",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "end_date",
+    "kind": "text",
+    "align": "right",
+    "x": 319.524,
+    "bases": [
+     89.89
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.935,
+    "color": "#ffffff",
+    "maxw": 36,
+    "sample": "2024/11/04",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0342,
+    "lama_size": 3.935,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0342
+   },
+   {
+    "key": "end_time",
+    "kind": "text",
+    "align": "right",
+    "x": 343.929,
+    "bases": [
+     94.05
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.488,
+    "color": "#ffffff",
+    "maxw": 56.92,
+    "sample": "الساعة 06:00 م",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 3.935,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "word_spacing": 0.1738
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 344.595,
+    "bases": [
+     105.24
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.488,
+    "color": "#ffffff",
+    "maxw": 57.56,
+    "sample": "قاعة جدة البحر",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "phone",
+    "kind": "text",
+    "align": "left",
+    "x": 7.72,
+    "bases": [
+     148.881
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 27.575,
+    "color": "#121a45",
+    "spacing": 8.492,
+    "lama_size": 27.575,
+    "digits": "r",
+    "maxw": 175.22
+   },
+   {
+    "key": "license",
+    "kind": "text",
+    "align": "center",
+    "x": 222.193,
+    "bases": [
+     147.55
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.563,
+    "color": "#434245",
+    "maxw": 56,
+    "sample": "4 2 0 00 00 1 07",
+    "font": "RuaqArabic-Medium",
+    "digits": "r",
+    "spacing": 1.312
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 348.619,
+    "bases": [
+     148.69
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 7.375,
+    "color": "#00365d",
+    "maxw": 34.59,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     263.171,
+     136.99,
+     311.671,
+     151.49
+    ]
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "center",
+    "x": 321.409,
+    "bases": [
+     179.981
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.7,
+    "color": "#121a45",
+    "maxw": 35,
+    "sample": "النور",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "center",
+    "x": 279.793,
+    "bases": [
+     180.361
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.7,
+    "color": "#121a45",
+    "maxw": 41.32,
+    "sample": "9271.71 متر مربع",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 5.7,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0061
+   },
+   {
+    "key": "plan_number",
+    "kind": "text",
+    "align": "center",
+    "x": 234.819,
+    "bases": [
+     180.861
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.7,
+    "color": "#121a45",
+    "maxw": 38,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 5.7,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "plot_number",
+    "kind": "text",
+    "align": "center",
+    "x": 193.331,
+    "bases": [
+     180.861
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.7,
+    "color": "#121a45",
+    "maxw": 38,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 5.7,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "center",
+    "x": 138.979,
+    "bases": [
+     180.711
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.7,
+    "color": "#121a45",
+    "maxw": 54,
+    "sample": "430107012766",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0161,
+    "lama_size": 5.7,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0161
+   },
+   {
+    "key": "execution",
+    "kind": "text",
+    "align": "center",
+    "x": 71.499,
+    "bases": [
+     180.68
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.7,
+    "color": "#121a45",
+    "maxw": 64,
+    "sample": "154584687412365",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0074,
+    "lama_size": 5.7,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0074
+   }
+  ]
+ },
+ "board-square-physical": {
+  "size": [
+   302.658,
+   302.648
+  ],
+  "slots": [
+   {
+    "key": "qr",
+    "kind": "qr",
+    "box": [
+     131.819,
+     185.689,
+     159.649,
+     213.519
+    ]
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "center",
+    "x": 69.622,
+    "bases": [
+     206.764
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 10.694,
+    "color": "#ffffff",
+    "maxw": 90,
+    "sample": "فيلا سكنية",
+    "word_spacing": -0.1138
+   },
+   {
+    "key": "supervision",
+    "kind": "text",
+    "align": "right",
+    "x": 204.534,
+    "bases": [
+     168.969
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.243,
+    "color": "#ffffff",
+    "maxw": 189.56,
+    "sample": "إنفاذ، و ..............- بإشراف مركز الإسناد والتصفية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "phone",
+    "kind": "text",
+    "align": "left",
+    "x": 11.035,
+    "bases": [
+     260.362
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 31.682,
+    "color": "#121a45",
+    "spacing": 9.756,
+    "lama_size": 31.682,
+    "digits": "r",
+    "maxw": 201.31
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 257.495,
+    "bases": [
+     158.769
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 6.965,
+    "color": "#ffffff",
+    "maxw": 34.82,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     262.159,
+     143.569,
+     276.159,
+     161.569
+    ]
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "center",
+    "x": 276.052,
+    "bases": [
+     291.579
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.462,
+    "color": "#121a45",
+    "maxw": 33,
+    "sample": "النور",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "usage",
+    "kind": "text",
+    "align": "center",
+    "x": 233.816,
+    "bases": [
+     292.429
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.462,
+    "color": "#121a45",
+    "maxw": 33,
+    "sample": "تجـــاري",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "center",
+    "x": 193.707,
+    "bases": [
+     291.949
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.462,
+    "color": "#121a45",
+    "maxw": 39.59,
+    "sample": "9271.71 متر مربع",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 5.462,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0061
+   },
+   {
+    "key": "plan_number",
+    "kind": "text",
+    "align": "center",
+    "x": 153.104,
+    "bases": [
+     292.429
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.462,
+    "color": "#121a45",
+    "maxw": 33,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 5.462,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "plot_number",
+    "kind": "text",
+    "align": "center",
+    "x": 111.896,
+    "bases": [
+     292.429
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.462,
+    "color": "#121a45",
+    "maxw": 33,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 5.462,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "center",
+    "x": 70.437,
+    "bases": [
+     292.289
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.462,
+    "color": "#121a45",
+    "maxw": 39.96,
+    "sample": "430107012766",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0161,
+    "lama_size": 5.462,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0161
+   },
+   {
+    "key": "execution",
+    "kind": "text",
+    "align": "center",
+    "x": 29.154,
+    "bases": [
+     292.249
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 4.388,
+    "color": "#01375c",
+    "maxw": 35.45,
+    "sample": "154584687412365",
+    "font": "LamaSans-Medium",
+    "tracking": -0.0558,
+    "lama_size": 4.388,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": -0.0558
+   },
+   {
+    "key": "day_label",
+    "kind": "text",
+    "align": "right",
+    "x": 258.866,
+    "bases": [
+     87.468
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.888,
+    "color": "#ffffff",
+    "maxw": 36.21,
+    "sample": "يوم الأربعاء",
+    "word_spacing": 0.1093
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "right",
+    "x": 258.775,
+    "bases": [
+     93.273
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 4.097,
+    "color": "#ffffff",
+    "maxw": 36.21,
+    "sample": "2023/11/01",
+    "tracking": 0.0438
+   },
+   {
+    "key": "time",
+    "kind": "text",
+    "align": "right",
+    "x": 259.052,
+    "bases": [
+     106.675
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.873,
+    "color": "#ffffff",
+    "maxw": 36.46,
+    "sample": "04 مساء"
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 259.0,
+    "bases": [
+     124.245
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.621,
+    "color": "#ffffff",
+    "maxw": 36.34,
+    "sample": "قاعة جدة البحر",
+    "word_spacing": -0.011
+   },
+   {
+    "key": "license",
+    "kind": "text",
+    "align": "center",
+    "x": 255.699,
+    "bases": [
+     258.132
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 10.468,
+    "color": "#434245",
+    "maxw": 66,
+    "spacing": 1.64,
+    "digits": "r"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     232.159,
+     193.569,
+     277.159,
+     207.569
+    ]
+   }
+  ]
+ },
+ "board-square-electronic": {
+  "size": [
+   302.658,
+   302.648
+  ],
+  "slots": [
+   {
+    "key": "qr",
+    "kind": "qr",
+    "box": [
+     130.779,
+     187.109,
+     158.559,
+     214.889
+    ]
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "center",
+    "x": 69.622,
+    "bases": [
+     205.764
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 10.694,
+    "color": "#ffffff",
+    "maxw": 90,
+    "sample": "فيلا سكنية",
+    "word_spacing": -0.1138
+   },
+   {
+    "key": "supervision",
+    "kind": "text",
+    "align": "right",
+    "x": 203.682,
+    "bases": [
+     172.479
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.243,
+    "color": "#ffffff",
+    "maxw": 188.8,
+    "sample": "إنفاذ، و ..............- بإشراف مركز الإسناد والتصفية",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "phone",
+    "kind": "text",
+    "align": "left",
+    "x": 10.955,
+    "bases": [
+     261.898
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 33.758,
+    "color": "#121a45",
+    "spacing": 10.395,
+    "lama_size": 33.758,
+    "digits": "r",
+    "maxw": 214.49
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 258.496,
+    "bases": [
+     156.839
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 6.965,
+    "color": "#ffffff",
+    "maxw": 35.83,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     263.159,
+     142.569,
+     277.159,
+     159.569
+    ]
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "center",
+    "x": 204.063,
+    "bases": [
+     291.649
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.979,
+    "color": "#121a45",
+    "maxw": 26,
+    "sample": "النور",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "usage",
+    "kind": "text",
+    "align": "center",
+    "x": 173.29,
+    "bases": [
+     292.269
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.979,
+    "color": "#121a45",
+    "maxw": 26,
+    "sample": "تجـــاري",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "center",
+    "x": 144.066,
+    "bases": [
+     291.909
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.979,
+    "color": "#121a45",
+    "maxw": 28.85,
+    "sample": "9271.71 متر مربع",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 3.979,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0061
+   },
+   {
+    "key": "plan_number",
+    "kind": "text",
+    "align": "center",
+    "x": 114.483,
+    "bases": [
+     292.269
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.979,
+    "color": "#121a45",
+    "maxw": 26,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 3.979,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "plot_number",
+    "kind": "text",
+    "align": "center",
+    "x": 84.458,
+    "bases": [
+     292.269
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.979,
+    "color": "#121a45",
+    "maxw": 26,
+    "sample": "10",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0059,
+    "lama_size": 3.979,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0059
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "center",
+    "x": 54.251,
+    "bases": [
+     292.159
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.979,
+    "color": "#121a45",
+    "maxw": 29.11,
+    "sample": "430107012766",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0161,
+    "lama_size": 3.979,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0161
+   },
+   {
+    "key": "execution",
+    "kind": "text",
+    "align": "center",
+    "x": 24.172,
+    "bases": [
+     292.139
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.197,
+    "color": "#01375c",
+    "maxw": 26,
+    "sample": "154584687412365",
+    "font": "LamaSans-Medium",
+    "tracking": -0.0558,
+    "lama_size": 3.197,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": -0.0558
+   },
+   {
+    "key": "start_label",
+    "kind": "text",
+    "align": "right",
+    "x": 263.514,
+    "bases": [
+     77.189
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.202,
+    "color": "#ffffff",
+    "maxw": 40.88,
+    "sample": "يبدأ الاثنين",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "start_date",
+    "kind": "text",
+    "align": "right",
+    "x": 263.045,
+    "bases": [
+     83.409
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 4.74,
+    "color": "#ffffff",
+    "maxw": 40.37,
+    "sample": "2024/11/01",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0376,
+    "lama_size": 4.74,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0376
+   },
+   {
+    "key": "start_time",
+    "kind": "text",
+    "align": "right",
+    "x": 263.21,
+    "bases": [
+     88.489
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.202,
+    "color": "#ffffff",
+    "maxw": 40.62,
+    "sample": "الساعة 10:00 م",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 4.74,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "word_spacing": 0.0903
+   },
+   {
+    "key": "end_label",
+    "kind": "text",
+    "align": "right",
+    "x": 263.515,
+    "bases": [
+     99.789
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.202,
+    "color": "#ffffff",
+    "maxw": 40.88,
+    "sample": "ينتهي الخميس",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "end_date",
+    "kind": "text",
+    "align": "right",
+    "x": 263.202,
+    "bases": [
+     106.179
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 4.74,
+    "color": "#ffffff",
+    "maxw": 40.62,
+    "sample": "2024/11/04",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0342,
+    "lama_size": 4.74,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0342
+   },
+   {
+    "key": "end_time",
+    "kind": "text",
+    "align": "right",
+    "x": 263.21,
+    "bases": [
+     111.189
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.202,
+    "color": "#ffffff",
+    "maxw": 40.62,
+    "sample": "الساعة 06:00 م",
+    "font": "RuaqArabic-Medium",
+    "lama_size": 4.74,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "word_spacing": 0.1736
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 263.848,
+    "bases": [
+     124.659
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.202,
+    "color": "#ffffff",
+    "maxw": 41.25,
+    "sample": "قاعة جدة البحر",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "license",
+    "kind": "text",
+    "align": "center",
+    "x": 262.799,
+    "bases": [
+     271.429
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 8.69,
+    "color": "#434245",
+    "maxw": 66,
+    "spacing": 1.361,
+    "digits": "r"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     232.159,
+     187.569,
+     278.159,
+     201.069
+    ]
+   }
+  ]
+ },
+ "x-announcement-white": {
+  "size": [
+   236.8,
+   144.28
+  ],
+  "slots": [
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     156.62,
+     9.95,
+     193.12,
+     23.45
+    ]
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 207.113,
+    "bases": [
+     49.64
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 5.224,
+    "color": "#00365d",
+    "maxw": 62.46,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     10.77,
+     12.03,
+     142.11,
+     133.81
+    ],
+    "path": "M28.31 12.03L10.77 29.57L10.77 133.81L123.45 133.81C130.74 126.53 134.82 122.44 142.11 115.15L142.11 12.03L28.31 12.03Z"
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     210.12,
+     38.45,
+     221.12,
+     52.45
+    ]
+   },
+   {
+    "key": "time_line",
+    "kind": "text",
+    "align": "right",
+    "x": 209.53,
+    "bases": [
+     102.7
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#00a3a2",
+    "maxw": 64.87,
+    "sample": "04:00 مساءً - 10:00 مساءً",
+    "word_spacing": -0.0766
+   },
+   {
+    "key": "date_line",
+    "kind": "text",
+    "align": "right",
+    "x": 209.369,
+    "bases": [
+     114.89
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#00a3a2",
+    "maxw": 64.65,
+    "sample": "الخميس 11 - 14 مارس 2024",
+    "word_spacing": 0.0406
+   },
+   {
+    "key": "place_line",
+    "kind": "text",
+    "align": "right",
+    "x": 209.539,
+    "bases": [
+     126.51
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#00a3a2",
+    "maxw": 64.87,
+    "sample": "المكان / اسم المنصة",
+    "word_spacing": 0.0319
+   },
+   {
+    "key": "count",
+    "kind": "text",
+    "align": "right",
+    "x": 177.862,
+    "bases": [
+     84.4
+    ],
+    "family": "l",
+    "weight": 900,
+    "size": 16.0,
+    "color": "#00a4a2",
+    "maxw": 40,
+    "sample": "4",
+    "font": "LamaSans-Black",
+    "lama_size": 16.0,
+    "lama_weight": 900,
+    "lama_font": "LamaSans-Black"
+   }
+  ]
+ },
+ "x-announcement-teal": {
+  "size": [
+   237.5,
+   144.98
+  ],
+  "slots": [
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     156.45,
+     10.3,
+     192.95,
+     23.8
+    ]
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 206.849,
+    "bases": [
+     49.88
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 5.674,
+    "color": "#ffffff",
+    "maxw": 61.77,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     11.25,
+     11.26,
+     142.6,
+     134.16
+    ],
+    "path": "M29.92 11.26C22.63 18.55 18.54 22.63 11.25 29.92L11.25 134.16L123.93 134.16C131.22 126.88 135.31 122.79 142.60 115.50L142.60 11.26L29.92 11.26Z"
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     209.95,
+     37.8,
+     221.95,
+     52.8
+    ]
+   },
+   {
+    "key": "time_line",
+    "kind": "text",
+    "align": "right",
+    "x": 210.02,
+    "bases": [
+     103.05
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#ffffff",
+    "maxw": 65.07,
+    "sample": "04:00 مساءً - 10:00 مساءً",
+    "word_spacing": -0.0766
+   },
+   {
+    "key": "date_line",
+    "kind": "text",
+    "align": "right",
+    "x": 208.809,
+    "bases": [
+     115.24
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#ffffff",
+    "maxw": 63.75,
+    "sample": "الخميس 11 - 14 مارس 2024",
+    "word_spacing": 0.0406
+   },
+   {
+    "key": "place_line",
+    "kind": "text",
+    "align": "right",
+    "x": 210.219,
+    "bases": [
+     127.81
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#ffffff",
+    "maxw": 65.07,
+    "sample": "المكان / اسم المنصة",
+    "word_spacing": 0.032
+   },
+   {
+    "key": "count",
+    "kind": "text",
+    "align": "right",
+    "x": 178.803,
+    "bases": [
+     84.75
+    ],
+    "family": "l",
+    "weight": 900,
+    "size": 16.0,
+    "color": "#ffffff",
+    "maxw": 40,
+    "sample": "4",
+    "font": "LamaSans-Black",
+    "lama_size": 16.0,
+    "lama_weight": 900,
+    "lama_font": "LamaSans-Black"
+   }
+  ]
+ },
+ "x-property-white": {
+  "size": [
+   236.8,
+   144.28
+  ],
+  "slots": [
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     158.12,
+     9.16,
+     194.12,
+     23.16
+    ]
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 202.281,
+    "bases": [
+     54.53
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 6.608,
+    "color": "#00365d",
+    "maxw": 89.43,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     9.61,
+     6.42,
+     110.39,
+     109.72
+    ],
+    "path": "M9.61 6.42L9.61 109.72L96.07 109.72L110.39 95.40L110.39 6.42L9.61 6.42Z"
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     206.12,
+     40.16,
+     220.12,
+     57.16
+    ]
+   },
+   {
+    "key": "time_line",
+    "kind": "text",
+    "align": "right",
+    "x": 207.96,
+    "bases": [
+     133.2
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#00a3a2",
+    "maxw": 54.57,
+    "sample": "04:00 مساءً - 10:00 مساءً",
+    "word_spacing": -0.0766
+   },
+   {
+    "key": "date_line",
+    "kind": "text",
+    "align": "right",
+    "x": 140.419,
+    "bases": [
+     133.22
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#00a3a2",
+    "maxw": 60.05,
+    "sample": "الخميس 11 - 14 مارس 2024",
+    "word_spacing": 0.0406
+   },
+   {
+    "key": "place_line",
+    "kind": "text",
+    "align": "right",
+    "x": 68.829,
+    "bases": [
+     133.26
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#00a3a2",
+    "maxw": 66.19,
+    "sample": "المكان / اسم المنصة",
+    "word_spacing": 0.0319
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "right",
+    "x": 211.2,
+    "bases": [
+     80.401
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#00365d",
+    "maxw": 35.37
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "right",
+    "x": 161.24,
+    "bases": [
+     80.401
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#00365d",
+    "maxw": 35.37
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "right",
+    "x": 211.2,
+    "bases": [
+     97.331
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#00365d",
+    "maxw": 35.37
+   },
+   {
+    "key": "city",
+    "kind": "text",
+    "align": "right",
+    "x": 161.24,
+    "bases": [
+     97.331
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#00365d",
+    "maxw": 35.37
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "right",
+    "x": 211.2,
+    "bases": [
+     118.051
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#00365d",
+    "maxw": 66.45
+   }
+  ]
+ },
+ "x-property-teal": {
+  "size": [
+   237.5,
+   144.98
+  ],
+  "slots": [
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     152.45,
+     9.51,
+     192.95,
+     23.51
+    ]
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 200.788,
+    "bases": [
+     54.81
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 6.668,
+    "color": "#ffffff",
+    "maxw": 89.26,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     8.39,
+     6.77,
+     109.16,
+     110.07
+    ],
+    "path": "M8.39 6.77L8.39 110.07L94.84 110.07L109.16 95.75L109.16 6.77L8.39 6.77Z"
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     204.95,
+     40.51,
+     218.95,
+     57.51
+    ]
+   },
+   {
+    "key": "time_line",
+    "kind": "text",
+    "align": "right",
+    "x": 207.13,
+    "bases": [
+     133.55
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#ffffff",
+    "maxw": 54.52,
+    "sample": "04:00 مساءً - 10:00 مساءً",
+    "word_spacing": -0.0766
+   },
+   {
+    "key": "date_line",
+    "kind": "text",
+    "align": "right",
+    "x": 138.539,
+    "bases": [
+     133.57
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#ffffff",
+    "maxw": 58.91,
+    "sample": "الخميس 11 - 14 مارس 2024",
+    "word_spacing": 0.0406
+   },
+   {
+    "key": "place_line",
+    "kind": "text",
+    "align": "right",
+    "x": 67.999,
+    "bases": [
+     133.61
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.12,
+    "color": "#ffffff",
+    "maxw": 65.51,
+    "sample": "المكان / اسم المنصة",
+    "word_spacing": 0.032
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "right",
+    "x": 209.97,
+    "bases": [
+     80.751
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#ffffff",
+    "maxw": 35.37
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "right",
+    "x": 160.01,
+    "bases": [
+     80.751
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#ffffff",
+    "maxw": 35.37
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "right",
+    "x": 209.97,
+    "bases": [
+     97.681
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#ffffff",
+    "maxw": 35.37
+   },
+   {
+    "key": "city",
+    "kind": "text",
+    "align": "right",
+    "x": 160.01,
+    "bases": [
+     97.681
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#ffffff",
+    "maxw": 35.37
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "right",
+    "x": 209.97,
+    "bases": [
+     118.401
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.6,
+    "color": "#ffffff",
+    "maxw": 66.45
+   }
+  ]
+ },
+ "instagram-announcement-white": {
+  "size": [
+   162.02,
+   162.01
+  ],
+  "slots": [
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "center",
+    "x": 38.965,
+    "bases": [
+     154.21
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 4.186,
+    "color": "#00365d",
+    "maxw": 24,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     6.35,
+     25.71,
+     154.41,
+     97.63
+    ],
+    "path": "M18.60 25.71C13.81 30.49 11.13 33.17 6.35 37.96L6.35 97.63L142.26 97.63L154.41 85.49L154.41 25.71L18.60 25.71Z"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     6.07,
+     134.08,
+     25.57,
+     155.58
+    ]
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     34.07,
+     133.08,
+     43.07,
+     145.08
+    ]
+   },
+   {
+    "key": "count",
+    "kind": "text",
+    "align": "center",
+    "x": 89.814,
+    "bases": [
+     132.4
+    ],
+    "family": "l",
+    "weight": 700,
+    "size": 9.448,
+    "color": "#ffffff",
+    "maxw": 7,
+    "sample": "4",
+    "font": "LamaSans-Bold",
+    "lama_size": 9.448,
+    "lama_weight": 700,
+    "lama_font": "LamaSans-Bold"
+   },
+   {
+    "key": "day_label",
+    "kind": "text",
+    "align": "center",
+    "x": 129.854,
+    "bases": [
+     147.67
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.761,
+    "color": "#14778a",
+    "maxw": 26,
+    "sample": "يوم الأربعاء",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.2065
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "center",
+    "x": 130.162,
+    "bases": [
+     153.33
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.991,
+    "color": "#14778a",
+    "maxw": 26,
+    "sample": "2023/11/01",
+    "font": "LamaSans-SemiBold",
+    "tracking": -0.0227,
+    "lama_size": 3.991,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-SemiBold",
+    "lama_tracking": -0.0227
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 99.298,
+    "bases": [
+     147.56,
+     153.43
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.364,
+    "color": "#14778a",
+    "maxw": 50.66,
+    "sample": "معارض الظهران الدوليـة (اكــــسـبـو الظـــــهـران)",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "accent",
+    "kind": "accent",
+    "box": [
+     136.269,
+     105.048,
+     151.349,
+     119.4
+    ],
+    "path": "M151.35 105.05L136.27 105.05L136.27 118.24C136.72 118.70 136.97 118.95 137.43 119.40L151.35 119.40L151.35 105.05Z",
+    "color": "#05a3a1",
+    "dx": -8.254,
+    "dy": -11.932
+   },
+   {
+    "key": "headline",
+    "kind": "text",
+    "align": "right",
+    "x": 144.523,
+    "bases": [
+     116.98
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 14.423,
+    "color": "#121a45",
+    "maxw": 84,
+    "sample": "نص تجريبي",
+    "font": "RuaqArabic-Bold",
+    "word_spacing": 0.184
+   },
+   {
+    "key": "phone_text",
+    "kind": "text",
+    "align": "right",
+    "x": 54.604,
+    "bases": [
+     119.91
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 8.656,
+    "color": "#113659",
+    "maxw": 52.16,
+    "sample": "920011513",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0277,
+    "lama_size": 8.656,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0277
+   }
+  ]
+ },
+ "instagram-announcement-teal": {
+  "size": [
+   162.67,
+   162.67
+  ],
+  "slots": [
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "center",
+    "x": 39.934,
+    "bases": [
+     152.22
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 4.095,
+    "color": "#ffffff",
+    "maxw": 24,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     8.02,
+     26.5,
+     152.97,
+     96.87
+    ],
+    "path": "M20.01 26.50L8.02 38.48L8.02 96.87L140.99 96.87L152.97 84.88L152.97 26.50L20.01 26.50Z"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     7.88,
+     132.41,
+     26.88,
+     152.91
+    ]
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     34.88,
+     132.41,
+     43.88,
+     142.41
+    ]
+   },
+   {
+    "key": "count",
+    "kind": "text",
+    "align": "center",
+    "x": 88.242,
+    "bases": [
+     132.73
+    ],
+    "family": "l",
+    "weight": 700,
+    "size": 9.448,
+    "color": "#ffffff",
+    "maxw": 7,
+    "sample": "4",
+    "font": "LamaSans-Bold",
+    "lama_size": 9.448,
+    "lama_weight": 700,
+    "lama_font": "LamaSans-Bold"
+   },
+   {
+    "key": "day_label",
+    "kind": "text",
+    "align": "center",
+    "x": 128.851,
+    "bases": [
+     145.82
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.657,
+    "color": "#ffffff",
+    "maxw": 26,
+    "sample": "يوم الأربعاء",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.2072
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "center",
+    "x": 129.152,
+    "bases": [
+     151.35
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.904,
+    "color": "#ffffff",
+    "maxw": 26,
+    "sample": "2023/11/01",
+    "font": "LamaSans-SemiBold",
+    "tracking": -0.0227,
+    "lama_size": 3.904,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-SemiBold",
+    "lama_tracking": -0.0227
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 98.958,
+    "bases": [
+     145.71,
+     151.45
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.269,
+    "color": "#ffffff",
+    "maxw": 49.66,
+    "sample": "معارض الظهران الدوليـة (اكــــسـبـو الظـــــهـران)",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "accent",
+    "kind": "accent",
+    "box": [
+     134.697,
+     105.378,
+     149.777,
+     119.73
+    ],
+    "path": "M149.78 105.38L134.70 105.38L134.70 118.57C135.15 119.03 135.40 119.28 135.85 119.73L149.78 119.73L149.78 105.38Z",
+    "color": "#00365d",
+    "dx": -8.253,
+    "dy": -11.932
+   },
+   {
+    "key": "headline",
+    "kind": "text",
+    "align": "right",
+    "x": 142.95,
+    "bases": [
+     117.31
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 14.423,
+    "color": "#ffffff",
+    "maxw": 84,
+    "sample": "نص تجريبي",
+    "font": "RuaqArabic-Bold",
+    "word_spacing": 0.184
+   },
+   {
+    "key": "phone_text",
+    "kind": "text",
+    "align": "right",
+    "x": 55.234,
+    "bases": [
+     118.66
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 8.468,
+    "color": "#ffffff",
+    "maxw": 52.83,
+    "sample": "920011513",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0277,
+    "lama_size": 8.468,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0277
+   }
+  ]
+ },
+ "instagram-property-white": {
+  "size": [
+   162.02,
+   162.02
+  ],
+  "slots": [
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "center",
+    "x": 136.583,
+    "bases": [
+     134.54
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 6.608,
+    "color": "#00365d",
+    "maxw": 24,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     6.35,
+     25.72,
+     152.45,
+     97.64
+    ],
+    "path": "M18.60 25.72L6.35 37.97L6.35 97.64L142.26 97.64C146.31 93.59 148.86 91.05 152.45 87.45L152.45 25.72L18.60 25.72Z"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     9.07,
+     141.65,
+     47.07,
+     153.15
+    ]
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     130.07,
+     102.65,
+     143.07,
+     119.65
+    ]
+   },
+   {
+    "key": "count",
+    "kind": "text",
+    "align": "center",
+    "x": 76.183,
+    "bases": [
+     107.23
+    ],
+    "family": "l",
+    "weight": 700,
+    "size": 4.773,
+    "color": "#ffffff",
+    "maxw": 7,
+    "sample": "4",
+    "font": "LamaSans-Bold",
+    "lama_size": 4.773,
+    "lama_weight": 700,
+    "lama_font": "LamaSans-Bold"
+   },
+   {
+    "key": "day_label",
+    "kind": "text",
+    "align": "center",
+    "x": 132.01,
+    "bases": [
+     147.39
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.466,
+    "color": "#14778a",
+    "maxw": 26,
+    "sample": "يوم الأربعاء",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.2069
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "center",
+    "x": 132.299,
+    "bases": [
+     152.69
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.744,
+    "color": "#14778a",
+    "maxw": 26,
+    "sample": "2023/11/01",
+    "font": "LamaSans-SemiBold",
+    "tracking": -0.0227,
+    "lama_size": 3.744,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-SemiBold",
+    "lama_tracking": -0.0227
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 103.345,
+    "bases": [
+     147.29,
+     152.79
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.094,
+    "color": "#14778a",
+    "maxw": 53.96,
+    "sample": "معارض الظهران الدوليـة (اكــــسـبـو الظـــــهـران)",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "right",
+    "x": 105.53,
+    "bases": [
+     122.093
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#00365d",
+    "maxw": 23.92
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "right",
+    "x": 70.47,
+    "bases": [
+     122.093
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#00365d",
+    "maxw": 23.93
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "right",
+    "x": 37.89,
+    "bases": [
+     122.093
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#00365d",
+    "maxw": 23.93
+   },
+   {
+    "key": "city",
+    "kind": "text",
+    "align": "right",
+    "x": 105.53,
+    "bases": [
+     135.143
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#00365d",
+    "maxw": 23.92
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "right",
+    "x": 70.47,
+    "bases": [
+     135.143
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#00365d",
+    "maxw": 45.58
+   }
+  ]
+ },
+ "instagram-property-teal": {
+  "size": [
+   162.67,
+   162.67
+  ],
+  "slots": [
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "center",
+    "x": 137.882,
+    "bases": [
+     134.85
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 6.585,
+    "color": "#ffffff",
+    "maxw": 24,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     7.25,
+     26.04,
+     155.41,
+     97.96
+    ],
+    "path": "M19.50 26.04C14.72 30.82 12.04 33.50 7.25 38.29L7.25 97.96L143.16 97.96C147.95 93.18 150.63 90.50 155.41 85.71L155.41 26.04L19.50 26.04Z"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     10.38,
+     141.97,
+     47.88,
+     153.47
+    ]
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     130.88,
+     102.97,
+     143.88,
+     119.97
+    ]
+   },
+   {
+    "key": "count",
+    "kind": "text",
+    "align": "center",
+    "x": 77.085,
+    "bases": [
+     107.55
+    ],
+    "family": "l",
+    "weight": 700,
+    "size": 4.773,
+    "color": "#ffffff",
+    "maxw": 7,
+    "sample": "4",
+    "font": "LamaSans-Bold",
+    "lama_size": 4.773,
+    "lama_weight": 700,
+    "lama_font": "LamaSans-Bold"
+   },
+   {
+    "key": "day_label",
+    "kind": "text",
+    "align": "center",
+    "x": 132.914,
+    "bases": [
+     147.71
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.466,
+    "color": "#ffffff",
+    "maxw": 26,
+    "sample": "يوم الأربعاء",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.2069
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "center",
+    "x": 133.202,
+    "bases": [
+     153.01
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.744,
+    "color": "#ffffff",
+    "maxw": 26,
+    "sample": "2023/11/01",
+    "font": "LamaSans-SemiBold",
+    "tracking": -0.0227,
+    "lama_size": 3.744,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-SemiBold",
+    "lama_tracking": -0.0227
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 104.249,
+    "bases": [
+     147.61,
+     153.11
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 4.094,
+    "color": "#ffffff",
+    "maxw": 54.18,
+    "sample": "معارض الظهران الدوليـة (اكــــسـبـو الظـــــهـران)",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "property_type",
+    "kind": "text",
+    "align": "right",
+    "x": 106.44,
+    "bases": [
+     122.413
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#ffffff",
+    "maxw": 23.93
+   },
+   {
+    "key": "district",
+    "kind": "text",
+    "align": "right",
+    "x": 71.37,
+    "bases": [
+     122.413
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#ffffff",
+    "maxw": 23.92
+   },
+   {
+    "key": "area",
+    "kind": "text",
+    "align": "right",
+    "x": 38.79,
+    "bases": [
+     122.413
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#ffffff",
+    "maxw": 23.92
+   },
+   {
+    "key": "city",
+    "kind": "text",
+    "align": "right",
+    "x": 106.44,
+    "bases": [
+     135.463
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#ffffff",
+    "maxw": 23.93
+   },
+   {
+    "key": "deed",
+    "kind": "text",
+    "align": "right",
+    "x": 71.37,
+    "bases": [
+     135.463
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.3,
+    "color": "#ffffff",
+    "maxw": 45.58
+   }
+  ]
+ },
+ "story-announcement-white": {
+  "size": [
+   161.88,
+   288.48
+  ],
+  "slots": [
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     11.46,
+     41.75,
+     150.41,
+     131.62
+    ],
+    "path": "M27.34 41.75L11.46 57.63L11.46 131.62L134.53 131.62C140.73 125.42 144.21 121.95 150.41 115.75L150.41 41.75L27.34 41.75Z"
+   },
+   {
+    "key": "accent",
+    "kind": "accent",
+    "box": [
+     116.238,
+     143.371,
+     138.278,
+     164.347
+    ],
+    "path": "M138.28 143.37L116.24 143.37L116.24 162.66C116.90 163.32 117.27 163.69 117.93 164.35L138.28 164.35L138.28 143.37Z",
+    "color": "#00a6a4",
+    "dx": -12.063,
+    "dy": -17.439
+   },
+   {
+    "key": "headline",
+    "kind": "text",
+    "align": "right",
+    "x": 128.301,
+    "bases": [
+     160.81
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 21.08,
+    "color": "#121a45",
+    "maxw": 130.0,
+    "sample": "نص تجريبي",
+    "font": "RuaqArabic-Bold",
+    "word_spacing": 0.1838
+   },
+   {
+    "key": "tagline",
+    "kind": "text",
+    "align": "center",
+    "x": 81.757,
+    "bases": [
+     182.86
+    ],
+    "family": "r",
+    "weight": 400,
+    "size": 10.076,
+    "color": "#00365d",
+    "maxw": 135.0,
+    "sample": "في وجهة واعدة اسـتثماريًا",
+    "font": "RuaqArabic-Light",
+    "word_spacing": 0.0888
+   },
+   {
+    "key": "auction_line",
+    "kind": "text",
+    "align": "center",
+    "x": 80.625,
+    "bases": [
+     200.67
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 11.648,
+    "color": "#00798e",
+    "maxw": 135.0,
+    "sample": "في مزاد درة البحر",
+    "font": "RuaqArabic-Bold",
+    "word_spacing": 0.1227
+   },
+   {
+    "key": "phone_text",
+    "kind": "text",
+    "align": "center",
+    "x": 39.485,
+    "bases": [
+     233.55
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 11.0,
+    "color": "#113659",
+    "maxw": 62.0,
+    "sample": "920011513",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0278,
+    "lama_size": 11.0,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0278
+   },
+   {
+    "key": "day_label",
+    "kind": "text",
+    "align": "right",
+    "x": 137.056,
+    "bases": [
+     220.23
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 6.279,
+    "color": "#14778a",
+    "maxw": 75.19,
+    "sample": "يوم الأربعاء",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.2062
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "right",
+    "x": 135.359,
+    "bases": [
+     227.68
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 5.263,
+    "color": "#14778a",
+    "maxw": 64.4,
+    "sample": "2023/11/01",
+    "font": "LamaSans-SemiBold",
+    "tracking": -0.0227,
+    "lama_size": 5.263,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-SemiBold",
+    "lama_tracking": -0.0227
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 137.35,
+    "bases": [
+     236.37,
+     243.17
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.055,
+    "color": "#14778a",
+    "maxw": 66.35,
+    "sample": "معارض الظهران الدوليـة (اكــــسـبـو الظـــــهـران)",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 110.982,
+    "bases": [
+     270.49
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 6.938,
+    "color": "#00365d",
+    "maxw": 35.17,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     24.54,
+     257.28,
+     73.54,
+     271.78
+    ]
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     115.04,
+     255.78,
+     129.04,
+     273.78
+    ]
+   }
+  ]
+ },
+ "story-announcement-teal": {
+  "size": [
+   100.62,
+   178.87
+  ],
+  "slots": [
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     7.37,
+     26.08,
+     93.25,
+     81.63
+    ],
+    "path": "M17.18 26.08C13.35 29.91 11.20 32.06 7.37 35.89L7.37 81.63L83.44 81.63C87.27 77.80 89.42 75.65 93.25 71.82L93.25 26.08L17.18 26.08Z"
+   },
+   {
+    "key": "accent",
+    "kind": "accent",
+    "box": [
+     72.005,
+     85.92,
+     85.55,
+     98.811
+    ],
+    "path": "M85.55 85.92L72.00 85.92L72.00 97.77C72.41 98.18 72.64 98.41 73.04 98.81L85.55 98.81L85.55 85.92Z",
+    "color": "#00365d",
+    "dx": -7.414,
+    "dy": -10.72
+   },
+   {
+    "key": "headline",
+    "kind": "text",
+    "align": "right",
+    "x": 79.419,
+    "bases": [
+     96.64
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 12.955,
+    "color": "#ffffff",
+    "maxw": 80.25,
+    "sample": "نص تجريبي",
+    "font": "RuaqArabic-Bold",
+    "word_spacing": 0.1839
+   },
+   {
+    "key": "tagline",
+    "kind": "text",
+    "align": "center",
+    "x": 50.311,
+    "bases": [
+     108.31
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 5.82,
+    "color": "#ffffff",
+    "maxw": 83.33,
+    "sample": "في وجهة واعدة اسـتثماريًا",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.0869
+   },
+   {
+    "key": "auction_line",
+    "kind": "text",
+    "align": "center",
+    "x": 50.61,
+    "bases": [
+     118.64
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 6.755,
+    "color": "#ffffff",
+    "maxw": 83.33,
+    "sample": "في مزاد درة البحر",
+    "font": "RuaqArabic-Bold",
+    "word_spacing": 0.1226
+   },
+   {
+    "key": "phone_text",
+    "kind": "text",
+    "align": "center",
+    "x": 24.78,
+    "bases": [
+     143.38
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 6.799,
+    "color": "#76c8a9",
+    "maxw": 38.27,
+    "sample": "920011513",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0278,
+    "lama_size": 6.799,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0278
+   },
+   {
+    "key": "day_label",
+    "kind": "text",
+    "align": "right",
+    "x": 84.762,
+    "bases": [
+     135.14
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.881,
+    "color": "#ffffff",
+    "maxw": 45.33,
+    "sample": "يوم الأربعاء",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.2065
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "right",
+    "x": 83.712,
+    "bases": [
+     139.75
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.253,
+    "color": "#ffffff",
+    "maxw": 38.62,
+    "sample": "2023/11/01",
+    "font": "LamaSans-SemiBold",
+    "tracking": -0.0227,
+    "lama_size": 3.253,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-SemiBold",
+    "lama_tracking": -0.0227
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 84.943,
+    "bases": [
+     145.12,
+     149.32
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.124,
+    "color": "#ffffff",
+    "maxw": 39.83,
+    "sample": "معارض الظهران الدوليـة (اكــــسـبـو الظـــــهـران)",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 68.104,
+    "bases": [
+     164.79
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 3.535,
+    "color": "#ffffff",
+    "maxw": 16.05,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     21.27,
+     156.71,
+     50.27,
+     166.21
+    ]
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     69.77,
+     156.71,
+     77.77,
+     166.71
+    ]
+   }
+  ]
+ },
+ "story-announcement-navy": {
+  "size": [
+   100.62,
+   178.87
+  ],
+  "slots": [
+   {
+    "key": "photo",
+    "kind": "photo",
+    "box": [
+     7.37,
+     26.08,
+     93.25,
+     81.63
+    ],
+    "path": "M17.18 26.08C13.35 29.91 11.20 32.06 7.37 35.89L7.37 81.63L83.44 81.63C87.27 77.80 89.42 75.65 93.25 71.82L93.25 26.08L17.18 26.08Z"
+   },
+   {
+    "key": "accent",
+    "kind": "accent",
+    "box": [
+     71.879,
+     85.92,
+     85.424,
+     98.811
+    ],
+    "path": "M85.42 85.92L71.88 85.92L71.88 97.77C72.29 98.18 72.51 98.41 72.92 98.81L85.42 98.81L85.42 85.92Z",
+    "color": "#00a6a4",
+    "dx": -7.414,
+    "dy": -10.72
+   },
+   {
+    "key": "headline",
+    "kind": "text",
+    "align": "right",
+    "x": 79.293,
+    "bases": [
+     96.64
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 12.955,
+    "color": "#ffffff",
+    "maxw": 80.25,
+    "sample": "نص تجريبي",
+    "font": "RuaqArabic-Bold",
+    "word_spacing": 0.1839
+   },
+   {
+    "key": "tagline",
+    "kind": "text",
+    "align": "center",
+    "x": 50.185,
+    "bases": [
+     108.55
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 6.107,
+    "color": "#ffffff",
+    "maxw": 83.33,
+    "sample": "في وجهة واعدة اسـتثماريًا",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.0867
+   },
+   {
+    "key": "auction_line",
+    "kind": "text",
+    "align": "center",
+    "x": 50.5,
+    "bases": [
+     119.54
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 7.088,
+    "color": "#ffffff",
+    "maxw": 83.33,
+    "sample": "في مزاد درة البحر",
+    "font": "RuaqArabic-Bold",
+    "word_spacing": 0.1225
+   },
+   {
+    "key": "phone_text",
+    "kind": "text",
+    "align": "center",
+    "x": 24.654,
+    "bases": [
+     143.38
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 6.799,
+    "color": "#76c8a9",
+    "maxw": 38.27,
+    "sample": "920011513",
+    "font": "LamaSans-Medium",
+    "tracking": 0.0278,
+    "lama_size": 6.799,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-Medium",
+    "lama_tracking": 0.0278
+   },
+   {
+    "key": "day_label",
+    "kind": "text",
+    "align": "right",
+    "x": 84.636,
+    "bases": [
+     135.14
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.881,
+    "color": "#ffffff",
+    "maxw": 45.33,
+    "sample": "يوم الأربعاء",
+    "font": "RuaqArabic-Medium",
+    "word_spacing": 0.2065
+   },
+   {
+    "key": "date",
+    "kind": "text",
+    "align": "right",
+    "x": 83.586,
+    "bases": [
+     139.75
+    ],
+    "family": "l",
+    "weight": 500,
+    "size": 3.253,
+    "color": "#ffffff",
+    "maxw": 38.71,
+    "sample": "2023/11/01",
+    "font": "LamaSans-SemiBold",
+    "tracking": -0.0227,
+    "lama_size": 3.253,
+    "lama_weight": 500,
+    "lama_font": "LamaSans-SemiBold",
+    "lama_tracking": -0.0227
+   },
+   {
+    "key": "place",
+    "kind": "text",
+    "align": "right",
+    "x": 84.817,
+    "bases": [
+     145.12,
+     149.32
+    ],
+    "family": "r",
+    "weight": 500,
+    "size": 3.124,
+    "color": "#ffffff",
+    "maxw": 39.93,
+    "sample": "معارض الظهران الدوليـة (اكــــسـبـو الظـــــهـران)",
+    "font": "RuaqArabic-Medium"
+   },
+   {
+    "key": "auction_name",
+    "kind": "text",
+    "align": "right",
+    "x": 67.978,
+    "bases": [
+     164.79
+    ],
+    "family": "r",
+    "weight": 700,
+    "size": 3.535,
+    "color": "#ffffff",
+    "maxw": 16.05,
+    "sample": "درة البحر",
+    "font": "RuaqArabic-Bold"
+   },
+   {
+    "key": "agent_logo",
+    "kind": "image",
+    "box": [
+     21.6,
+     156.71,
+     50.1,
+     166.21
+    ]
+   },
+   {
+    "key": "icon",
+    "kind": "icon",
+    "box": [
+     70.1,
+     156.71,
+     78.1,
+     166.71
+    ]
+   }
+  ]
+ }
+}

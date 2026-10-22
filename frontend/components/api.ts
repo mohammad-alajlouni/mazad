@@ -31,7 +31,7 @@ export type Account = {
 export type Project = {
   workspace_type?: "project" | "booklet" | "banners" | "social";
   social_config?: import("./SocialTemplateFields").SocialConfig;
-  banner_config?: { size: string; property_ids: string[] };
+  banner_config?: { size: string; property_ids: string[]; court_name?: string };
   auction?: Record<string, unknown>;
   id: string;
   name: string;

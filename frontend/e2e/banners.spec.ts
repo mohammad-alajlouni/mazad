@@ -48,6 +48,8 @@ test("independent banner workspace validates, generates and exports", async ({
     .click();
   const auction = page.locator(".auction-workspace form");
   for (const [field, value] of Object.entries({
+    // The name beside the guide's «مـزاد» (room for a short name).
+    auction_name: "مزاد الريان",
     license_number: "420000053",
     auction_contact_number: "0555000000",
     auction_date: "2026-10-10",
@@ -85,6 +87,11 @@ test("independent banner workspace validates, generates and exports", async ({
   await page
     .locator('[name="property.execution_request_number"]')
     .fill("987654321");
+  // The guide's board shows the property as it is typed, before saving.
+  const board = page.frameLocator(
+    '.live-preview-paper iframe[aria-hidden="false"]',
+  );
+  await expect(board.getByText("987654321")).toBeVisible();
   await page
     .getByRole("button", { name: "Save and close", exact: true })
     .click();
@@ -100,6 +107,15 @@ test("independent banner workspace validates, generates and exports", async ({
   await expect(
     page.getByRole("button", { name: "Generate banners", exact: true }),
   ).toBeEnabled();
+  // The approved design itself, beneath the values (guide p. 30).
+  await expect(page.locator(".live-preview-paper")).toHaveAttribute(
+    "data-page-kind",
+    "board-landscape-physical",
+  );
+  await expect(
+    board.locator('img[src*="marketing/board-landscape-physical.png"]'),
+  ).toHaveCount(1);
+  await expect(board.locator('[data-slot="phone"]')).toHaveText("0555000000");
   await page
     .getByRole("button", { name: "Generate banners", exact: true })
     .click();
@@ -134,6 +150,12 @@ test("independent banner workspace validates, generates and exports", async ({
     .click();
   await expect(page.getByText(name, { exact: true })).toBeVisible();
   await page.getByText(name, { exact: true }).click();
+  // Another size shows its own design of the guide at once, unsaved.
+  await page.locator('input[value="2x2"]').check();
+  await expect(page.locator(".live-preview-paper")).toHaveAttribute(
+    "data-page-kind",
+    "board-square-physical",
+  );
   await page.locator(".language-switcher").selectOption("ar");
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
