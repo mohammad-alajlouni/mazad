@@ -58,6 +58,8 @@ class Project(Record, Base):
         JSONType, default=dict, server_default="{}"
     )
     auction: Mapped[dict] = mapped_column(JSONType, default=dict)
+    # The author's entries for the auction's official forms (FormsData).
+    forms: Mapped[dict] = mapped_column(JSONType, default=dict, server_default="{}")
     name: Mapped[str] = mapped_column(String(200))
     code: Mapped[str] = mapped_column(String(100), unique=True)
     customer: Mapped[str] = mapped_column(String(200), default="")

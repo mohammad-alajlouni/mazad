@@ -11,10 +11,19 @@ type Preview = {
   pages: { kind: string; item: string; step: string }[];
   // The property being entered: the optional pages its data calls for.
   auto?: Record<string, boolean> | null;
+  // The page's own size (the official forms have a landscape page).
+  width_pt?: number;
+  height_pt?: number;
+};
+// The official forms' unsaved values (FormsStep's "forms-draft" event).
+export type FormsDraft = {
+  forms: unknown;
+  form: "request" | "study";
+  item?: string;
 };
 // Booklet pages follow the data-entry steps; later steps stay locked until the
 // earlier ones are complete, so the preview never runs ahead of the form.
-const STEPS = ["auction", "items", "closing", "generate"];
+const STEPS = ["auction", "items", "closing", "forms", "generate"];
 const PAGE_WIDTH = 794; // 595.276 pt in CSS pixels
 const PAGE_HEIGHT = 1123;
 // The page of a property a field of its form prints on (the server falls
@@ -152,6 +161,23 @@ export default function LiveBookletPreview({
   const [frames, setFrames] = useState<[string, string]>(["", ""]);
   const [front, setFront] = useState(0);
   const [scale, setScale] = useState(0.4);
+  // In the forms step the preview shows the official forms, not the booklet.
+  const formsMode = stage === "forms";
+  const [formsDraft, setFormsDraft] = useState<FormsDraft | null>(null);
+  useEffect(() => {
+    const take = (event: Event) => {
+      const detail = (event as CustomEvent<FormsDraft>).detail;
+      setFormsDraft((current) => {
+        if (current?.form !== detail.form || current?.item !== detail.item)
+          setPage(null);
+        return detail;
+      });
+    };
+    window.addEventListener("forms-draft", take);
+    return () => window.removeEventListener("forms-draft", take);
+  }, []);
+  const pageWidth = ((preview?.width_pt || 595.276) * 4) / 3;
+  const pageHeight = ((preview?.height_pt || 841.89) * 4) / 3;
   // Larger than the column to read details: the page scrolls in its frame,
   // following the field being edited.
   const [zoom, setZoom] = useState(1);
@@ -263,15 +289,20 @@ export default function LiveBookletPreview({
     );
     return () => clearTimeout(timer);
   }, [detail, stage]);
+  const pageWidthRef = useRef(pageWidth);
+  pageWidthRef.current = pageWidth;
   useEffect(() => {
     const element = paper.current;
     if (!element) return;
     const observer = new ResizeObserver(() =>
-      setScale(element.clientWidth / PAGE_WIDTH),
+      setScale(element.clientWidth / pageWidthRef.current),
     );
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  useEffect(() => {
+    if (paper.current) setScale(paper.current.clientWidth / pageWidth);
+  }, [pageWidth]);
   const current = stepOf(stage);
   const stages = detail.workflow?.stages || {};
   const unlocked = new Set<string>();
@@ -296,34 +327,43 @@ export default function LiveBookletPreview({
     const timer = setTimeout(async () => {
       try {
         const result = await api<Preview>(
-          `/projects/${detail.project.id}/booklet-preview`,
+          `/projects/${detail.project.id}/${formsMode ? "forms-preview" : "booklet-preview"}`,
           {
             method: "POST",
             signal: controller.signal,
-            body: send({
-              ...draft,
-              stage: [
-                "auction",
-                "agent",
-                "items",
-                "images",
-                "closing",
-                "generate",
-                "cover",
-                "introduction",
-                "terms",
-                "participation",
-                "contact",
-                "features",
-                "boundaries",
-                "information",
-                "photos",
-                "rentals",
-              ].includes(focus)
-                ? focus
-                : "items",
-              page,
-            }),
+            body: send(
+              formsMode
+                ? {
+                    form: formsDraft?.form || "request",
+                    ...(formsDraft ? { forms: formsDraft.forms } : {}),
+                    item: formsDraft?.item,
+                    page,
+                  }
+                : {
+                    ...draft,
+                    stage: [
+                      "auction",
+                      "agent",
+                      "items",
+                      "images",
+                      "closing",
+                      "generate",
+                      "cover",
+                      "introduction",
+                      "terms",
+                      "participation",
+                      "contact",
+                      "features",
+                      "boundaries",
+                      "information",
+                      "photos",
+                      "rentals",
+                    ].includes(focus)
+                      ? focus
+                      : "items",
+                    page,
+                  },
+            ),
           },
         );
         if (request !== version.current) return;
@@ -361,7 +401,7 @@ export default function LiveBookletPreview({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [detail, draft, page, focus, retry]);
+  }, [detail, draft, page, focus, retry, formsMode, formsDraft]);
   async function loaded(slot: number) {
     const job = pending.current;
     const doc = frameRefs[slot].current?.contentDocument;
@@ -542,7 +582,7 @@ export default function LiveBookletPreview({
           <X size={20} />
         </button>
         <div className="live-preview-heading">
-          <strong>{t("title")}</strong>
+          <strong>{t(formsMode ? "formsTitle" : "title")}</strong>
           <span aria-live="polite">
             {error ? t("failed") : updating ? t("updating") : t("current")}
           </span>
@@ -622,6 +662,7 @@ export default function LiveBookletPreview({
           <div
             className="live-preview-paper"
             ref={paper}
+            style={{ aspectRatio: `${pageWidth} / ${pageHeight}` }}
             aria-busy={updating}
             data-page-kind={preview?.pages[preview.page]?.kind}
           >
@@ -637,8 +678,8 @@ export default function LiveBookletPreview({
                 tabIndex={-1}
                 onLoad={() => void loaded(slot)}
                 style={{
-                  width: PAGE_WIDTH,
-                  height: PAGE_HEIGHT,
+                  width: pageWidth,
+                  height: pageHeight,
                   transform: `scale(${scale})`,
                   visibility: slot === front && preview ? "visible" : "hidden",
                 }}

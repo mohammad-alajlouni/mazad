@@ -72,7 +72,7 @@ test("Arabic default, administrator provisioning, private author booklet and app
     page
       .locator(".workflow-steps")
       .getByRole("button", { name: new RegExp(t(`flow.${key}`)) });
-  await expect(page.locator(".workflow-steps button")).toHaveCount(5);
+  await expect(page.locator(".workflow-steps button")).toHaveCount(6);
   await step("review").click();
   await expect(
     page.locator('.auction-workspace [name="auction_date"]'),
@@ -133,8 +133,15 @@ test("Arabic default, administrator provisioning, private author booklet and app
   const detail = await page.request
     .get("/api/projects/" + projects[0].id)
     .then((r) => r.json());
-  expect(detail.outputs).toHaveLength(1);
-  expect(detail.outputs[0].official_booklet).toBe(true);
+  // The booklet, with the auction's two official forms.
+  expect(
+    detail.outputs.map((o: { output_type: string }) => o.output_type).sort(),
+  ).toEqual(["auction_request", "project_booklet", "property_study"]);
+  expect(
+    detail.outputs.filter(
+      (o: { official_booklet: boolean }) => o.official_booklet,
+    ),
+  ).toHaveLength(1);
   expect(detail.selling_agent.logo_image_id).toBeTruthy();
   expect(errors).toEqual([]);
 });

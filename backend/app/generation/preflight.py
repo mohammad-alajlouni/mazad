@@ -68,15 +68,23 @@ def inspect_pdf(pdf, content):
     elif content.get("booklet"):
         expected = (210 * 72 / 25.4, 297 * 72 / 25.4)
         count = len(content["booklet"]["pages"])
+    elif content.get("forms"):
+        # A4, the statement tables lying across (landscape).
+        expected = (210 * 72 / 25.4, 297 * 72 / 25.4)
+        kind = "forms"
+        if content["forms"]["kind"] == "request":
+            count = len(content["forms"]["pages"])
     else:
         return None
     with pymupdf.open(stream=pdf, filetype="pdf") as doc:
         if not len(doc) or (count is not None and len(doc) != count):
             raise HTTPException(422, "Generated layout failed preflight")
         for page in doc:
+            size = (page.rect.width, page.rect.height)
+            if kind == "forms":
+                size = tuple(sorted(size))
             if any(
-                abs(actual - target) > 0.15
-                for actual, target in zip((page.rect.width, page.rect.height), expected)
+                abs(actual - target) > 0.15 for actual, target in zip(size, expected)
             ):
                 raise HTTPException(422, "Generated layout failed preflight")
             for b in page.get_text("blocks"):

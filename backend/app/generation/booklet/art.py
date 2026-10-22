@@ -321,13 +321,14 @@ def cover_with_photo(number, src):
 def original_pdf_artwork(pdf, content, document=None):
     """Place the immutable original artwork on its pages, as vectors.
 
-    Icons, tiles, the footer bar and the covers are the vector files built by
+    Icons, tiles, the footer bar and the covers (and the official forms'
+    pages, see generation/forms) are the vector files built by
     scripts/build_vector_art.py, placed beneath the text in the boxes the
     templates reserved (document is the rendered WeasyPrint document).
     """
     import pymupdf
 
-    if not content.get("booklet"):
+    if not content.get("booklet") and not content.get("forms"):
         return pdf
     stamps = vector_boxes(document) if document is not None else []
     sources = {}
@@ -343,15 +344,18 @@ def original_pdf_artwork(pdf, content, document=None):
         return sources[name]
 
     with pymupdf.open(stream=pdf, filetype="pdf") as output:
-        for n, page in enumerate(content["booklet"]["pages"]):
-            if n >= len(output):
-                break  # The normal page-count preflight rejects an invalid composition.
+        for n in range(len(output)):
             # Later insertions go further down: reversed keeps the document order
             # (a cover background stays beneath the icon drawn on it).
             for name, x0, y0, x1, y1 in reversed(stamps[n] if n < len(stamps) else []):
                 output[n].show_pdf_page(
                     pymupdf.Rect(x0, y0, x1, y1),
-                    source(f"booklet-art/vector/{name}.pdf"),
+                    # The official forms' pages are named by their own path.
+                    source(
+                        f"{name}.pdf"
+                        if name.startswith("forms/")
+                        else f"booklet-art/vector/{name}.pdf"
+                    ),
                     0,
                     keep_proportion=False,
                     overlay=False,

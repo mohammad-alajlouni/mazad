@@ -2112,3 +2112,18 @@ html[dir="rtl"] .profile-return .lucide-arrow-left { transform: scaleX(-1); }
   .live-booklet-preview.open .live-preview-zoom { display: flex; }
   .live-booklet-preview.open .live-preview-paper { width: calc(100% * var(--zoom, 1)); max-width: calc(520px * var(--zoom, 1)); }
 }
+/* The official forms step: values from the booklet, choices and the study's questions. */
+.form-given { display: grid; gap: 4px; align-content: start; margin-bottom: 20px; }
+.form-given .given-value { min-height: 40px; display: flex; align-items: center; padding: 8px 12px; background: var(--soft); border: 1px dashed var(--line); font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.form-given .given-value em { font-style: normal; font-weight: 500; color: var(--warn-fg); }
+.form-given small { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--accent); }
+.form-question { display: grid; gap: 8px; margin: 4px 0 18px; }
+.form-question > input { max-width: 520px; }
+.form-choice { flex-wrap: wrap; justify-content: flex-start; }
+.form-choice button { display: inline-flex; align-items: center; gap: 5px; }
+.form-property { margin: 0 0 16px; }
+.study-questions { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border: 1px solid var(--line); background: var(--sheet); }
+.study-questions li { display: grid; grid-template-columns: minmax(0, 1.4fr) auto minmax(0, 1fr); gap: 10px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--line); }
+.study-questions li:first-child { border-top: 0; }
+.study-question { font-size: 13px; line-height: 1.6; }
+@media (max-width: 760px) { .study-questions li { grid-template-columns: minmax(0, 1fr); } }

@@ -1,0 +1,20 @@
+{
+ "source": {
+  "rega-request-source.pdf": "7d8072eff8ae07ac5c8c3c265d409ca9c00b0246881ba656714e72d2b91b7685"
+ },
+ "files": {
+  "request-1.pdf": "90f7e477f3d104c874572d5828f5de142e32259f0af5bae78d6f24798479fb38",
+  "request-1.png": "a14bf60e26325417dc27c45f969d1e4565382cd053604d8b2948d0e1277fe65d",
+  "request-2.pdf": "fc09ecdeb88dacfcc4c9f35f063ba71ce119482a7253df175bb5a914d434014f",
+  "request-2.png": "3beb8bddd31a6d8ef34b4eba1911e195e28ad2de49799228a73efa7286040396",
+  "request-3.pdf": "03273a54c49d18d9aa7a712ee83f69d01da91ed14f7500960da56a5caadce0fc",
+  "request-3.png": "372c2b22a26d3ec7c69a91c8fdbbc1d1f6397292f2940427978b459d4fa2981a",
+  "request-4.pdf": "972a8868dcc6868b5564a1c13a2616b0f8dc06126331c2affa7df60a7cebb18d",
+  "request-4.png": "6379f91d4ffa27c5aeccc6df96ba6a6f3cbe7b348139a7ab545ca87c6a6c3f48",
+  "request-5.pdf": "f905715b841f84595c0d4b7dfcc0903a799ba158e60e81563c9a2496131b72e8",
+  "request-5.png": "03bd518f7f5be44317565af3b191a68b9ef2113168a24bc84298f4f70a9d04f6",
+  "request-6.pdf": "481e8bf349a6becba5a7ebe8e3705f90514c95502b432efd44707ac3e77e068e",
+  "request-6.png": "fc1037c0109913e6eb4cb2401b6a15ff9697b5feb6261b20b29c6cc79ed4888c",
+  "request-fields.json": "fb246126c1ff6984b26d8faa7e6cfa7d7446f5007d325ca052ef7e9f72ca9543"
+ }
+}

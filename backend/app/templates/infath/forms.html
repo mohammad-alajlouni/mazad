@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+{#- The auction's official forms (generation/forms/compose.py).
+    request: the authority's own pages, each value in its field's box (the
+    page itself is placed under the text on export, its picture in the live
+    preview). study: Infath's study sheet, one per property. -#}
+<style>
+{% include 'infath/identity.css' %}
+@page{size:595.276pt 841.890pt;margin:0}
+@page land{size:841.890pt 595.276pt;margin:0}
+@page study{size:595.276pt 841.890pt;margin:10mm 10mm 10mm}
+*{box-sizing:border-box}
+body{margin:0;font-family:Ruaq,Lama,sans-serif;color:#001447}
+.sheet{position:relative;overflow:hidden;break-after:page}
+.sheet:last-child,.study:last-child{break-after:auto}
+.sheet.land{page:land}
+.bg{position:absolute;left:0;top:0;width:100%;height:100%}
+.vec{position:absolute}
+.val{position:absolute;text-align:right;color:#0b2a5b;font-weight:500;white-space:nowrap}
+.val.r{font-family:Ruaq,Lama}.val.l{font-family:Lama,Ruaq}
+.tick{position:absolute}
+/* Infath's study sheet. */
+.study{page:study;break-after:page;font-size:7.6pt;color:#0b1f3f}
+.study-head{display:flex;align-items:center;justify-content:space-between;background:#0d2b5e;color:#fff;padding:7pt 12pt;margin-bottom:9pt}
+.study-head h1{margin:0;font-size:13pt;font-weight:700;flex:1;text-align:center}
+.study-head img{height:30pt}
+.study table{width:100%;border-collapse:collapse;margin-bottom:5pt;table-layout:fixed}
+.study th,.study td{border:0.6pt solid #0d2b5e;padding:2pt 4pt;vertical-align:middle;text-align:right;line-height:1.35;overflow-wrap:anywhere}
+.study th{background:#0d2b5e;color:#fff;font-weight:700;font-size:7.6pt;text-align:center}
+.study th.label{text-align:right;font-weight:500}
+.study td.num,.study th.num{width:20pt;text-align:center}
+.study td.mark{text-align:center;font-weight:700;color:#0d2b5e}
+.study td.main{background:#eef2f8;font-weight:700;text-align:center}
+.study td.ltr{direction:ltr;text-align:left;font-family:Lama,Ruaq;font-size:7.4pt}
+.study .pre{white-space:pre-line}
+.study tr{break-inside:avoid}
+{% if preview %}.study{padding:28pt}{% endif %}
+.study .declaration td{height:46pt}
+.study .caption{background:#0d2b5e;color:#fff;text-align:center;font-weight:700;padding:4pt}
+</style>
+</head>
+<body>
+{% set F = forms %}
+{% if F.kind == 'request' %}
+{% for page in F.pages %}{% set w, h = page.size %}
+<section class="sheet{{ ' land' if w > h else '' }}" data-kind="request-{{ page.sheet }}" style="width:{{ w }}pt;height:{{ h }}pt">
+{% if preview %}<img class="bg" src="{{ asset('forms/request-' ~ page.sheet ~ '.png') }}" alt="">
+{% else %}<div class="vec" data-vector="forms/request-{{ page.sheet }}" style="left:0;top:0;width:{{ w }}pt;height:{{ h }}pt"></div>{% endif %}
+{% for t in page.texts %}{% set x0, y0, x1, y1 = t.box %}
+{%- set lh = t.size * 1.25 %}{% set top = y0 + ((y1 - y0) - lh * (t.lines|length)) / 2 %}
+<div class="val {{ t.family }}" style="right:{{ '%.2f' % (w - x1 + 3) }}pt;top:{{ '%.2f' % top }}pt;width:{{ '%.2f' % (x1 - x0 - 6) }}pt;font-size:{{ t.size }}pt;line-height:{{ '%.2f' % lh }}pt">
+{%- for line in t.lines %}<div dir="auto" style="text-align:right">{{ line }}</div>{% endfor %}</div>
+{% endfor %}
+{% for x0, y0, x1, y1 in page.ticks %}{% set s = [x1 - x0, y1 - y0]|min %}
+<svg class="tick" style="right:{{ '%.2f' % (w - (x0 + x1) / 2 - s * 0.4) }}pt;top:{{ '%.2f' % ((y0 + y1) / 2 - s * 0.4) }}pt;width:{{ '%.2f' % (s * 0.8) }}pt;height:{{ '%.2f' % (s * 0.8) }}pt" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" fill="none" stroke="#0b2a5b" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+{% endfor %}
+</section>
+{% endfor %}
+{% else %}
+{% for s in F.pages %}
+<section class="study" data-kind="study">
+<div class="study-head"><img src="{{ infath_logo('#ffffff') }}" alt="Infath"><h1>نموذج مطابقة المعلومات الواردة في النظام على الواقع</h1><span style="width:30pt"></span></div>
+<table>
+<tr><th colspan="4">البيانات الأساسية للعقار</th></tr>
+<tr><th class="label" style="width:30%">اسم المشروع</th><td colspan="3">{{ s.project_name }}</td></tr>
+<tr><th class="label">المدينة</th><td colspan="3">{{ s.city }}</td></tr>
+<tr><th class="label">فئة المشروع</th><td colspan="3">{{ s.category }}</td></tr>
+<tr><th class="label">مدير المشروع</th><td colspan="3">{{ s.manager }}</td></tr>
+</table>
+<table>
+<tr><th colspan="7">قائمة دراسة العقار<br>رقم الصك ( {{ s.deed or '.............................' }} )</th></tr>
+<tr><th class="num">#</th><th style="width:17%">العنوان الرئيسي</th><th style="width:22%">رابط موقع العقار</th><th style="width:10%">المساحة</th><th style="width:11%">نوع العقار</th><th>الملاحظة</th><th style="width:13%">اعتماد مدير التصفية</th></tr>
+<tr><td class="num">1</td><td class="main">الموقع والمساحة ونوع العقار</td><td class="ltr">{{ s.location_link }}</td><td>{{ s.area }}</td><td>{{ s.property_type }}</td><td class="pre">{{ s.location_note }}</td><td></td></tr>
+</table>
+{% for section in s.sections %}
+<table>
+<tr><th class="num">#</th><th style="width:13%">العنوان الرئيسي</th><th>العنوان الفرعي</th><th style="width:5%">نعم</th><th style="width:5%">لا</th><th style="width:22%">الملاحظة</th><th style="width:11%">اعتماد مدير التصفية</th></tr>
+{% for row in section.rows %}<tr>
+{% if loop.first %}<td class="num" rowspan="{{ section.rows|length + (1 if section.number == 4 else 0) }}">{{ section.number }}</td><td class="main" rowspan="{{ section.rows|length + (1 if section.number == 4 else 0) }}">{{ section.title }}</td>{% endif %}
+<td>{{ row.question }}</td><td class="mark">{{ '✓' if row.answer == 'yes' else '' }}</td><td class="mark">{{ '✓' if row.answer == 'no' else '' }}</td><td class="pre">{{ row.note }}</td><td></td></tr>
+{% endfor %}
+{% if section.number == 4 %}<tr><td>عمر العقار</td><td></td><td></td><td>{{ s.age }}</td><td></td></tr>{% endif %}
+</table>
+{% endfor %}
+<table>
+<tr><th class="num">#</th><th style="width:22%">البند</th><th></th><th style="width:13%">اعتماد مدير التصفية</th></tr>
+<tr><td class="num">8</td><td class="main">السعر التقديري</td><td>{{ s.estimated_price }}</td><td></td></tr>
+<tr><td class="num">9</td><td class="main">القيمة الاسترشادية</td><td>{{ s.indicative_value }}</td><td></td></tr>
+<tr><td class="num">10</td><td class="main">عيوب العقار</td><td class="pre">{{ s.defects }}</td><td></td></tr>
+<tr><td class="num">11</td><td class="main">مميزات العقار</td><td class="pre">{{ s.features }}</td><td></td></tr>
+</table>
+<table class="declaration">
+<tr><th style="width:46%">إقرار وتعهد</th><th>وكيل البيع</th><th style="width:27%">توقيع وكيل البيع</th></tr>
+<tr><td>{{ F.declaration }}</td><td style="text-align:center">{{ s.agent }}</td><td></td></tr>
+</table>
+</section>
+{% endfor %}
+{% endif %}
+</body>
+</html>

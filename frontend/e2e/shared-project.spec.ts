@@ -159,9 +159,16 @@ test("one project reuses data for booklet, banners and social posts", async ({
     .then((r) => r.json());
   expect(detail.items).toHaveLength(1);
   expect(detail.images).toHaveLength(4);
-  expect(detail.outputs).toHaveLength(3);
+  // The booklet came with its two official forms.
+  expect(detail.outputs).toHaveLength(5);
+  // Each approved where it was reviewed; the forms wait for their own review.
   expect(
-    detail.outputs.every((o: { status: string }) => o.status === "APPROVED"),
+    detail.outputs
+      .filter(
+        (o: { output_type: string }) =>
+          !["auction_request", "property_study"].includes(o.output_type),
+      )
+      .every((o: { status: string }) => o.status === "APPROVED"),
   ).toBeTruthy();
   expect(
     await page.request.get("/api/projects").then((r) => r.json()),
@@ -199,11 +206,11 @@ test("one project reuses data for booklet, banners and social posts", async ({
   const batch = page.waitForResponse(
     (r) =>
       r.url().endsWith(`/projects/${p.id}/generate`) &&
-      r.request().postDataJSON()?.types?.length === 3,
+      r.request().postDataJSON()?.types?.length === 5,
   );
   await page
     .getByRole("button", {
-      name: "Generate booklet, banners and social posts",
+      name: "Generate booklet, forms, banners and social posts",
       exact: true,
     })
     .click();
@@ -214,10 +221,10 @@ test("one project reuses data for booklet, banners and social posts", async ({
   const complete = await page.request
     .get(`/api/projects/${p.id}`)
     .then((r) => r.json());
-  expect(complete.outputs).toHaveLength(6);
+  expect(complete.outputs).toHaveLength(10);
   expect(
     complete.outputs.filter((o: { status: string }) => o.status === "DRAFT"),
-  ).toHaveLength(3);
+  ).toHaveLength(5);
   await page.locator(".language-switcher").selectOption("ar");
   await page.setViewportSize({ width: 390, height: 844 });
   expect(

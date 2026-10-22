@@ -74,6 +74,8 @@ export function activityDetail(action: string, detail: string) {
     const aliases: Record<string, string> = {
       marketing_banners: "banners",
       social_media_content: "social_content",
+      auction_request_form: "auction_request",
+      property_study_form: "property_study",
     };
     return systemLabel(aliases[key] || key) + " · " + name.join(" · ");
   }

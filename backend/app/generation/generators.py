@@ -77,6 +77,22 @@ class ClosingFormGenerator(BaseOutputGenerator):
         return data
 
 
+class AuctionRequestGenerator(BaseOutputGenerator):
+    key = "auction_request"
+    title = "Auction request form"
+
+    def build(self, project, items, outputs):
+        return self.base(project, items)
+
+
+class PropertyStudyGenerator(BaseOutputGenerator):
+    key = "property_study"
+    title = "Property study form"
+
+    def build(self, project, items, outputs):
+        return self.base(project, items)
+
+
 class SocialContentGenerator(BaseOutputGenerator):
     key = "social_content"
     title = "Social media content"
@@ -142,3 +158,9 @@ GENERATORS = {
         BookletStudyReportGenerator,
     )
 }
+# The auction's official forms: generated with the booklet when asked for,
+# never part of the general output set above.
+FORM_GENERATORS = {
+    g.key: g() for g in (AuctionRequestGenerator, PropertyStudyGenerator)
+}
+ALL_GENERATORS = {**GENERATORS, **FORM_GENERATORS}

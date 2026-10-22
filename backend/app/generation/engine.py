@@ -20,7 +20,7 @@ from ..models import (
     Template,
 )
 from ..services.storage import LocalStorage
-from .generators import GENERATORS
+from .generators import ALL_GENERATORS
 
 TEMPLATE_ROOT = Path(__file__).parent.parent / "templates"
 env = Environment(
@@ -245,6 +245,23 @@ def snapshot(db, project, linked_photos=False):
     return project_data, items
 
 
+# The official forms, generated with the booklet (generation/forms).
+FORM_KINDS = {"auction_request": "request", "property_study": "study"}
+
+
+def forms_content(project_data, items, forms, kind):
+    from .forms.compose import request_pages, study_pages
+    from .forms.questions import DECLARATION
+
+    form = FORM_KINDS[kind]
+    build = request_pages if form == "request" else study_pages
+    return {
+        "kind": form,
+        "pages": build(project_data, items, forms or {}),
+        "declaration": DECLARATION,
+    }
+
+
 def build_content(db, project, kind, output_language=None):
     project_data, items = snapshot(db, project)
     if kind == "banners" and project.workspace_type in ("project", "banners"):
@@ -275,7 +292,7 @@ def build_content(db, project, kind, output_language=None):
             select(GeneratedOutput).where(GeneratedOutput.project_id == project.id)
         )
     ]
-    content = GENERATORS[kind].build(project_data, items, reports)
+    content = ALL_GENERATORS[kind].build(project_data, items, reports)
     if kind == "banners" and project.workspace_type in ("project", "banners"):
         from ..services.banners import SIZES
 
@@ -333,6 +350,8 @@ def build_content(db, project, kind, output_language=None):
         from .booklet.composer import compose
 
         content["booklet"] = compose(project_data, items)
+    if kind in FORM_KINDS:
+        content["forms"] = forms_content(project_data, items, project.forms, kind)
     if kind == "social_content" and project.workspace_type in ("project", "social"):
         from ..services.social import FORMATS, caption
 
@@ -375,6 +394,8 @@ def render(db, output):
         template_file = "infath/social.html"
     if content.get("booklet"):
         template_file = "infath/booklet.html"
+    if content.get("forms"):
+        template_file = "infath/forms.html"
     html = render_html(content, template_file, output.status, font_data, font_bold)
 
     from .preflight import check_layout, inspect_pdf
@@ -483,6 +504,7 @@ def render_html(
     from .booklet import fit, formatting
     from .booklet.art import (
         COVER_PHOTO,
+        infath_logo,
         logo_fit,
         page_shape,
         photo,
@@ -522,6 +544,7 @@ def render_html(
         agent_logo_box=AGENT_LOGO,
         supervisor_logo=supervisor_logo,
         infath=INFATH,
+        infath_logo=infath_logo,
         legal_room=LEGAL_ROOM,
         legal_small=LEGAL_SMALL,
         shapes=shapes,

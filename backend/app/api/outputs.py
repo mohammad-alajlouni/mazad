@@ -8,7 +8,7 @@ from ..auth import current_user
 from ..db import get_db
 from ..generation.booklet.validation import validate_project
 from ..generation.engine import build_content, render
-from ..generation.generators import GENERATORS
+from ..generation.generators import ALL_GENERATORS, FORM_GENERATORS, GENERATORS
 from ..models import (
     AIGeneration,
     GeneratedFile,
@@ -32,7 +32,7 @@ def output_types():
 
 class GenerationInput(BaseModel):
     types: list[str] = Field(
-        default_factory=lambda: list(GENERATORS), min_length=1, max_length=8
+        default_factory=lambda: list(GENERATORS), min_length=1, max_length=10
     )
     use_ai: bool = False
     output_language: Literal["en", "ar"] | None = None
@@ -41,7 +41,7 @@ class GenerationInput(BaseModel):
 @router.post("/projects/{id}/generate")
 async def generate(id: str, body: GenerationInput, db=Depends(get_db)):
     p = get_project(db, id, True)
-    if any(k not in GENERATORS for k in body.types):
+    if any(k not in ALL_GENERATORS for k in body.types):
         raise HTTPException(400, "Unknown output type")
     if not db.scalar(
         select(ProjectItem.id).where(ProjectItem.project_id == id).limit(1)
@@ -134,7 +134,7 @@ async def generate(id: str, body: GenerationInput, db=Depends(get_db)):
         db.add(o)
         db.flush()
         render(db, o)
-        audit(db, "Output generated", f"{GENERATORS[kind].title} · {p.name}")
+        audit(db, "Output generated", f"{ALL_GENERATORS[kind].title} · {p.name}")
         result.append(o)
     db.commit()
     return [output_view(db, o) for o in result]
@@ -167,7 +167,7 @@ def edit_output(id: str, body: ReviewInput, db=Depends(get_db)):
     o = get_output(db, id)
     if o.status == "NEEDS_REGENERATION":
         raise HTTPException(409, "Source data changed. Regenerate first.")
-    if o.content.get("booklet") or o.content.get("banner") or o.content.get("social"):
+    if any(o.content.get(k) for k in ("booklet", "banner", "social", "forms")):
         raise HTTPException(409, "Edit auction data and regenerate the booklet")
     o.content = {**o.content, "review_text": body.review_text}
     o.status = "DRAFT"
@@ -261,6 +261,17 @@ def regenerate(id: str, db=Depends(get_db)):
             )
             db.add(o)
             db.flush()
+    if o.output_type in FORM_GENERATORS and o.approved_at:
+        # An approved form stays as approved; the new one is a draft.
+        o = GeneratedOutput(
+            project_id=p.id,
+            output_type=o.output_type,
+            template_id=o.template_id,
+            content={},
+            revision=p.revision,
+        )
+        db.add(o)
+        db.flush()
     o.content = build_content(db, p, o.output_type, output_language)
     o.status = "DRAFT"
     o.revision = p.revision
@@ -285,11 +296,14 @@ def generated_file(id: str, download: bool = False, db=Depends(get_db)):
         filename = f"social-{o.content['social']['format']}-{file.id[:8]}.{suffix}"
     if o.content.get("banner"):
         filename = f"banner-{o.content['banner']['size']}-{file.id[:8]}.{suffix}"
-    if o.content.get("booklet"):
+    if o.content.get("booklet") or o.content.get("forms"):
         import re
 
         code = re.sub(r"[^a-zA-Z0-9_-]", "-", o.content["project"]["code"])[:70]
-        filename = f"auction-{code}-{o.created_at:%Y-%m-%d}.{suffix}"
+        name = {"request": "auction-request", "study": "property-study"}.get(
+            (o.content.get("forms") or {}).get("kind"), "auction"
+        )
+        filename = f"{name}-{code}-{o.created_at:%Y-%m-%d}.{suffix}"
     return Response(
         LocalStorage().read(file.key),
         media_type=file.media_type,

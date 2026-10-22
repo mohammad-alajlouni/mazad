@@ -3,7 +3,7 @@ from sqlalchemy import select
 from .auth import hasher
 from .config import settings
 from .db import SessionLocal
-from .generation.generators import GENERATORS
+from .generation.generators import ALL_GENERATORS
 from .models import SystemSetting, Template, User
 from .schemas import Branding
 
@@ -23,7 +23,7 @@ def bootstrap():
             )
         else:
             admin.role = "admin"
-        for key in GENERATORS:
+        for key in ALL_GENERATORS:
             if not db.scalar(select(Template).where(Template.output_type == key)):
                 db.add(
                     Template(
