@@ -1,8 +1,9 @@
 "use client";
 // The auction's official forms: the authority's auction request form and
-// Infath's property study. What the booklet holds is shown as it is (from
-// the booklet); only the rest is entered here. The live preview shows the
-// form being filled; both forms are generated with the booklet.
+// Infath's property study, each a section of the project of its own. What
+// the project's data holds (the auction, its properties) is shown as it is;
+// only the rest is entered here. The live preview shows the form being
+// filled; each form is issued on its own, without the booklet.
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { BookOpen, Check } from "lucide-react";
@@ -46,16 +47,19 @@ export function FormsStep({
   detail,
   run,
   onSaved,
+  only,
 }: {
   detail: Detail;
   run: Run;
   // After a part is saved; done after the last one.
   onSaved: (done: boolean) => void;
+  // One form alone (its own section of the project).
+  only?: Part;
 }) {
   const t = useTranslations("forms");
   const [view, setView] = useState<View | null>(null);
   const [forms, setForms] = useState<Forms | null>(null);
-  const [part, setPart] = useState<Part>("request");
+  const [part, setPart] = useState<Part>(only || "request");
   const [item, setItem] = useState(detail.items[0]?.id || "");
   const form = useRef<HTMLFormElement>(null);
   const at = useRef(part);
@@ -85,7 +89,7 @@ export function FormsStep({
     const element = form.current;
     if (!element) return;
     const back = (event: Event) => {
-      if (at.current === "study") {
+      if (at.current === "study" && !only) {
         event.preventDefault();
         setPart("request");
       }
@@ -217,7 +221,7 @@ export function FormsStep({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        if (part === "request")
+        if (part === "request" && !only)
           save(() => {
             onSaved(false);
             setPart("study");
@@ -225,9 +229,9 @@ export function FormsStep({
         else save(() => onSaved(true));
       }}
     >
-      <h2>{t("title")}</h2>
-      <p className="muted">{t("help")}</p>
-      <ol className="page-parts" aria-label={t("title")}>
+      <h2>{only ? t(only) : t("title")}</h2>
+      <p className="muted">{t(only ? only + "Help" : "help")}</p>
+      <ol className="page-parts" aria-label={t("title")} hidden={!!only}>
         {PARTS.map((key) => (
           <li key={key}>
             <button

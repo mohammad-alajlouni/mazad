@@ -14,7 +14,7 @@ const env = Object.fromEntries(
       return [l.slice(0, i), l.slice(i + 1)];
     }),
 );
-test("the official forms take the booklet's data and the author fills the rest, with a live preview", async ({
+test("each official form is its own section of the project, issued without the booklet", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -25,13 +25,15 @@ test("the official forms take the booklet's data and the author fills the rest, 
   await page.getByLabel("Password", { exact: true }).fill(env.ADMIN_PASSWORD);
   await page.getByRole("button", { name: "Sign in to workspace" }).click();
   await completeAccount(page);
+  // A full project whose booklet is far from ready (no closing pages, no
+  // photographs): its forms need only its data.
   const project = await newProject(
     page,
     "Forms " + Date.now(),
-    "booklet",
+    "project",
     {},
     {
-      auction_name: "Forms auction",
+      auction_name: "مزاد النماذج",
       auction_date: "2026-10-10",
       start_time: "16:00",
       physical_location: "الرياض",
@@ -49,20 +51,18 @@ test("the official forms take the booklet's data and the author fills the rest, 
     },
   });
   expect(added.ok()).toBeTruthy();
-  // Open the project again, with its property.
+  await page.reload();
   await page.locator(".sidebar nav button").nth(1).click();
   await page.getByText(project.name, { exact: true }).first().click();
-  await page.locator(".workflow-steps").waitFor();
-  await page.locator(".workflow-steps button", { hasText: "Forms" }).click();
+  const sections = page.locator(".project-sections");
+  await sections.getByRole("button", { name: "Auction request" }).click();
   const form = page.locator(".forms-step");
   await expect(form).toBeVisible();
-  // The booklet's values are shown, not asked for again.
+  // The project's values are shown, not asked for again.
   await expect(
-    form.locator(".form-given", { hasText: "410112034455" }),
+    form.locator(".form-given", { hasText: "مزاد النماذج" }),
   ).toHaveCount(1);
-  await expect(
-    form.locator(".form-given", { hasText: "Forms auction" }),
-  ).toHaveCount(1);
+  await expect(form.getByText("From project data").first()).toBeVisible();
   // What is typed shows at once in the authority's form, in the preview.
   await form
     .locator("label", { hasText: "Commercial registration" })
@@ -76,11 +76,18 @@ test("the official forms take the booklet's data and the author fills the rest, 
     "data-page-kind",
     "request-1",
   );
-  // Next saves the request form and opens the study.
-  await page.locator(".nav-next").click();
+  // Issued alone: saved, generated, open for review.
+  await page.getByRole("button", { name: /Save and issue/ }).click();
   await expect(
-    form.locator(".page-parts button.selected", { hasText: "Property study" }),
+    page.getByText("Form issued and ready for review"),
   ).toBeVisible();
+  await expect(page.locator(".review h1")).toHaveText("Auction request form");
+  await page
+    .getByRole("button", { name: "← Back to workspace", exact: true })
+    .click();
+  // Back in the project, where its sections are.
+  await expect(sections).toBeVisible();
+  await sections.getByRole("button", { name: "Property study" }).click();
   await expect(page.locator(".live-preview-paper")).toHaveAttribute(
     "data-page-kind",
     "study",
@@ -89,10 +96,8 @@ test("the official forms take the booklet's data and the author fills the rest, 
     .getByRole("radio", { name: /fully sellable: Yes|بالكامل: Yes/ })
     .first()
     .click();
-  await page.locator(".nav-next").click();
-  await expect(
-    page.locator(".workflow-steps button.selected", { hasText: "Review" }),
-  ).toBeVisible();
+  await page.getByRole("button", { name: /Save and issue/ }).click();
+  await expect(page.locator(".review h1")).toHaveText("Property study form");
   const saved = await page.request
     .get(`/api/projects/${project.id}/forms`)
     .then((r) => r.json());
@@ -101,5 +106,12 @@ test("the official forms take the booklet's data and the author fills the rest, 
     answers: Record<string, { answer: string }>;
   };
   expect(answers.answers.sellable.answer).toBe("yes");
+  // Only the two forms: no booklet, banners or posts were needed.
+  const detail = await page.request
+    .get(`/api/projects/${project.id}`)
+    .then((r) => r.json());
+  expect(
+    detail.outputs.map((o: { output_type: string }) => o.output_type).sort(),
+  ).toEqual(["auction_request", "property_study"]);
   expect(errors).toEqual([]);
 });

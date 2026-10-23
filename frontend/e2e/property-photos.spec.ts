@@ -40,7 +40,7 @@ test("a property's photographs are entered and changed in its own form", async (
   );
   // No step of its own for photographs: they belong to each property.
   const steps = page.locator(".workflow-steps button");
-  await expect(steps).toHaveCount(5);
+  await expect(steps).toHaveCount(4);
   await steps.nth(1).click();
   await expect(page.locator(".workflow-steps")).not.toContainText("Images");
   const form = page.locator(".property-form");

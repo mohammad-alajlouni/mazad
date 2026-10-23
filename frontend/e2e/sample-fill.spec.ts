@@ -40,14 +40,14 @@ test("sample fill completes a project that generates all its outputs", async ({
     page.getByText("3 properties and 4 images in this shared project"),
   ).toBeVisible({ timeout: 30000 });
   const steps = page.locator(".workflow-steps button");
-  await expect(steps).toHaveCount(5);
+  await expect(steps).toHaveCount(4);
   await expect(page.locator(".workflow-steps .step-missing")).toHaveCount(0);
   // The open form shows the filled values, not the ones it started with.
   await expect(page.locator('[name="auction_name"]')).not.toHaveValue("");
   await steps.nth(1).click();
   await expect(page.locator(".property-cards li")).toHaveCount(3);
   // Generating is the last step of the same wizard.
-  await steps.nth(4).click();
+  await steps.nth(3).click();
   const generate = page
     .locator(".project-generation")
     .getByRole("button", { name: /Generate/ });
@@ -69,7 +69,8 @@ test("sample fill completes a project that generates all its outputs", async ({
   const detail = await page.request
     .get("/api/projects/" + p.id)
     .then((r) => r.json());
-  // The booklet with its two official forms, the banners and the posts.
-  expect(detail.outputs).toHaveLength(5);
+  // The booklet, the banners and the posts (the official forms are issued
+  // in their own sections).
+  expect(detail.outputs).toHaveLength(3);
   expect(errors).toEqual([]);
 });

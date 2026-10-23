@@ -1,5 +1,4 @@
 import LiveBookletPreview from "./LiveBookletPreview";
-import { FormsStep } from "./FormsStep";
 import PropertyManager from "./PropertyManager";
 import SampleFill from "./SampleFill";
 import {
@@ -28,12 +27,9 @@ import { api, send, Detail, Item, Output, Run } from "./api";
 import { Config } from "./Settings";
 import { Badge, OutputList, title } from "./shared";
 import { ProjectForm, ExcelUpload } from "./ProjectForms";
-// What the booklet flow generates: the booklet and the official forms.
-const BOOKLET_OUTPUTS = [
-  "project_booklet",
-  "auction_request",
-  "property_study",
-];
+// What the booklet flow generates: the booklet alone (the official forms
+// are sections of the project of their own).
+const BOOKLET_OUTPUTS = ["project_booklet"];
 export default function ProjectWorkspace({
   detail,
   config,
@@ -90,23 +86,22 @@ export default function ProjectWorkspace({
   // contact). A shared project ends its data steps with generating everything.
   const steps =
     sharedMode === "data"
-      ? ["auction", "items", "closing", "forms", "finish"]
+      ? ["auction", "items", "closing", "finish"]
       : sharedMode === "booklet"
         ? ["generate", "outputs"]
-        : ["auction", "items", "closing", "forms", "generate", "outputs"];
+        : ["auction", "items", "closing", "generate", "outputs"];
   const stepNames: Record<string, string> = {
     auction: "auction",
     items: "properties",
     images: "images",
     closing: "closing",
-    forms: "forms",
     generate: "review",
     outputs: "export",
     finish: "finish",
   };
   const stepKeys = steps.map((step) => stepNames[step]);
   const stepIndex = steps.indexOf(tab === "excel import" ? "items" : tab);
-  const paged = tab === "auction" || tab === "closing" || tab === "forms";
+  const paged = tab === "auction" || tab === "closing";
   const pagedForm = () =>
     root.current?.querySelector<HTMLFormElement>("form.booklet-pages") || null;
   const go = async (next: string) => {
@@ -407,21 +402,7 @@ export default function ProjectWorkspace({
             onPage={(index, count) => setPages([index, count])}
             onSaved={() => {
               setDirty(false);
-              setTab("forms");
-            }}
-          />
-        )}
-        {tab === "forms" && (
-          <FormsStep
-            key={tab + formVersion}
-            detail={detail}
-            run={run}
-            onSaved={(done) => {
-              setDirty(false);
-              if (done) {
-                void reloadProject();
-                setTab(sharedMode === "data" ? "finish" : "generate");
-              }
+              setTab(sharedMode === "data" ? "finish" : "generate");
             }}
           />
         )}
@@ -568,7 +549,6 @@ export default function ProjectWorkspace({
                     {
                       method: "POST",
                       body: send({
-                        // The booklet comes with the auction's official forms.
                         types: otherTools ? selected : BOOKLET_OUTPUTS,
                         use_ai: useAI,
                         output_language: outputLanguage,

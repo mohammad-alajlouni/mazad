@@ -59,7 +59,7 @@ for (const locale of ["ar", "en"] as const)
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     // The project's sections and the wizard's steps wrap onto rows.
     const tabs = ".project-sections button, .workflow-steps button";
-    await expect(page.locator(".project-sections button")).toHaveCount(5);
+    await expect(page.locator(".project-sections button")).toHaveCount(7);
     await fits(page, tabs + ", .page-parts button, .cover-option");
     // The live preview is out of the way until asked for, then fills the screen.
     const sheet = page.locator(".live-booklet-preview");

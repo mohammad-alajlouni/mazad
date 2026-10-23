@@ -1,5 +1,6 @@
 """The auction's official forms: the authority's request form and Infath's
-study, filled from the booklet's data and the author's entries."""
+study, filled from the project's data and the author's entries, each
+issued on its own."""
 
 import os
 
@@ -74,7 +75,7 @@ def project_with(admin, count=1, cover="infath-2"):
     return p, items
 
 
-def test_forms_take_the_booklet_values_and_list_what_is_missing(admin):
+def test_forms_take_the_project_values_and_list_what_is_missing(admin):
     p, items = project_with(admin)
     view = admin.get(f"/api/projects/{p}/forms").json()
     shared = view["shared"]
@@ -153,3 +154,33 @@ def test_values_shrink_then_wrap_inside_their_box():
     long = fitted("حساب بنكي مخصص لأموال المتنافسين لدى بنك محلي معتمد " * 3, box)
     assert long["size"] <= 8 and len(long["lines"]) >= 2 and "overflow" not in long
     assert fitted("كلام " * 400, box).get("overflow")
+
+
+def test_each_form_is_issued_alone_without_the_booklet(admin):
+    """A project's forms need its data, not its booklet: with the booklet's
+    own requirements unmet (no closing pages, no photographs), each form is
+    issued by itself and nothing else is generated."""
+    r = admin.post(
+        "/api/projects",
+        json={
+            "name": "نماذج فقط",
+            "code": "FORMS-ONLY",
+            "workspace_type": "project",
+            "auction": {"auction_name": "مزاد النماذج", "auction_type": "physical"},
+        },
+    )
+    assert r.status_code == 201, r.text
+    p = r.json()["id"]
+    item = add(admin, p, property_input(1))
+    assert not admin.get(f"/api/projects/{p}/review").json()["valid"]
+    admin.put(f"/api/projects/{p}/forms", json=entries_for([item]))
+    for kind in ("auction_request", "property_study"):
+        r = admin.post(f"/api/projects/{p}/generate", json={"types": [kind]})
+        assert r.status_code == 200, r.text
+        assert [o["output_type"] for o in r.json()] == [kind]
+        assert pdf(admin, r.json()[0]).startswith(b"%PDF")
+    outputs = admin.get(f"/api/projects/{p}").json()["outputs"]
+    assert sorted(o["output_type"] for o in outputs) == [
+        "auction_request",
+        "property_study",
+    ]

@@ -1,4 +1,4 @@
-"""Both forms, filled: the booklet's data where it holds the value, the
+"""Both forms, filled: the project's data where it holds the value, the
 author's entries (FormsData) for the rest.
 
 The request form keeps the authority's pages as they are (booklet-art like:
@@ -93,7 +93,7 @@ def clock(value):
 
 
 def shared(project, items):
-    """What both forms take from the booklet, as the forms print it: for the
+    """What both forms take from the project's data, as the forms print it: for the
     auction ("request") and each property (by id)."""
     auction = project.get("auction") or {}
     agent = project.get("selling_agent") or {}

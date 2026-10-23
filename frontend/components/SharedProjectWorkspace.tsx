@@ -15,9 +15,13 @@ import { OutputList } from "./shared";
 import GenerateProject from "./GenerateProject";
 import ProjectWorkspace from "./ProjectWorkspace";
 import BannerWorkspace from "./BannerWorkspace";
+import FormsWorkspace from "./FormsWorkspace";
 
 export type ProjectSection =
-  "data" | "booklet" | "banner" | "social" | "outputs";
+  "data" | "booklet" | "banner" | "social" | "request" | "study" | "outputs";
+// The official forms take the project's data as it stands: they open
+// without the booklet's requirements (each says what it still lacks).
+const FORMS: ProjectSection[] = ["request", "study"];
 
 export default function SharedProjectWorkspace({
   detail,
@@ -44,7 +48,9 @@ export default function SharedProjectWorkspace({
   const root = useRef<HTMLDivElement>(null);
   const [blocked, setBlocked] = useState<string | null>(null);
   const [section, setSection] = useState<ProjectSection>(
-    initialSection !== "outputs" && missingStage(detail)
+    initialSection !== "outputs" &&
+      !FORMS.includes(initialSection) &&
+      missingStage(detail)
       ? "data"
       : initialSection,
   );
@@ -58,7 +64,7 @@ export default function SharedProjectWorkspace({
   }, [detail]);
   const select = async (next: ProjectSection) => {
     if (next === section) return;
-    if (next !== "data" && next !== "outputs") {
+    if (next !== "data" && next !== "outputs" && !FORMS.includes(next)) {
       if (!validateForms(root.current)) return;
       const missing = missingStage(detail);
       if (missing) {
@@ -116,6 +122,8 @@ export default function SharedProjectWorkspace({
               "booklet",
               "banner",
               "social",
+              "request",
+              "study",
               "outputs",
             ] as ProjectSection[]
           ).map((key) => (
@@ -175,6 +183,16 @@ export default function SharedProjectWorkspace({
           }
           tab={section === "data" ? dataTab : bookletTab}
           setTab={section === "data" ? setDataTab : setBookletTab}
+        />
+      ) : section === "request" || section === "study" ? (
+        <FormsWorkspace
+          key={section}
+          form={section}
+          detail={detail}
+          busy={busy}
+          run={run}
+          reloadProject={reloadProject}
+          setReview={setReview}
         />
       ) : section === "outputs" ? (
         <section className="panel form-panel">

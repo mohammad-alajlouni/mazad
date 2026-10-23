@@ -64,6 +64,11 @@ export default function Workspace() {
     [detail, setDetail] = useState<Detail | null>(null),
     [config, setConfig] = useState<Config | null>(null),
     [review, setReview] = useState<Output | null>(null);
+  // An output opens at its top, wherever the page it was opened from stood.
+  const reviewing = review?.id;
+  useEffect(() => {
+    if (reviewing) window.scrollTo(0, 0);
+  }, [reviewing]);
   const [projectSection, setProjectSection] = useState<ProjectSection>("data");
   const [tab, setTab] = useState("overview"),
     [query, setQuery] = useState(""),

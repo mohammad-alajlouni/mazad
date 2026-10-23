@@ -158,8 +158,8 @@ GENERATORS = {
         BookletStudyReportGenerator,
     )
 }
-# The auction's official forms: generated with the booklet when asked for,
-# never part of the general output set above.
+# The auction's official forms: each issued on its own from the project's
+# data (its own section of the project), never part of the output set above.
 FORM_GENERATORS = {
     g.key: g() for g in (AuctionRequestGenerator, PropertyStudyGenerator)
 }

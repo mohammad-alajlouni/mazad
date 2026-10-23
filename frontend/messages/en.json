@@ -689,7 +689,7 @@
     "finishHelp": "Generate the booklet, banners and social posts from the project data in one go.",
     "newProject": "New project",
     "forms": "Forms",
-    "formsHelp": "The auction request and the property study: complete what the booklet does not hold; they are generated with the booklet."
+    "formsHelp": "The auction request and the property study are sections of the project of their own, each issued alone."
   },
   "excel": {
     "title": "Import properties from the approved template",
@@ -888,7 +888,9 @@
     "independentBanner": "Create standalone banner campaign",
     "scope": "Project type",
     "sharedOption": "Complete project: booklet, banners and posts (default)",
-    "bookletOnly": "Standalone booklet only"
+    "bookletOnly": "Standalone booklet only",
+    "request": "Auction request",
+    "study": "Property study"
   },
   "validationFlow": {
     "completeFirst": "Complete this step before continuing.",
@@ -978,7 +980,7 @@
     "settings": "Review design settings",
     "fix": "Complete missing data",
     "retry": "Check again",
-    "generate": "Generate booklet, forms, banners and social posts",
+    "generate": "Generate booklet, banners and social posts",
     "generating": "Generating project…",
     "done": "Project outputs generated for review."
   },
@@ -1275,7 +1277,7 @@
   },
   "forms": {
     "title": "Official auction forms",
-    "help": "The authority's auction request form and Infath's property study. What the booklet holds is taken from it (marked “From the booklet”); only the rest is entered here. Both are generated with the booklet.",
+    "help": "The real estate auction request form (Real Estate General Authority) and the property study (Infath): each is a section of the project of its own and is issued alone. What the project's data and properties hold is taken from them directly; only the rest is entered here.",
     "request": "Auction request",
     "requestBody": "Real Estate General Authority",
     "study": "Property study",
@@ -1284,8 +1286,8 @@
     "complete": "The form is complete.",
     "overflow": "Some values are too long for their box even at the smallest size; shorten them.",
     "saved": "Forms saved",
-    "fromBooklet": "From the booklet",
-    "notInBooklet": "Not in the booklet",
+    "fromBooklet": "From project data",
+    "notInBooklet": "Not entered in the project data",
     "yes": "Yes",
     "no": "No",
     "mention": "Specify",
@@ -1393,7 +1395,14 @@
     "indicative_value": "Indicative value",
     "defects": "Defects",
     "features": "Features",
-    "features_hint": "Empty: the booklet's features."
+    "features_hint": "Empty: the booklet's features.",
+    "requestHelp": "Filled directly from the project's data and properties (auction, properties, selling agent); only the remaining details are entered here. Issued on its own, without the booklet or any other output.",
+    "studyHelp": "One sheet per property, filled directly from the property's data in the project; the study's answers and notes are entered here. Issued on its own, without the booklet or any other output.",
+    "issueTitle": "Issue the {form}",
+    "issueHelp": "Saves the form, then issues it from the project's current data as a draft for review and approval. The booklet, banners and posts are not needed.",
+    "needsProperty": "Add at least one property in “Project data” before issuing.",
+    "issue": "Save and issue the {form}",
+    "issued": "Form issued and ready for review"
   },
   "liveMarketing": {
     "open": "Preview",

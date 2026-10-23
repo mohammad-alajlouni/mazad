@@ -88,7 +88,7 @@ test("missing requirements are listed per step and lead to their fields", async 
 
   // The property also needs its photograph: there is no separate images
   // step, the link opens the property at its photograph box.
-  await expect(steps).toHaveCount(5);
+  await expect(steps).toHaveCount(4);
   await expect(checklist).toContainText("Main property image");
   await expect(checklist).not.toContainText("Auction logo");
   await expect(steps.nth(1).locator(".step-missing")).toBeVisible();

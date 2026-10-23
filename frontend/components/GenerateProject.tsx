@@ -126,13 +126,7 @@ export default function GenerateProject({
             await api<Output[]>(`/projects/${detail.project.id}/generate`, {
               method: "POST",
               body: send({
-                types: [
-                  "project_booklet",
-                  "auction_request",
-                  "property_study",
-                  "banners",
-                  "social_content",
-                ],
+                types: ["project_booklet", "banners", "social_content"],
                 output_language:
                   detail.project.auction?.document_language || "ar",
               }),
