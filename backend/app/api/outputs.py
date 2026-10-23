@@ -8,7 +8,12 @@ from ..auth import current_user
 from ..db import get_db
 from ..generation.booklet.validation import validate_project
 from ..generation.engine import build_content, render
-from ..generation.generators import ALL_GENERATORS, FORM_GENERATORS, GENERATORS
+from ..generation.generators import (
+    ALL_GENERATORS,
+    FORM_GENERATORS,
+    GENERATORS,
+    REPORT_GENERATORS,
+)
 from ..models import (
     AIGeneration,
     GeneratedFile,
@@ -53,6 +58,10 @@ async def generate(id: str, body: GenerationInput, db=Depends(get_db)):
         and not validate_project(db, p)["valid"]
     ):
         raise HTTPException(422, "Complete the auction review before generation")
+    if any(k in REPORT_GENERATORS for k in body.types) and (
+        p.workspace_type not in ("project", "booklet") or not p.auction
+    ):
+        raise HTTPException(400, "Reports belong to an auction project")
     if p.workspace_type == "banners":
         if set(body.types) != {"banners"}:
             raise HTTPException(400, "Use the banner workspace")
@@ -261,7 +270,9 @@ def regenerate(id: str, db=Depends(get_db)):
             )
             db.add(o)
             db.flush()
-    if o.output_type in FORM_GENERATORS and o.approved_at:
+    if (
+        o.output_type in FORM_GENERATORS or o.output_type in REPORT_GENERATORS
+    ) and o.approved_at:
         # An approved form stays as approved; the new one is a draft.
         o = GeneratedOutput(
             project_id=p.id,

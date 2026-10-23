@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+{#- The Real Estate General Authority's reports after the auction
+    (generation/reports/compose.py): each page is the authority's template
+    page (placed beneath the values as vectors on export, its picture in the
+    live preview) with this auction's values where the template sets them. -#}
+<style>
+{% include 'infath/identity.css' %}
+{% for name, file in reports.fonts.items() %}@font-face{font-family:'{{ name }}';src:url('{{ asset(file) }}')}
+{% endfor %}
+{% set first = reports.pages[0] %}
+@page{size:{{ first.size[0] }}pt {{ first.size[1] }}pt;margin:0}
+*{box-sizing:border-box}
+body{margin:0}
+.page{position:relative;overflow:hidden;break-after:page}
+.page:last-child{break-after:auto}
+.art,.vec,.layer,.t,.cell,.para{position:absolute}
+.t{white-space:nowrap;margin:0}
+.t span,.para span{line-height:0}
+.cell{text-align:center;color:#000;font-weight:500;white-space:nowrap}
+.cell.r{font-family:Ruaq,Lama}.cell.l{font-family:Lama,Ruaq}
+.para{margin:0;white-space:nowrap;text-align:justify;text-align-last:justify}
+.para.last{text-align-last:right}
+</style>
+</head>
+<body>
+{#- A line whose baseline sits on base: Ruaq's line box puts the baseline
+    0.366 em below its middle (all its weights alike). -#}
+{% macro runs(items, main) -%}
+{%- for r in items %}{% if r.font == main %}{{ r.text }}{% else %}<span style="font-family:'{{ r.font }}'">{{ '⁦' ~ r.text ~ '⁩' }}</span>{% endif %}{% endfor -%}
+{%- endmacro %}
+{% macro text(t, w) -%}
+{%- set L = t.size * 1.874 -%}
+<p class="t" dir="{{ t.dir }}" data-slot="{{ t.key }}" style="top:{{ '%.3f' % (t.base - L / 2 - t.size * 0.366) }}pt;font-family:'{{ t.font }}';font-size:{{ t.size }}pt;line-height:{{ '%.3f' % L }}pt;color:{{ t.color }};
+{%- if t.align == 'right' %}right:{{ '%.3f' % (w - t.x) }}pt;text-align:right
+{%- elif t.align == 'center' %}left:{{ '%.3f' % (t.x - 700) }}pt;width:1400pt;text-align:center
+{%- else %}left:{{ t.x }}pt;text-align:left{% endif %}">{{ runs(t.runs, t.font) }}</p>
+{%- endmacro %}
+{% for p in reports.pages %}{% set w, h = p.size %}
+<section class="page" data-kind="{{ p.kind }}" style="width:{{ w }}pt;height:{{ h }}pt">
+{% if preview %}<img class="art" alt="" src="{{ asset(p.preview) }}" style="left:0;top:0;width:{{ w }}pt;height:{{ h }}pt">
+{% else %}<div class="vec" data-vector="{{ p.art }}" style="left:0;top:0;width:{{ w }}pt;height:{{ h }}pt"></div>{% endif %}
+{% for f in p.frames %}{% set x0, y0, x1, y1 = f.box %}
+{% if preview %}<img class="art" alt="" src="{{ asset(f.preview) }}" style="left:{{ x0 }}pt;top:{{ y0 }}pt;width:{{ x1 - x0 }}pt;height:{{ y1 - y0 }}pt">
+{% else %}<div class="vec" data-vector="{{ f.name }}" style="left:{{ x0 }}pt;top:{{ y0 }}pt;width:{{ x1 - x0 }}pt;height:{{ y1 - y0 }}pt"></div>{% endif %}
+{% endfor %}
+{% for t in p.tables %}<svg class="layer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ w }} {{ h }}" style="left:0;top:0;width:{{ w }}pt;height:{{ h }}pt">
+{%- for x0, y0, x1, y1 in t.lines %}<line x1="{{ x0 }}" y1="{{ y0 }}" x2="{{ x1 }}" y2="{{ y1 }}" stroke="{{ t.stroke }}" stroke-width="{{ t.width }}"/>{% endfor -%}
+</svg>{% endfor %}
+{% for i in p.images %}{% set x0, y0, x1, y1 = i.box %}<svg class="layer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ x1 - x0 }} {{ y1 - y0 }}" style="left:{{ x0 }}pt;top:{{ y0 }}pt;width:{{ x1 - x0 }}pt;height:{{ y1 - y0 }}pt">
+{%- if i.radius %}<defs><clipPath id="clip-{{ loop.index }}-{{ p.kind }}-{{ x0|int }}"><rect width="{{ x1 - x0 }}" height="{{ y1 - y0 }}" rx="{{ i.radius }}"/></clipPath></defs>{% endif -%}
+<image href="{{ i.src }}" width="{{ x1 - x0 }}" height="{{ y1 - y0 }}" preserveAspectRatio="{{ 'xMidYMid slice' if i.fit == 'cover' else 'xMidYMax meet' }}"{% if i.radius %} clip-path="url(#clip-{{ loop.index }}-{{ p.kind }}-{{ x0|int }})"{% endif %}/></svg>
+{% endfor %}
+{% if p.logo %}{% set x0, y0, x1, y1 = p.logo.box %}{% set L = logo_fit(p.logo.src, x1 - x0, y1 - y0, true) %}
+<img class="layer" alt="" src="{{ L.src }}" style="left:{{ '%.2f' % (x0 + (x1 - x0 - L.width) / 2) }}pt;top:{{ '%.2f' % (y0 + (y1 - y0 - L.height) / 2) }}pt;width:{{ L.width }}pt;height:{{ L.height }}pt">{% endif %}
+{% for t in p.texts %}{{ text(t, w) }}
+{% endfor %}
+{% for para in p.paragraphs %}{% for l in para.lines %}{% set L = para.size * 1.874 %}
+<p class="para{{ ' last' if l.last else '' }}" style="top:{{ '%.3f' % (l.base - L / 2 - para.size * 0.366) }}pt;left:{{ para.x0 }}pt;width:{{ para.width }}pt;font-family:'{{ para.font }}';font-size:{{ para.size }}pt;line-height:{{ '%.3f' % L }}pt;color:{{ para.color }}">{{ runs(l.runs, para.font) }}</p>
+{% endfor %}{% endfor %}
+{% for c in p.cells %}{% set x0, y0, x1, y1 = c.box %}
+{%- set lh = c.size * 1.25 %}{% set top = y0 + ((y1 - y0) - lh * (c.lines|length)) / 2 %}
+<div class="cell {{ c.family }}" data-slot="{{ c.key }}" style="left:{{ '%.2f' % (x0 + 3) }}pt;top:{{ '%.2f' % top }}pt;width:{{ '%.2f' % (x1 - x0 - 6) }}pt;font-size:{{ c.size }}pt;line-height:{{ '%.2f' % lh }}pt">
+{%- for line in c.lines %}<div dir="auto">{{ line }}</div>{% endfor %}</div>
+{% endfor %}
+</section>
+{% endfor %}
+</body>
+</html>

@@ -2,6 +2,7 @@ import base64
 import json
 import unicodedata
 from decimal import Decimal
+from io import BytesIO
 from pathlib import Path
 
 from fastapi import HTTPException
@@ -262,6 +263,27 @@ def forms_content(project_data, items, forms, kind):
     }
 
 
+# The authority's reports after the auction (generation/reports).
+REPORT_KINDS = ("auction_closing", "outputs_report")
+
+
+def report_source(image):
+    """A report image as stored (its address in the PDF)."""
+    from PIL import Image
+
+    data = LocalStorage().read(image["key"])
+    with Image.open(BytesIO(data)) as picture:
+        kind = "png" if picture.format == "PNG" else "jpeg"
+    return f"data:image/{kind};base64," + base64.b64encode(data).decode()
+
+
+def reports_content(project_data, items, data, kind, source=report_source):
+    from .reports.compose import fonts_of, report_pages
+
+    pages = report_pages(kind, project_data, items, data or {}, source)
+    return {"kind": kind, "pages": pages, "fonts": fonts_of(pages)}
+
+
 def build_content(db, project, kind, output_language=None):
     project_data, items = snapshot(db, project)
     if kind == "banners" and project.workspace_type in ("project", "banners"):
@@ -357,6 +379,9 @@ def build_content(db, project, kind, output_language=None):
         content["booklet"] = compose(project_data, items)
     if kind in FORM_KINDS:
         content["forms"] = forms_content(project_data, items, project.forms, kind)
+    if kind in REPORT_KINDS:
+        # The author's entries as they stand; the pages are set at rendering.
+        content["report_data"] = {"kind": kind, "data": project.reports or {}}
     if kind == "social_content" and project.workspace_type in ("project", "social"):
         from ..services.social import FORMATS, caption
 
@@ -403,6 +428,15 @@ def render(db, output):
         template_file = "infath/booklet.html"
     if content.get("forms"):
         template_file = "infath/forms.html"
+    if content.get("report_data"):
+        template_file = "infath/reports.html"
+        r = content["report_data"]
+        content = {
+            **content,
+            "reports": reports_content(
+                content["project"], content["items"], r["data"], r["kind"]
+            ),
+        }
     html = render_html(content, template_file, output.status, font_data, font_bold)
 
     from .preflight import check_layout, inspect_pdf

@@ -93,6 +93,22 @@ class PropertyStudyGenerator(BaseOutputGenerator):
         return self.base(project, items)
 
 
+class AuctionClosingGenerator(BaseOutputGenerator):
+    key = "auction_closing"
+    title = "Auction closing form"
+
+    def build(self, project, items, outputs):
+        return self.base(project, items)
+
+
+class OutputsReportGenerator(BaseOutputGenerator):
+    key = "outputs_report"
+    title = "Auction outputs report"
+
+    def build(self, project, items, outputs):
+        return self.base(project, items)
+
+
 class SocialContentGenerator(BaseOutputGenerator):
     key = "social_content"
     title = "Social media content"
@@ -163,4 +179,9 @@ GENERATORS = {
 FORM_GENERATORS = {
     g.key: g() for g in (AuctionRequestGenerator, PropertyStudyGenerator)
 }
-ALL_GENERATORS = {**GENERATORS, **FORM_GENERATORS}
+# The authority's reports after the auction (their own section, from the
+# auction's project).
+REPORT_GENERATORS = {
+    g.key: g() for g in (AuctionClosingGenerator, OutputsReportGenerator)
+}
+ALL_GENERATORS = {**GENERATORS, **FORM_GENERATORS, **REPORT_GENERATORS}

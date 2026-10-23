@@ -65,6 +65,7 @@ def invalidate(db, project, output_types=None):
             and not o.content.get("banner")
             and not o.content.get("social")
             and not o.content.get("forms")
+            and not o.content.get("reports")
         ):
             o.approved_at = None
 

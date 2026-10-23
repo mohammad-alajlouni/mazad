@@ -67,5 +67,7 @@
   "social_content": "محتوى التواصل الاجتماعي",
   "final_output_report": "التقرير النهائي للمخرجات",
   "booklet_study_report": "تقرير دراسة الكتيّب",
-  "item_count": "عدد العناصر: {count}"
+  "item_count": "عدد العناصر: {count}",
+  "auction_closing": "نموذج إقفال المزاد",
+  "outputs_report": "تقرير المخرجات"
 }

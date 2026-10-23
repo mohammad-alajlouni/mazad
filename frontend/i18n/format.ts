@@ -76,6 +76,8 @@ export function activityDetail(action: string, detail: string) {
       social_media_content: "social_content",
       auction_request_form: "auction_request",
       property_study_form: "property_study",
+      auction_closing_form: "auction_closing",
+      auction_outputs_report: "outputs_report",
     };
     return systemLabel(aliases[key] || key) + " · " + name.join(" · ");
   }

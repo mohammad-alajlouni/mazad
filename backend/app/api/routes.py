@@ -8,6 +8,7 @@ from . import (
     outputs,
     profile,
     projects,
+    reports,
     settings,
     social,
     users,
@@ -25,5 +26,6 @@ for module in (
     banners,
     social,
     forms,
+    reports,
 ):
     router.include_router(module.router)

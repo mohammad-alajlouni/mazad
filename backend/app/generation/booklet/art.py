@@ -328,7 +328,7 @@ def original_pdf_artwork(pdf, content, document=None):
     """
     import pymupdf
 
-    if not any(content.get(k) for k in ("booklet", "forms", "marketing")):
+    if not any(content.get(k) for k in ("booklet", "forms", "marketing", "reports")):
         return pdf
     stamps = vector_boxes(document) if document is not None else []
     sources = {}
@@ -348,16 +348,18 @@ def original_pdf_artwork(pdf, content, document=None):
             # Later insertions go further down: reversed keeps the document order
             # (a cover background stays beneath the icon drawn on it).
             for name, x0, y0, x1, y1 in reversed(stamps[n] if n < len(stamps) else []):
+                # A page of a file of several: "reports/report@4".
+                name, _, page = name.partition("@")
                 output[n].show_pdf_page(
                     pymupdf.Rect(x0, y0, x1, y1),
                     # The official forms' pages, the guide's boards and posts
-                    # are named by their own path.
+                    # and the authority's reports are named by their own path.
                     source(
                         f"{name}.pdf"
-                        if name.startswith(("forms/", "marketing/"))
+                        if name.startswith(("forms/", "marketing/", "reports/"))
                         else f"booklet-art/vector/{name}.pdf"
                     ),
-                    0,
+                    int(page or 0),
                     keep_proportion=False,
                     overlay=False,
                 )

@@ -1,0 +1,1032 @@
+{
+ "closing": {
+  "size": [
+   841.89,
+   595.276
+  ],
+  "columns": [
+   [
+    759.3,
+    776.25
+   ],
+   [
+    656.27,
+    759.3
+   ],
+   [
+    558.76,
+    656.27
+   ],
+   [
+    460.5,
+    558.76
+   ],
+   [
+    362.54,
+    460.5
+   ],
+   [
+    264.01,
+    362.54
+   ],
+   [
+    162.84,
+    264.01
+   ],
+   [
+    65.65,
+    162.84
+   ]
+  ],
+  "header": [
+   97.04,
+   126.44
+  ],
+  "rows": [
+   [
+    126.44,
+    146.08
+   ],
+   [
+    146.08,
+    165.72
+   ],
+   [
+    165.72,
+    185.37
+   ],
+   [
+    185.37,
+    205.01
+   ],
+   [
+    205.01,
+    224.65
+   ],
+   [
+    224.65,
+    244.29
+   ],
+   [
+    244.29,
+    263.93
+   ],
+   [
+    263.93,
+    283.58
+   ],
+   [
+    283.58,
+    303.22
+   ],
+   [
+    303.22,
+    322.86
+   ],
+   [
+    322.86,
+    342.5
+   ],
+   [
+    342.5,
+    362.14
+   ],
+   [
+    362.14,
+    381.79
+   ],
+   [
+    381.79,
+    401.43
+   ],
+   [
+    401.43,
+    421.07
+   ],
+   [
+    421.07,
+    440.71
+   ],
+   [
+    440.71,
+    460.35
+   ]
+  ],
+  "names": [
+   "number",
+   "deed",
+   "property_type",
+   "usage",
+   "status",
+   "reason",
+   "winner",
+   "value"
+  ],
+  "date": [
+   31.3,
+   21.5,
+   146.2,
+   37.5
+  ],
+  "approval": [
+   31.1,
+   37.0,
+   110.6,
+   53.0
+  ],
+  "signature": [
+   421.1,
+   496.4,
+   628.8,
+   558.0
+  ],
+  "stamp": [
+   213.1,
+   496.4,
+   421.2,
+   558.0
+  ],
+  "header_color": "#005257"
+ },
+ "report": {
+  "cover": {
+   "page": 0,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      85.93,
+      179.97,
+      149.14
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 715.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "title",
+     "kind": "text",
+     "align": "center",
+     "x": 719.99,
+     "base": 411.69,
+     "width": 433.22,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 72.0,
+     "color": "#ffffff"
+    },
+    {
+     "key": "court",
+     "kind": "text",
+     "align": "center",
+     "x": 730.48,
+     "base": 510.67,
+     "width": 282.45,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 27.998,
+     "color": "#d9d9d9"
+    },
+    {
+     "key": "period",
+     "kind": "text",
+     "align": "center",
+     "x": 730.48,
+     "base": 563.43,
+     "width": 325.33,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 21.997,
+     "color": "#d9d9d9"
+    }
+   ]
+  },
+  "contents": {
+   "page": 1,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.35,
+      179.97,
+      144.56
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 715.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    }
+   ]
+  },
+  "intro": {
+   "page": 2,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "intro",
+     "kind": "para",
+     "x0": 281.27,
+     "x1": 1112.57,
+     "base": 265.81,
+     "pitch": 42.0,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 25.118,
+     "color": "#ffffff"
+    }
+   ]
+  },
+  "marketing": {
+   "page": 3,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    }
+   ]
+  },
+  "boards": {
+   "page": 4,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 715.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "boards_line",
+     "kind": "text",
+     "align": "right",
+     "x": 1112.57,
+     "base": 263.89,
+     "width": 849.53,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 17.58,
+     "color": "#ffffff"
+    },
+    {
+     "key": "boards_table",
+     "kind": "table",
+     "columns": [
+      286.42,
+      492.86,
+      699.31,
+      905.75,
+      1112.2
+     ],
+     "rows": [
+      288.18,
+      321.93,
+      355.68,
+      389.43,
+      423.18,
+      456.93,
+      490.68,
+      524.43,
+      558.18,
+      591.93,
+      625.68,
+      659.43
+     ],
+     "stroke": "#ffffff",
+     "stroke_width": 0.75,
+     "merged": [
+      0,
+      1
+     ],
+     "keep": false,
+     "base_offset": 22.12,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 15.997,
+     "color": "#ffffff"
+    }
+   ]
+  },
+  "board_photos": {
+   "page": 5,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "photos",
+     "kind": "images",
+     "boxes": [
+      [
+       903.3,
+       251.89,
+       1114.8,
+       371.14
+      ],
+      [
+       695.89,
+       251.89,
+       894.64,
+       371.14
+      ],
+      [
+       488.49,
+       251.89,
+       687.24,
+       371.14
+      ],
+      [
+       281.27,
+       249.95,
+       480.02,
+       369.2
+      ],
+      [
+       903.3,
+       382.71,
+       1114.8,
+       501.96
+      ],
+      [
+       695.89,
+       382.71,
+       894.64,
+       501.96
+      ],
+      [
+       488.49,
+       382.71,
+       687.24,
+       501.96
+      ],
+      [
+       281.27,
+       382.71,
+       480.02,
+       501.96
+      ],
+      [
+       695.89,
+       513.45,
+       894.64,
+       632.7
+      ],
+      [
+       488.49,
+       513.45,
+       687.24,
+       632.7
+      ]
+     ]
+    }
+   ]
+  },
+  "channels": {
+   "page": 6,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "channels_table",
+     "kind": "table",
+     "columns": [
+      276.7,
+      554.26,
+      840.28,
+      1107.97
+     ],
+     "rows": [
+      249.88,
+      292.66,
+      335.44,
+      378.22,
+      421.01,
+      463.79
+     ],
+     "stroke": "#ffffff",
+     "stroke_width": 0.75,
+     "merged": [],
+     "keep": true,
+     "base_offset": 27.75,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 18.007,
+     "color": "#fffffa"
+    }
+   ]
+  },
+  "x": {
+   "page": 7,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "x_line",
+     "kind": "text",
+     "align": "right",
+     "x": 1117.22,
+     "base": 264.24,
+     "width": 822.63,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 18.0,
+     "color": "#ffffff"
+    },
+    {
+     "key": "x_shots",
+     "kind": "images",
+     "boxes": [
+      [
+       569.5,
+       292.03,
+       823.75,
+       550.78
+      ],
+      [
+       837.21,
+       372.57,
+       1101.21,
+       551.07
+      ],
+      [
+       300.77,
+       372.57,
+       555.77,
+       545.82
+      ]
+     ]
+    }
+   ]
+  },
+  "tiktok": {
+   "page": 8,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "tiktok_line",
+     "kind": "text",
+     "align": "right",
+     "x": 1112.56,
+     "base": 262.8,
+     "width": 397.98,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 18.0,
+     "color": "#ffffff"
+    },
+    {
+     "key": "tiktok_shots",
+     "kind": "frames",
+     "frames": [
+      [
+       482,
+       300,
+       646,
+       624
+      ],
+      [
+       786,
+       300,
+       952,
+       629
+      ]
+     ],
+     "screens": [
+      [
+       493.55,
+       309.89,
+       633.93,
+       614.28
+      ],
+      [
+       797.94,
+       310.06,
+       940.77,
+       619.54
+      ]
+     ]
+    }
+   ]
+  },
+  "whatsapp": {
+   "page": 9,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "whatsapp_shots",
+     "kind": "frames",
+     "frames": [
+      [
+       455,
+       302,
+       704,
+       647
+      ],
+      [
+       750,
+       302,
+       998,
+       647
+      ]
+     ],
+     "screens": [
+      [
+       468.4,
+       315.8,
+       689.6,
+       633.56
+      ],
+      [
+       763.0,
+       315.8,
+       984.21,
+       633.56
+      ]
+     ]
+    }
+   ]
+  },
+  "youtube": {
+   "page": 10,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "youtube_shot",
+     "kind": "images",
+     "boxes": [
+      [
+       416.93,
+       282.35,
+       995.18,
+       607.1
+      ]
+     ]
+    }
+   ]
+  },
+  "participants": {
+   "page": 11,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "participants_table",
+     "kind": "table",
+     "columns": [
+      281.65,
+      705.92,
+      1112.2
+     ],
+     "rows": [
+      250.32,
+      298.41,
+      346.5,
+      394.59,
+      442.68
+     ],
+     "stroke": "#ffffff",
+     "stroke_width": 0.75,
+     "merged": [],
+     "keep": true,
+     "base_offset": 28.88,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 15.997,
+     "color": "#ffffff"
+    }
+   ]
+  },
+  "assets": {
+   "page": 12,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "footer_name",
+     "kind": "text",
+     "align": "right",
+     "x": 1288.15,
+     "base": 714.75,
+     "font": "RuaqArabic-Bold",
+     "family": "r",
+     "weight": 700,
+     "size": 23.804,
+     "color": "#ffffff"
+    },
+    {
+     "key": "assets_table",
+     "kind": "table",
+     "columns": [
+      281.65,
+      457.88,
+      624.31,
+      787.68,
+      1116.37
+     ],
+     "rows": [
+      258.46,
+      292.21,
+      325.96,
+      359.71,
+      393.46,
+      427.21,
+      460.96,
+      494.71,
+      528.46,
+      562.21,
+      595.96,
+      629.71
+     ],
+     "stroke": "#ffffff",
+     "stroke_width": 0.75,
+     "merged": [],
+     "keep": false,
+     "base_offset": 22.13,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 15.997,
+     "color": "#ffffff"
+    },
+    {
+     "key": "reason_title",
+     "kind": "text",
+     "align": "right",
+     "x": 1108.87,
+     "base": 660.69,
+     "width": 262.27,
+     "font": "RuaqArabic-Medium",
+     "family": "r",
+     "weight": 500,
+     "size": 21.0,
+     "color": "#ffffff"
+    },
+    {
+     "key": "reason",
+     "kind": "para",
+     "x0": 308.79,
+     "x1": 1108.87,
+     "base": 689.5,
+     "pitch": 24.0,
+     "font": "RuaqArabic-Light",
+     "family": "r",
+     "weight": 400,
+     "size": 15.048,
+     "color": "#ffffff"
+    }
+   ]
+  },
+  "closing": {
+   "page": 13,
+   "size": [
+    1440.0,
+    810.0
+   ],
+   "slots": [
+    {
+     "key": "agent_logo",
+     "kind": "logo",
+     "box": [
+      81.0,
+      81.0,
+      179.97,
+      144.21
+     ]
+    },
+    {
+     "key": "address",
+     "kind": "text",
+     "align": "left",
+     "x": 365.92,
+     "base": 709.06,
+     "width": 34.14,
+     "font": "RuaqArabic-Medium",
+     "family": "r",
+     "weight": 500,
+     "size": 18.375,
+     "color": "#ffffff",
+     "latin_font": "NotoSans-Regular"
+    },
+    {
+     "key": "phone",
+     "kind": "text",
+     "align": "left",
+     "x": 665.23,
+     "base": 709.06,
+     "width": 136.19,
+     "font": "RuaqArabic-Medium",
+     "family": "r",
+     "weight": 500,
+     "size": 18.375,
+     "color": "#ffffff"
+    },
+    {
+     "key": "email",
+     "kind": "text",
+     "align": "left",
+     "x": 964.53,
+     "base": 709.06,
+     "width": 86.12,
+     "font": "NotoSans-Regular",
+     "family": "r",
+     "weight": 500,
+     "size": 18.375,
+     "color": "#ffffff",
+     "latin_font": "NotoSans-Regular"
+    }
+   ]
+  }
+ },
+ "frames": {
+  "tiktok-1": 0,
+  "tiktok-2": 1,
+  "whatsapp-1": 2,
+  "whatsapp-2": 3
+ }
+}

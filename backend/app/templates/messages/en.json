@@ -67,5 +67,7 @@
   "social_content": "social content",
   "final_output_report": "final output report",
   "booklet_study_report": "booklet study report",
-  "item_count": "{count} items"
+  "item_count": "{count} items",
+  "auction_closing": "Auction closing form",
+  "outputs_report": "Auction outputs report"
 }

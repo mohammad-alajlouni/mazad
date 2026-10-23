@@ -68,6 +68,12 @@ def inspect_pdf(pdf, content):
     elif content.get("booklet"):
         expected = (210 * 72 / 25.4, 297 * 72 / 25.4)
         count = len(content["booklet"]["pages"])
+    elif content.get("reports"):
+        r = content["reports"]
+        first = r["pages"][0]["size"]
+        expected = (first[0], first[1])
+        count = len(r["pages"])
+        kind = "report"
     elif content.get("forms"):
         # A4, the statement tables lying across (landscape).
         expected = (210 * 72 / 25.4, 297 * 72 / 25.4)

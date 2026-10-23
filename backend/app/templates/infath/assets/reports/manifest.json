@@ -1,0 +1,32 @@
+{
+ "source": {
+  "نموذج-اقفال-المزاد-العقاري.pdf": "0b8d558a75e0bcc500a4b5b50a4c609a24d0931ac6c9ccf9f164a564d9f8eb9d",
+  "تقرير-مخرجات (قالب الهيئة)": "88900407fdb56cea9e7c4b7f3f3f71fff56269bc55abd26fbc40fe2708d235d2"
+ },
+ "files": {
+  "NotoSans-Regular.ttf": "f5f552c8c5edb61fe6efb824baf4d4de47b1a8689ab4925ff43f7bd6a4ebece5",
+  "closing.pdf": "f8499fabb10130f218dd58701c1ce8999bd41c7043559a80321baf19ca365da3",
+  "closing.png": "f3b31e753cced789740d66459fde450a3d0bee318a589792a50907d0def79c0f",
+  "frame-tiktok-1.png": "f872fe7fc7aa3a3d6a8dca92bfaca71f844ec995162f7029beac0a8c48bd9f0b",
+  "frame-tiktok-2.png": "124e833bc912c0e764d9790cf4920f030318f00354540d13a0ba0c7b9d3d9467",
+  "frame-whatsapp-1.png": "1dedfd7bb168b4a3333a8ba9d094bd41d6f9e57b69eed380438961d4f5833f75",
+  "frame-whatsapp-2.png": "7e1431a36d7396bb697cfb01fbfe714e9fc1eda333d9975c8498ef8fb53676a3",
+  "frames.pdf": "db394f399fb65e2956197b075a2a1bdb8b5423bae2f3e03ce1009f919894c826",
+  "layout.json": "a9df1076b0670f65ba48825dba8eff9010c670ea7e5bd86fb420c57c5c5d4864",
+  "report-assets.png": "0d91a162b1189abeeed2746abf327033168010dd7186e9b1fec20bfd51cf9173",
+  "report-board_photos.png": "85c90d5d39b4ecb894a5fc1598131ff24275b67fd2b94217b2b8313a7784d1f9",
+  "report-boards.png": "035e95808644580bdbd2e49ef2f4712b5f027dfb99cff36d28ca81c3f3d0c67c",
+  "report-channels.png": "b564572f4a04e77fae2ce5d3c3cc5b338f710e3f90d01a3d642c84beb974e61a",
+  "report-closing.png": "dea86319d82033b77e7a0290b5b0d0ef1f3bbecaeb1c8d96995bfabdb6a4e631",
+  "report-contents.png": "c22c6c6f7c7b4cad47907ad05c560bde64da6ed6b7498b8530da31aba7d8be39",
+  "report-cover.png": "cf6992e3cb278e159ccdd47a2b68c88040dc503eb99bf765bb2c34b9b76026b1",
+  "report-intro.png": "478a820a536281b9200dbeb0f3b718f8a3fcebd0ad3d9a2046bab9c65a9966b8",
+  "report-marketing.png": "99a7255afb3e7a7ba198a815a14b51e39105760c302c06bd99bf6b99f0ef99df",
+  "report-participants.png": "3b7513c8861601a02666ec8f8f5f149d771bc1e23955a1259de2598af4984a64",
+  "report-tiktok.png": "5b185ccf693d62cd647b8e25e8c3fe4fc2e901982fbb044944417372d86d5bf4",
+  "report-whatsapp.png": "bb8f667be656b34dd558e1b3314b98c4a2d7140e83edde66f937632915157fbd",
+  "report-x.png": "9d541e27b1d5b2fb87f8f788d22ab6b16c37329e623ced7932c0314dd8b16f17",
+  "report-youtube.png": "dd95a8b942af15ff73af06d8dd4d3905d8ba38a175255a3742fb5770578a675c",
+  "report.pdf": "a1ddf9ac7388176960ba5ef80200a20d1bd3e287ac3c01c5e2e497e71358f152"
+ }
+}

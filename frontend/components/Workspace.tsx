@@ -13,6 +13,7 @@ import UserManagement from "./UserManagement";
 import DashboardView, { Dashboard } from "./Dashboard";
 import BannerWorkspace, { BannerCreate } from "./BannerWorkspace";
 import ProjectWorkspace from "./ProjectWorkspace";
+import ReportsWorkspace from "./ReportsWorkspace";
 import SharedProjectWorkspace, {
   ProjectSection,
 } from "./SharedProjectWorkspace";
@@ -29,6 +30,7 @@ import {
   Menu,
   X,
   Users,
+  ClipboardCheck,
 } from "lucide-react";
 import { api, send, Project, Output, Detail, Run, Account } from "./api";
 import { ProjectList, OutputList, RemovalContext, title } from "./shared";
@@ -47,7 +49,11 @@ type Page =
   | "banners"
   | "banner-create"
   | "social"
-  | "social-create";
+  | "social-create"
+  // The authority's reports after the auction: choose the auction's project,
+  // then its reports.
+  | "reports"
+  | "reports-project";
 export default function Workspace() {
   const tr = useTranslations();
 
@@ -178,6 +184,11 @@ export default function Workspace() {
       return () => clearTimeout(id);
     }
   }, [notice]);
+  const openReports = async (id: string) => {
+    setProfileOver(false);
+    setDetail(await api<Detail>("/projects/" + id));
+    setPage("reports-project");
+  };
   const openProject = async (id: string, section: ProjectSection = "data") => {
     setProfileOver(false);
     setProjectSection(section);
@@ -341,6 +352,11 @@ export default function Workspace() {
     detail?.project.workspace_type === "social" ? "social" : "banner";
   const heading: Record<Page, [string, string]> = {
     profile: [tr("accountProfile.title"), tr("accountProfile.help")],
+    reports: [tr("authorityReports.title"), tr("authorityReports.pick")],
+    "reports-project": [
+      tr("authorityReports.title"),
+      tr("authorityReports.help"),
+    ],
     social: [tr("social.home"), tr("projectFlow.pickSocial")],
     "social-create": [tr("social.create"), tr("social.independent")],
     banners: [tr("banner.home"), tr("projectFlow.pickBanner")],
@@ -393,6 +409,11 @@ export default function Workspace() {
               { id: "projects", label: tr("ui.projects"), icon: FolderOpen },
               { id: "banners", label: tr("banner.home"), icon: Files },
               { id: "social", label: tr("social.home"), icon: Files },
+              {
+                id: "reports",
+                label: tr("authorityReports.title"),
+                icon: ClipboardCheck,
+              },
               { id: "create", label: tr("ui.create_project"), icon: Plus },
               { id: "outputs", label: tr("ui.outputs"), icon: Files },
             ] as const
@@ -409,7 +430,8 @@ export default function Workspace() {
                         ? "banners"
                         : "projects")) ||
                 (page === "banner-create" && n.id === "banners") ||
-                (page === "social-create" && n.id === "social")
+                (page === "social-create" && n.id === "social") ||
+                (page === "reports-project" && n.id === "reports")
                   ? "active"
                   : ""
               }
@@ -505,21 +527,23 @@ export default function Workspace() {
             <strong>
               {inProfile
                 ? tr("accountProfile.title")
-                : page === "users"
-                  ? tr("flow.users")
-                  : page === "dashboard"
-                    ? tr("flow.home")
-                    : page === "social" ||
-                        page === "social-create" ||
-                        (page === "project" &&
-                          detail?.project.workspace_type === "social")
-                      ? tr("social.home")
-                      : page === "banners" ||
-                          page === "banner-create" ||
+                : page === "reports" || page === "reports-project"
+                  ? tr("authorityReports.title")
+                  : page === "users"
+                    ? tr("flow.users")
+                    : page === "dashboard"
+                      ? tr("flow.home")
+                      : page === "social" ||
+                          page === "social-create" ||
                           (page === "project" &&
-                            detail?.project.workspace_type === "banners")
-                        ? tr("banner.home")
-                        : title(page)}
+                            detail?.project.workspace_type === "social")
+                        ? tr("social.home")
+                        : page === "banners" ||
+                            page === "banner-create" ||
+                            (page === "project" &&
+                              detail?.project.workspace_type === "banners")
+                          ? tr("banner.home")
+                          : title(page)}
             </strong>
           </div>
           <div className="topbar-right">
@@ -693,6 +717,32 @@ export default function Workspace() {
                         onOpen={(id) => void run(() => openProject(id))}
                       />
                     </section>
+                  )}
+                  {page === "reports" && (
+                    <section className="panel form-panel">
+                      <h2>{tr("authorityReports.pickTitle")}</h2>
+                      <p>{tr("authorityReports.pick")}</p>
+                      <ProjectList
+                        projects={projects.filter(
+                          (p) =>
+                            !["banners", "social"].includes(
+                              p.workspace_type || "booklet",
+                            ),
+                        )}
+                        onOpen={(id) => void run(() => openReports(id))}
+                      />
+                    </section>
+                  )}
+                  {page === "reports-project" && detail && (
+                    <ReportsWorkspace
+                      key={detail.project.id}
+                      detail={detail}
+                      busy={busy}
+                      run={run}
+                      reloadProject={reloadProject}
+                      setReview={setReview}
+                      onChangeProject={() => navigate("reports")}
+                    />
                   )}
                   {page === "social-create" && (
                     <BannerCreate
