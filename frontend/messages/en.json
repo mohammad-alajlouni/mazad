@@ -613,7 +613,11 @@
     "page_rentals_help": "Appears when rental contracts are entered.",
     "page_auto": "On automatically",
     "pageUp": "Move {page} up",
-    "pageDown": "Move {page} down"
+    "pageDown": "Move {page} down",
+    "bookletLinkHelp": "The booklet's public link from the platform: it opens the booklet for anyone without signing in, and the QR codes use it whenever this field is empty. Enter another link only if the booklet is published elsewhere.",
+    "copyBookletLink": "Copy booklet link",
+    "openBookletLink": "Open booklet link",
+    "bookletLinkCopied": "Link copied"
   },
   "flow": {
     "backToBooklet": "Back to the booklet",

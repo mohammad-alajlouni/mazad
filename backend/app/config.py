@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     ai_base_url: str = "https://api.openai.com/v1"
     ai_model: str = "gpt-4.1-mini"
     max_upload_mb: int = 10
+    # The platform's public address (https://kutayyib.io), for the booklet
+    # links printed as QR codes; empty, the address each request came in on.
+    public_url: str = ""
 
 
 @lru_cache

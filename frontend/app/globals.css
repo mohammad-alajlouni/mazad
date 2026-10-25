@@ -2142,3 +2142,9 @@ html[dir="rtl"] .profile-return .lucide-arrow-left { transform: scaleX(-1); }
 .report-channels th,.report-channels td{padding:6px;text-align:start}
 .report-channels input{width:100%}
 .report-actions{margin:16px 0;gap:10px;justify-content:flex-start}
+
+/* The booklet's public link under its field (AuctionWorkspace). */
+.booklet-link{display:grid;gap:4px;margin-top:6px}
+.booklet-link small{color:var(--muted);font-size:12px;line-height:1.5}
+.booklet-link-row{display:flex;align-items:center;gap:6px;min-width:0}
+.booklet-link-row bdi{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;padding:6px 8px;border:1px dashed var(--line);border-radius:8px;background:var(--soft)}

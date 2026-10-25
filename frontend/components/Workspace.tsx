@@ -13,6 +13,7 @@ import UserManagement from "./UserManagement";
 import DashboardView, { Dashboard } from "./Dashboard";
 import BannerWorkspace, { BannerCreate } from "./BannerWorkspace";
 import ProjectWorkspace from "./ProjectWorkspace";
+import { ShareToken } from "./AuctionWorkspace";
 import ReportsWorkspace from "./ReportsWorkspace";
 import SharedProjectWorkspace, {
   ProjectSection,
@@ -832,49 +833,53 @@ export default function Workspace() {
                   {page === "settings" && user.role === "admin" && config && (
                     <Settings config={config} run={run} reload={refresh} />
                   )}
-                  {page === "project" &&
-                    detail &&
-                    (detail.project.workspace_type === "project" ? (
-                      <SharedProjectWorkspace
-                        key={detail.project.id + projectSection}
-                        initialSection={projectSection}
-                        detail={detail}
-                        config={config}
-                        types={types}
-                        busy={busy}
-                        run={run}
-                        reloadProject={reloadProject}
-                        setReview={(output) => {
-                          setProjectSection("outputs");
-                          setReview(output);
-                        }}
-                      />
-                    ) : ["banners", "social"].includes(
-                        detail.project.workspace_type || "",
-                      ) ? (
-                      <BannerWorkspace
-                        mode={campaignMode}
-                        key={detail.project.id}
-                        detail={detail}
-                        busy={busy}
-                        run={run}
-                        reloadProject={reloadProject}
-                        setReview={setReview}
-                      />
-                    ) : (
-                      <ProjectWorkspace
-                        key={detail.project.id}
-                        detail={detail}
-                        config={config}
-                        types={types}
-                        busy={busy}
-                        run={run}
-                        tab={tab}
-                        setTab={setTab}
-                        reloadProject={reloadProject}
-                        setReview={setReview}
-                      />
-                    ))}
+                  {page === "project" && detail && (
+                    <ShareToken.Provider
+                      value={detail.project.share_token || ""}
+                    >
+                      {detail.project.workspace_type === "project" ? (
+                        <SharedProjectWorkspace
+                          key={detail.project.id + projectSection}
+                          initialSection={projectSection}
+                          detail={detail}
+                          config={config}
+                          types={types}
+                          busy={busy}
+                          run={run}
+                          reloadProject={reloadProject}
+                          setReview={(output) => {
+                            setProjectSection("outputs");
+                            setReview(output);
+                          }}
+                        />
+                      ) : ["banners", "social"].includes(
+                          detail.project.workspace_type || "",
+                        ) ? (
+                        <BannerWorkspace
+                          mode={campaignMode}
+                          key={detail.project.id}
+                          detail={detail}
+                          busy={busy}
+                          run={run}
+                          reloadProject={reloadProject}
+                          setReview={setReview}
+                        />
+                      ) : (
+                        <ProjectWorkspace
+                          key={detail.project.id}
+                          detail={detail}
+                          config={config}
+                          types={types}
+                          busy={busy}
+                          run={run}
+                          tab={tab}
+                          setTab={setTab}
+                          reloadProject={reloadProject}
+                          setReview={setReview}
+                        />
+                      )}
+                    </ShareToken.Provider>
+                  )}
                 </>
               )}
             </div>

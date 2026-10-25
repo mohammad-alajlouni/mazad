@@ -94,7 +94,6 @@ def review_banners(db, project):
         "license_number",
         "auction_contact_number",
         "legal_announcement_text",
-        "booklet_url",
     ):
         need(a.get(field), field, "auction")
     electronic = a.get("auction_type") in ("electronic", "hybrid")

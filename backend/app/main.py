@@ -26,6 +26,24 @@ app.add_middleware(
 
 
 @app.middleware("http")
+async def public_address(request: Request, call_next):
+    """The platform's address as this request reached it (through nginx or
+    the frontend's proxy), for the booklet links the QR codes carry."""
+    from .services.sharing import REQUEST_BASE, request_base
+
+    token = REQUEST_BASE.set(
+        request_base(
+            request.headers.get("x-forwarded-host") or request.headers.get("host"),
+            request.headers.get("x-forwarded-proto") or request.url.scheme,
+        )
+    )
+    try:
+        return await call_next(request)
+    finally:
+        REQUEST_BASE.reset(token)
+
+
+@app.middleware("http")
 async def security(request: Request, call_next):
     origin = request.headers.get("origin")
     if (

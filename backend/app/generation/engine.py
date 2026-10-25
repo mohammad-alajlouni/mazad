@@ -148,6 +148,14 @@ def snapshot(db, project, linked_photos=False):
         project_data["auction"] = AuctionData.model_validate(
             project.auction
         ).model_dump(mode="json")
+    if project.auction:
+        # The link the booklet's QR codes open (services/sharing.py).
+        from ..services.sharing import booklet_link, booklet_url
+
+        project_data["auction"]["booklet_url"] = booklet_url(
+            project_data["auction"].get("booklet_url"), project.share_token
+        )
+        project_data["booklet_link"] = booklet_link(project.share_token)
     agent = db.scalar(select(SellingAgent).where(SellingAgent.project_id == project.id))
     project_data["selling_agent"] = agent.data if agent else {}
     project_data["agent_logo"] = next(

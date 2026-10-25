@@ -1,12 +1,62 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { Copy, ExternalLink, Plus, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { api, send, Detail, Item, Run } from "./api";
 import { BookletPages } from "./BookletPages";
 import { PageSettings, RentalContracts } from "./PropertySections";
 
 type Values = Record<string, unknown>;
+// The open project's share token: its booklet's public link, what the QR
+// codes open (backend services/sharing.py).
+export const ShareToken = createContext("");
+// The booklet's public link, shown under the booklet link field: used by the
+// QR codes whenever the field is empty (or holds a link into the platform).
+function BookletLink() {
+  const t = useTranslations("auction");
+  const token = useContext(ShareToken);
+  const [copied, setCopied] = useState(false);
+  if (!token) return null;
+  const link = `${location.origin}/api/b/${token}`;
+  return (
+    <div className="booklet-link" data-booklet-link={link}>
+      <small>{t("bookletLinkHelp")}</small>
+      <div className="booklet-link-row">
+        <bdi dir="ltr">{link}</bdi>
+        <button
+          type="button"
+          className="icon-button"
+          aria-label={t("copyBookletLink")}
+          title={t("copyBookletLink")}
+          onClick={() =>
+            void navigator.clipboard
+              ?.writeText(link)
+              .then(() => setCopied(true))
+          }
+        >
+          <Copy size={15} />
+        </button>
+        <a
+          className="icon-button"
+          href={link}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={t("openBookletLink")}
+          title={t("openBookletLink")}
+        >
+          <ExternalLink size={15} />
+        </a>
+      </div>
+      {copied && <small role="status">{t("bookletLinkCopied")}</small>}
+    </div>
+  );
+}
 const auctionGroups = [
   [
     "auction_name",
@@ -487,6 +537,7 @@ export function Fields({
           {invalid[prefix + key] && (
             <small className="field-error">{v("required")}</small>
           )}
+          {key === "booklet_url" && <BookletLink />}
           {key === "electronic_platform_name" && (
             // The known platforms to choose from; any other may be typed.
             <datalist id="platforms">

@@ -102,7 +102,8 @@ export default function SampleFill({
         electronic_platform_name: "منصة السعودية للمزادات",
         electronic_platform_url: "https://example.com/platform",
         auction_location_url: "https://example.com/hall",
-        booklet_url: "https://example.com/booklet",
+        // Empty: the booklet's own public link (its QR codes open it).
+        booklet_url: "",
         contact_url: "https://example.com/contact",
         license_number: digits(9),
         supervising_authority: "مركز الإسناد والتصفية (إنفاذ)",

@@ -1,3 +1,4 @@
+import secrets
 import uuid
 from datetime import datetime, timezone
 
@@ -33,7 +34,9 @@ class Record:
 
 class User(Record, Base):
     __tablename__ = "users"
-    agent_profile: Mapped[dict] = mapped_column(JSONType, default=dict, server_default="{}")
+    agent_profile: Mapped[dict] = mapped_column(
+        JSONType, default=dict, server_default="{}"
+    )
     email: Mapped[str] = mapped_column(String(255), unique=True)
     password_hash: Mapped[str] = mapped_column(Text)
     token_version: Mapped[int] = mapped_column(Integer, default=0)
@@ -62,8 +65,10 @@ class Project(Record, Base):
     forms: Mapped[dict] = mapped_column(JSONType, default=dict, server_default="{}")
     # The author's entries for the authority's reports after the auction
     # (ReportsData): the closing form and the outputs report.
-    reports: Mapped[dict] = mapped_column(
-        JSONType, default=dict, server_default="{}"
+    reports: Mapped[dict] = mapped_column(JSONType, default=dict, server_default="{}")
+    # The booklet's public link (services/sharing.py): unguessable, stable.
+    share_token: Mapped[str] = mapped_column(
+        String(24), unique=True, default=lambda: secrets.token_urlsafe(9)
     )
     name: Mapped[str] = mapped_column(String(200))
     code: Mapped[str] = mapped_column(String(100), unique=True)

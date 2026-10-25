@@ -100,7 +100,10 @@ def test_banner_sizes_preview_approval(admin, size):
     (out / f"banner-{size}.png").write_bytes(raw)
     im = Image.open(BytesIO(raw))
     assert im.width == 2400
-    assert "https://example.com/booklet/demo" in [
+    # The booklet's public link (the sample's placeholder link cannot open
+    # it): the project's own, readable without signing in.
+    token = admin.get(f"/api/projects/{p}").json()["project"]["share_token"]
+    assert f"http://testserver/api/b/{token}" in [
         r.text for r in zxingcpp.read_barcodes(im)
     ]
     assert admin.get("/api/files/" + png["id"] + "?download=true").status_code == 409

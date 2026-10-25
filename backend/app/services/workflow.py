@@ -97,8 +97,6 @@ def workflow(db, project):
                 "auction_contact_number",
                 "legal_announcement_text",
             ]
-        if scope in ("project", "banners"):
-            required += ["booklet_url"]
         rules["auction"][kind] = {
             "visible": AUCTION_COMMON + visible,
             "required": required,
