@@ -285,9 +285,24 @@ def text_block(name, slot, value, geometry):
         first = middle - step * (len(lines) - 1) / 2
         bases = [first + step * n for n in range(len(lines))]
     size = slot["size"] * scale
+    # Where the value's ink stands, in the guide's points (the logo keeps
+    # clear of it).
+    spans = []
+    for line, base in zip(lines, bases, strict=True):
+        w = width(line, slot, scale)
+        x0 = {"right": slot["x"] - w, "center": slot["x"] - w / 2, "left": slot["x"]}[
+            slot["align"]
+        ]
+        spans.append([x0, base - size * 0.85, x0 + w, base + size * 0.3])
     return {
         "key": slot["key"],
         "fits": fits,
+        "extent": [
+            min(e[0] for e in spans),
+            min(e[1] for e in spans),
+            max(e[2] for e in spans),
+            max(e[3] for e in spans),
+        ],
         "align": slot["align"],
         "x": round(ox + slot["x"] * k, 3),
         "lines": [
@@ -376,6 +391,7 @@ def page(name, size, value_of, images):
             round((y1 - y0) * ky, 3),
         ]
 
+    logo = None
     for slot in design["slots"]:
         kind, key = slot["kind"], slot["key"]
         if kind == "text":
@@ -386,20 +402,7 @@ def page(name, size, value_of, images):
             d, n = qr_path(images["qr"])
             out["qr"] = {"box": box(slot["box"]), "path": d, "modules": n}
         elif kind == "image" and images.get("logo"):
-            from ..booklet.art import logo_fit
-
-            x, y, w, h = box(slot["box"])
-            white = dark_behind(name, tuple(slot["box"]))
-            fit = logo_fit(images["logo"], w, h, white)
-            out["logo"] = {
-                "src": fit["src"],
-                "box": [
-                    round(x + (w - fit["width"]) / 2, 3),
-                    round(y + (h - fit["height"]) / 2, 3),
-                    fit["width"],
-                    fit["height"],
-                ],
-            }
+            logo = slot  # placed once the values are: it keeps clear of them
         elif kind == "photo" and images.get("photo"):
             out["photo"] = {
                 "src": images["photo"],
@@ -408,8 +411,101 @@ def page(name, size, value_of, images):
             }
         elif kind == "accent":
             out["accent"].append({"path": slot["path"], "color": slot["color"]})
+    if logo:
+        from ..booklet.art import logo_fit
+
+        room = logo_room(name, logo["box"], [t["extent"] for t in out["texts"]])
+        x, y, w, h = box(room)
+        white = dark_behind(name, tuple(logo["box"]))
+        fit = logo_fit(images["logo"], w, h, white)
+        out["logo"] = {
+            "src": fit["src"],
+            "box": [
+                round(x + (w - fit["width"]) / 2, 3),
+                round(y + (h - fit["height"]) / 2, 3),
+                fit["width"],
+                fit["height"],
+            ],
+        }
     out["view"] = [aw, ah]
     return out
+
+
+@lru_cache(maxsize=32)
+def artwork(name):
+    """The design's picture, in grey, and its pixels per guide point."""
+    from PIL import Image
+
+    image = Image.open(ART / f"{name}.png").convert("L")
+    return image, image.width / layout()[name]["size"][0]
+
+
+def logo_room(name, box, texts, gap=1.5):
+    """The guide's box for the selling agent's logo, grown to AGENT_LOGO_SCALE
+    as far as the design leaves it free: it stops short of the guide's own
+    drawing and of the values beside it, and is never smaller than the
+    guide's box."""
+    from PIL import ImageChops
+
+    from ..booklet.art import AGENT_LOGO_SCALE
+
+    image, k = artwork(name)
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    inside = image.crop(tuple(round(v * k) for v in box))
+    background = sorted(inside.getdata())[len(inside.getdata()) // 2]
+
+    def free(r):
+        a, b, c, d = r
+        if a < 0 or b < 0 or c * k > image.width or d * k > image.height:
+            return False
+        for t in texts:
+            if a < t[2] + gap and c > t[0] - gap and b < t[3] + gap and d > t[1] - gap:
+                return False
+        crop = image.crop((round(a * k), round(b * k), round(c * k), round(d * k)))
+        if not crop.width or not crop.height:
+            return True
+        diff = ImageChops.difference(crop, crop.point(lambda _: background))
+        return diff.point(lambda v: 255 if v > 40 else 0).getbbox() is None
+
+    grow = AGENT_LOGO_SCALE - 1
+    step = 0.25
+
+    def reach(edge):
+        """How far one side can move out (the others as in the guide)."""
+        most = (w if edge in "lr" else h) * grow
+        n = 0.0
+        while n + step <= most:
+            m = n + step
+            strip = {
+                "l": (x0 - m - gap, y0, x0, y1),
+                "r": (x1, y0, x1 + m + gap, y1),
+                "t": (x0, y0 - m - gap, x1, y0),
+                "b": (x0, y1, x1, y1 + m + gap),
+            }[edge]
+            if not free(strip):
+                break
+            n = m
+        return n
+
+    left, right, top, bottom = (reach(e) for e in "lrtb")
+    width_ = min(w * AGENT_LOGO_SCALE, w + left + right)
+    height = min(h * AGENT_LOGO_SCALE, h + top + bottom)
+    # Centred on the guide's box where the room allows, shifted where not.
+    a = min(max((x0 + x1 - width_) / 2, x0 - left), x1 + right - width_)
+    b = min(max((y0 + y1 - height) / 2, y0 - top), y1 + bottom - height)
+    room = [a, b, a + width_, b + height]
+    # The corners, too, are free (shrink towards the guide's box if not).
+    for _ in range(40):
+        if free(room) or room == [x0, y0, x1, y1]:
+            break
+        room = [
+            room[0] + (x0 - room[0]) * 0.1,
+            room[1] + (y0 - room[1]) * 0.1,
+            room[2] + (x1 - room[2]) * 0.1,
+            room[3] + (y1 - room[3]) * 0.1,
+        ]
+    return room
 
 
 def banner_pages(project, items, config):

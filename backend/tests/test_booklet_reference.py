@@ -699,6 +699,19 @@ def test_logos_take_each_cover_s_reference_position(cover, auction_box, agent_bo
         cover, logo_data((80, 100)), logo_data((700, 100), "JPEG", (255, 255, 255))
     )
     tolerance = 0.2
+    # The agent's logo is set one and a half times its reference box
+    # (AGENT_LOGO_SCALE), from the box's outer edge and its middle.
+    from app.generation.booklet.art import AGENT_LOGO_SCALE as S
+
+    x0, y0, x1, y1 = agent_box
+    middle, w, h = (y0 + y1) / 2, (x1 - x0) * S, (y1 - y0) * S
+    outer_right = cover in ("infath-4", "infath-5")
+    agent_box = (
+        x1 - w if outer_right else x0,
+        middle - h / 2,
+        x1 if outer_right else x0 + w,
+        middle + h / 2,
+    )
     assert auction in pymupdf.Rect(auction_box) + (
         -tolerance,
         -tolerance,

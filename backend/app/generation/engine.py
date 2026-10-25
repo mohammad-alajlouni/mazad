@@ -553,6 +553,7 @@ def render_html(
     from .booklet.art import (
         COVER_PHOTO,
         infath_logo,
+        agent_logo_fit,
         logo_fit,
         page_shape,
         photo,
@@ -586,6 +587,7 @@ def render_html(
         rentals_column=rentals_column,
         white_logo=white_logo,
         logo_fit=logo_fit,
+        agent_logo_fit=agent_logo_fit,
         cover_photo_window=COVER_PHOTO.get,
         agent_logo_box=AGENT_LOGO,
         supervisor_logo=supervisor_logo,

@@ -191,6 +191,22 @@ def prepared_logo(src, white=False):
     return uri, image.width / max(1, image.height)
 
 
+# The selling agent's logo is set one and a half times its reference box, in
+# every output (booklet, boards, posts, the authority's report), from the
+# same anchor (an edge or the centre, as each place has it).
+AGENT_LOGO_SCALE = 1.5
+
+
+def agent_logo_fit(src, max_width, max_height, white=False, room=None):
+    """The selling agent's logo in its reference box, enlarged; room (points)
+    caps its width where the page sets something beside it, never below the
+    reference box."""
+    width = max_width * AGENT_LOGO_SCALE
+    if room is not None:
+        width = max(max_width, min(width, room))
+    return logo_fit(src, width, max_height * AGENT_LOGO_SCALE, white)
+
+
 def logo_fit(src, max_width, max_height, white=False):
     """Prepared logo and its size in points inside a reference box."""
     uri, ratio = prepared_logo(src, white)

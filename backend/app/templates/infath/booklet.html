@@ -29,7 +29,7 @@ top:{{ '%.2f' % (base - L / 2 - size * (0.366 if fam == 'r' else 0.255)) }}pt;fo
 {%- endmacro %}
 {#- Page artwork, with the supervising body's logo where the guide puts Infath's. -#}
 {% macro art(name) %}<img class="art" src="{{ asset('booklet-art/' ~ name ~ '.svg') }}">{{ supervisor_logo(project.supervisor, name) }}{% endmacro %}
-{% macro footer(reverse=false, agent_logo=true) %}{{ vec('footer-bar' ~ ('-reverse' if reverse else ''), 0, 822, 595.276, 19.89) }}{% if agent_logo and project.agent_logo %}{% set A = logo_fit(project.agent_logo, 80, 22.3) %}<img class="logo" style="{{ box(12.3, 803.05 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}{% endmacro %}
+{% macro footer(reverse=false, agent_logo=true) %}{{ vec('footer-bar' ~ ('-reverse' if reverse else ''), 0, 822, 595.276, 19.89) }}{% if agent_logo and project.agent_logo %}{% set A = agent_logo_fit(project.agent_logo, 80, 22.3) %}<img class="logo" style="{{ box(12.3, 803.05 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}{% endmacro %}
 {#- Nearby landmarks: up to three in a row, each icon beside its name (set at
     size, on up to two lines; see composer.landmark_size). -#}
 {% macro landmark_row(items, size) %}<div style="display:flex;flex-direction:row;align-items:center;height:26pt">

@@ -1,6 +1,6 @@
 {#- Guide p.12: the selling agent, set as the supervising body's page (p.11). -#}
 {{ art('agent') }}
-{% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, agent_logo_box[0], agent_logo_box[1]) %}
+{% if project.agent_logo %}{% set A = agent_logo_fit(project.agent_logo, agent_logo_box[0], agent_logo_box[1]) %}
 {% set profile_logo %}<img class="logo" style="{{ box(463.4 - A.width, 243.3 - A.height, A.width, A.height) }}" src="{{ A.src }}">{% endset %}
 {% else %}{% set profile_logo = '' %}{% endif %}
 {% set profile_title = agent.name %}

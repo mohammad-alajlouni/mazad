@@ -1,6 +1,6 @@
 {#- Reference page 21. -#}
 {{ art('contact') }}{{ footer(true, false) }}
-{% if project.agent_logo %}{% set A = logo_fit(project.agent_logo, 220, 51.7) %}<img class="logo" style="{{ box(300 - A.width / 2, 197.15 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
+{% if project.agent_logo %}{% set A = agent_logo_fit(project.agent_logo, 220, 51.7) %}<img class="logo" style="{{ box(300 - A.width / 2, 197.15 - A.height / 2, A.width, A.height) }}" src="{{ A.src }}">{% endif %}
 <div class="t r w5" style="{{ T(299.75, 302.2, 20.37, align='center', width=300) }};color:#243c52">{{ bt('held_at') }}</div>
 {% set items = [] %}
 {#- Guide p.25, right to left - electronic: date, platform, time; in person:
