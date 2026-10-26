@@ -42,20 +42,20 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 13
+LAYOUT_VERSION = 14
 # Rows that the reference tables hold before continuing on another page.
 # Summary table (guide p.14). Column edges (right to left) come from the open
-# reference booklet; the title and table sit where the guide places them, and
-# the table fills its area down to the footer: rows share the height evenly.
+# reference booklet; the title and table sit where the guide places them. Rows
+# are the reference row's height from the top, as in the rentals table: a row
+# grows only when a value wraps.
 SUMMARY_COLS = (509.2, 455.1, 413.1, 350.6, 308.6, 265.9, 225.9, 152.6, 37.6)
-SUMMARY_SHIFT = -103.5  # from the open booklet's position up to the guide's
+# From the open booklet's position up: the band sits as far under the title as
+# the rentals table's does (118.5 pt from the page's top).
+SUMMARY_SHIFT = -135.5
 SUMMARY_TOP = 297.7 + SUMMARY_SHIFT
 SUMMARY_LIMIT = 740.0  # the table ends above the footer
 SUMMARY_MIN_ROW = 26.0  # the reference row
 SUMMARY_ROWS = 20  # properties on a summary page; the next ones open a new page
-# With few properties a row grows no taller than in a full eight-row table
-# (the guide's), so a short list does not turn into oversized rows.
-SUMMARY_MAX_ROW = (SUMMARY_LIMIT - SUMMARY_TOP) / 8
 SUMMARY_LINE = 10.5  # line height of a value wrapped inside its cell
 RENTAL_ROWS = 19
 # Rentals table (reference page 18): column edges right to left, the reference
@@ -540,19 +540,6 @@ def cell_text(text, width):
     return lines or ["-"]
 
 
-def spread(needs, space, cap):
-    """Row heights sharing a table's space evenly: every row is at least as tall
-    as its content needs, no row taller than cap, the total within space."""
-    low, high = min(needs), max(cap, min(needs))
-    for _ in range(40):
-        level = (low + high) / 2
-        if sum(max(n, level) for n in needs) <= space:
-            low = level
-        else:
-            high = level
-    return [max(n, low) for n in needs]
-
-
 # The summary's column headings (white on the band): Ruaq Medium 6.48.
 SUMMARY_HEAD = (6.48, "RuaqArabic-Medium")
 SUMMARY_PAD = 6.0  # space beside a cell's widest line
@@ -639,10 +626,10 @@ def summary_pages(items, language="ar"):
 
     Columns are fitted to the values (summary_columns). A value too long for
     its column still wraps inside its cell and its row grows. A page takes at
-    most SUMMARY_ROWS properties (fewer when wrapped rows fill it down to the
-    footer first), and its rows share the table's height evenly.
+    most SUMMARY_ROWS properties (fewer when wrapped rows reach the footer
+    first); its rows run down from the top at the reference height, as the
+    rentals table's do, whatever their number.
     """
-    space = SUMMARY_LIMIT - SUMMARY_TOP
     cols = summary_columns(items, language)
     heads = [
         [
@@ -656,14 +643,9 @@ def summary_pages(items, language="ar"):
         ]
         for i, key in enumerate(SUMMARY_FIELDS)
     ]
-    pages, rows, needs, lines = [], [], [], []
+    pages, rows, bottoms, lines = [], [], [], []
 
     def close():
-        heights = spread(needs, space, SUMMARY_MAX_ROW)
-        bottoms, y = [], SUMMARY_TOP
-        for height in heights:
-            y += height
-            bottoms.append(round(y, 2))
         pages.append(
             {
                 "kind": "summary",
@@ -684,12 +666,14 @@ def summary_pages(items, language="ar"):
             for i, key in enumerate(SUMMARY_FIELDS)
         }
         longest = max(len(text) for text in texts.values())
-        need = max(SUMMARY_MIN_ROW, longest * SUMMARY_LINE + 6)
-        if rows and (len(rows) == SUMMARY_ROWS or sum(needs) + need > space + 0.01):
+        height = max(SUMMARY_MIN_ROW, longest * SUMMARY_LINE + 6)
+        top = bottoms[-1] if bottoms else SUMMARY_TOP
+        if rows and (len(rows) == SUMMARY_ROWS or top + height > SUMMARY_LIMIT + 0.01):
             close()
-            rows, needs, lines = [], [], []
+            rows, bottoms, lines = [], [], []
+            top = SUMMARY_TOP
         rows.append(item)
-        needs.append(need)
+        bottoms.append(round(top + height, 2))
         lines.append(texts)
     if rows:
         close()

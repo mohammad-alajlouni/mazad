@@ -1,7 +1,8 @@
 {#- Guide V2 p.14: title and table at the guide's height; teal or navy to match
-    the cover. The table fills its area: row bottoms come from the composer. -#}
+    the cover. Row bottoms come from the composer: reference rows from the top,
+    a row growing only when a value wraps (as in the rentals table). -#}
 {% set navy = booklet.theme == 'navy' %}{% set band = '#00365d' if navy else '#37bfbd' %}
-{% set dy = -103.5 %}{% set table_top = 297.7 + dy %}
+{% set dy = summary_shift %}{% set table_top = 297.7 + dy %}
 {% set bottoms = page.bottoms %}{% set last = bottoms[-1] %}
 {#- Column edges fitted to the values (composer.summary_columns); the guide's
     for a plan written before they were. -#}

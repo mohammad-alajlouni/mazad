@@ -214,7 +214,7 @@ def test_tables_close_at_the_last_record_on_every_page():
     )
     summaries = [len(p["rows"]) for p in booklet["pages"] if p["kind"] == "summary"]
     rentals = [len(p["rows"]) for p in booklet["pages"] if p["kind"] == "rentals"]
-    # The summary table fills its area: twenty reference rows down to the footer.
+    # Twenty reference rows to a summary page, the rest on the next.
     assert summaries == [20, 2] and rentals == [19, 1]
 
 
@@ -998,12 +998,13 @@ def test_every_summary_value_is_printed_inside_its_own_cell():
         assert len(cells[(row, 0)]) > 3  # the property type is there too
 
 
-def test_summary_table_fills_its_area_with_evenly_shared_rows():
-    """Guide p.14: the table starts at the guide's height and runs down to the
-    footer; rows share the space (no taller than in an eight-row table)."""
+def test_summary_rows_keep_the_reference_height_like_the_rentals_table():
+    """Review: with few properties the rows were stretched down to the footer.
+    Rows run down from the guide's height at the reference row's height, as in
+    the rentals table, whatever their number; twenty fit above the footer."""
     from app.generation.booklet.composer import (
         SUMMARY_LIMIT,
-        SUMMARY_MAX_ROW,
+        SUMMARY_MIN_ROW,
         SUMMARY_TOP,
     )
 
@@ -1012,13 +1013,11 @@ def test_summary_table_fills_its_area_with_evenly_shared_rows():
         return next(p for p in pages["pages"] if p["kind"] == "summary")["bottoms"]
 
     assert SUMMARY_TOP < 200  # raised from the open booklet's 297.7 to the guide's
-    for count in (8, 14, 20):  # a full page: the last row ends at the footer limit
+    for count in (2, 8, 14, 20):
         bottoms = table(count)
-        assert abs(bottoms[-1] - SUMMARY_LIMIT) < 0.1
         heights = [b - a for a, b in zip([SUMMARY_TOP] + bottoms, bottoms)]
-        assert max(heights) - min(heights) < 0.1
-    few = table(2)  # a short list keeps sensible rows instead of two giant ones
-    assert abs(few[0] - SUMMARY_TOP - SUMMARY_MAX_ROW) < 0.1
+        assert all(abs(h - SUMMARY_MIN_ROW) < 0.01 for h in heights), heights
+        assert bottoms[-1] <= SUMMARY_LIMIT
 
 
 def test_typed_plan_numbers_keep_the_order_shown_in_the_form():

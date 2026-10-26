@@ -568,7 +568,13 @@ def render_html(
         table_lines,
         white_logo,
     )
-    from .booklet.composer import AGENT_LOGO, FIELDS, RENTAL_FIELDS, SUMMARY_FIELDS
+    from .booklet.composer import (
+        AGENT_LOGO,
+        FIELDS,
+        RENTAL_FIELDS,
+        SUMMARY_FIELDS,
+        SUMMARY_SHIFT,
+    )
     from .booklet.labels import label
     from .booklet.supervisor import INFATH
 
@@ -605,5 +611,6 @@ def render_html(
         display=lambda value: "-" if value in (None, "") else str(value),
         property_fields=FIELDS,
         summary_fields=SUMMARY_FIELDS,
+        summary_shift=SUMMARY_SHIFT,
         rental_fields=RENTAL_FIELDS,
     )
