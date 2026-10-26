@@ -39,6 +39,9 @@ body{margin:0}
 <section class="page" data-kind="{{ p.name }}" style="width:{{ w }}pt;height:{{ h }}pt">
 {% if preview %}<img class="art" alt="" src="{{ asset('marketing/' ~ p.name ~ '.png') }}" style="left:{{ ax }}pt;top:{{ ay }}pt;width:{{ aw }}pt;height:{{ ah }}pt">
 {% else %}<div class="vec" data-vector="marketing/{{ p.name }}" style="left:{{ ax }}pt;top:{{ ay }}pt;width:{{ aw }}pt;height:{{ ah }}pt"></div>{% endif %}
+{% if p.icons %}<svg class="layer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ vw }} {{ vh }}" preserveAspectRatio="none" style="left:{{ ax }}pt;top:{{ ay }}pt;width:{{ aw }}pt;height:{{ ah }}pt">
+{%- for i in p.icons %}{% set t = i.transform or [0, 0, 1] %}<path d="{{ i.d }}" fill="{{ i.fill }}"{% if i.even_odd %} fill-rule="evenodd"{% endif %} transform="translate({{ '%.3f' % (t[0] + i.dx) }} {{ '%.3f' % t[1] }}) scale({{ t[2] }})"/>{% endfor -%}
+</svg>{% endif %}
 {% if p.photo or p.accent %}<svg class="layer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ vw }} {{ vh }}" preserveAspectRatio="none" style="left:{{ ax }}pt;top:{{ ay }}pt;width:{{ aw }}pt;height:{{ ah }}pt">
 {%- if p.photo %}{% set x0, y0, x1, y1 = p.photo.frame %}<defs><clipPath id="photo-{{ loop.index }}"><path d="{{ p.photo.clip }}"/></clipPath></defs><image clip-path="url(#photo-{{ loop.index }})" href="{{ p.photo.src }}" x="{{ x0 }}" y="{{ y0 }}" width="{{ x1 - x0 }}" height="{{ y1 - y0 }}" preserveAspectRatio="xMidYMid slice"/>{% endif %}
 {%- for a in p.accent %}<path d="{{ a.path }}" fill="{{ a.color }}"/>{% endfor -%}

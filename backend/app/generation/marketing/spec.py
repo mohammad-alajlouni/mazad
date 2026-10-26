@@ -654,3 +654,36 @@ POSTS = {
     },
 }
 TEMPLATES = {**BOARDS, **POSTS}
+
+# The place line's icon (guide p.13): the location pin for an auction held in
+# a hall, the platform (a screen) for an electronic one, both for a hybrid.
+# Each design's own icon is taken out of it (these boxes) and set again by the
+# auction's type; the platform icon is the guide's own (the teal X post on
+# p.35 draws it), in each design's colours.
+PLACE_ICONS = {
+    "board-panoramic-physical": [346.84, 388.82, 355.75, 397.35],
+    "board-panoramic-electronic": [334.6, 385.89, 344.51, 395.37],
+    "board-landscape-physical": [601.9, 407.8, 617.1, 422.4],
+    "board-landscape-electronic": [557.0, 394.7, 565.0, 402.4],
+    "board-square-physical": [321.4, 276.6, 333.9, 288.5],
+    "board-square-electronic": [324.8, 280.2, 334.0, 289.0],
+    "x-announcement-white": [653.54, 219.65, 658.63, 226.44],
+    "x-announcement-teal": [382.51, 218.56, 390.7, 226.63],
+    "x-property-white": [512.81, 400.2, 517.9, 406.98],
+    "x-property-teal": [242.15, 400.2, 247.23, 406.98],
+    "instagram-announcement-white": [559.34, 232.06, 566.74, 239.15],
+    "instagram-announcement-teal": [375.1, 230.0, 382.34, 236.93],
+    "instagram-property-white": [563.13, 412.28, 570.08, 418.93],
+    "instagram-property-teal": [380.22, 412.28, 387.17, 418.93],
+    "story-announcement-white": [548.07, 353.31, 556.65, 361.52],
+    "story-announcement-teal": [680.11, 374.52, 685.42, 379.6],
+    "story-announcement-navy": [803.66, 374.52, 808.96, 379.6],
+}
+# The design that draws the platform icon, and where that design's location
+# pin is taken from instead (its sibling on the same page).
+PLATFORM_SOURCE = "x-announcement-teal"
+LOCATION_SIBLING = {"x-announcement-teal": "x-property-teal"}
+for _name, _box in PLACE_ICONS.items():
+    TEMPLATES[_name]["slots"].append(
+        {"key": "place_icon", "kind": "place_icon", "box": _box}
+    )

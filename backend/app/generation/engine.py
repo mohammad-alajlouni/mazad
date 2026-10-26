@@ -194,6 +194,9 @@ def snapshot(db, project, linked_photos=False):
         .order_by(ProjectItem.sequence_number, ProjectItem.created_at)
     ):
         data = record_dict(item)
+        # Its place among the project's properties: the booklet's closing
+        # schedule (composer.closing) counts on it, so every output does.
+        data["position"] = len(items)
         data["line_total"] = str(
             (Decimal(data["quantity"]) * Decimal(data["financial_value"])).quantize(
                 Decimal(".01")
@@ -552,8 +555,8 @@ def render_html(
     from .booklet import fit, formatting
     from .booklet.art import (
         COVER_PHOTO,
-        infath_logo,
         agent_logo_fit,
+        infath_logo,
         logo_fit,
         page_shape,
         photo,

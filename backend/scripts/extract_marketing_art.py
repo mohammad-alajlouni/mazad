@@ -25,7 +25,11 @@ from PIL import ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from app.generation.marketing.spec import TEMPLATES
+from app.generation.marketing.spec import (
+    LOCATION_SIBLING,
+    PLATFORM_SOURCE,
+    TEMPLATES,
+)
 
 ASSETS = ROOT / "app/templates/infath/assets"
 OUT = ASSETS / "marketing"
@@ -485,6 +489,22 @@ def extract(name, spec, guide):
             slots.append({"key": key, "kind": kind, "box": rel(slot["box"])})
         elif kind == "erase":
             art_cuts.append(pymupdf.Rect(slot["erase"]))
+        elif kind == "place_icon":
+            area = pymupdf.Rect(slot["box"]) + (-0.7, -0.7, 0.7, 0.7)
+            parts = [
+                {
+                    "d": svg_path(d["items"], ox, oy),
+                    "fill": hex_colour(d["fill"]),
+                    "even_odd": bool(d.get("even_odd")),
+                    "rect": rel(d["rect"]),
+                }
+                for d in page.get_drawings()
+                if d["type"] == "f" and d.get("fill") and area.contains(d["rect"])
+            ]
+            if not parts:
+                raise SystemExit(f"{name}: place icon not found")
+            art_cuts.append(area)
+            slots.append({"key": key, "kind": "place_icon", "parts": parts})
         elif kind == "photo":
             clip = None
             for drawing in page.get_drawings(extended=True):
@@ -698,10 +718,106 @@ def free_room(png, slots, zoom):
         s["maxw"] = round(max(s["maxw"], room), 2)
 
 
+def bounds(parts):
+    return [
+        min(p["rect"][0] for p in parts),
+        min(p["rect"][1] for p in parts),
+        max(p["rect"][2] for p in parts),
+        max(p["rect"][3] for p in parts),
+    ]
+
+
+def inside(a, b):
+    return (
+        a[0] >= b[0] - 0.05
+        and a[1] >= b[1] - 0.05
+        and a[2] <= b[2] + 0.05
+        and a[3] <= b[3] + 0.05
+    )
+
+
+def roles(parts):
+    """A pin's parts: its base (the flat ellipse under it, if drawn), its
+    ring and its inner circle; a screen's frame is its base."""
+    out = []
+    for p in parts:
+        w, h = p["rect"][2] - p["rect"][0], p["rect"][3] - p["rect"][1]
+        holds = any(q is not p and inside(q["rect"], p["rect"]) for q in parts)
+        held = any(q is not p and inside(p["rect"], q["rect"]) for q in parts)
+        out.append("inner" if held else "pin" if holds or h >= w * 0.6 else "base")
+    return out
+
+
+def place_icons(layout):
+    """Each design's two place icons, in its colours (see spec.PLACE_ICONS):
+    its own location pin and the guide's platform icon, sized to it."""
+    own = {
+        name: next(s for s in d["slots"] if s["kind"] == "place_icon")["parts"]
+        for name, d in layout.items()
+        if any(s["kind"] == "place_icon" for s in d["slots"])
+    }
+    screen = own[PLATFORM_SOURCE]
+    screen_box = bounds(screen)
+    screen_roles = roles(screen)
+    for name, parts in own.items():
+        location = [dict(p) for p in parts]
+        anchor = bounds(parts)
+        if name in LOCATION_SIBLING:
+            # Its own icon is the screen: the pin is its sibling's, set where
+            # this design's icon stands (same right edge and foot).
+            sibling = own[LOCATION_SIBLING[name]]
+            sb = bounds(sibling)
+            dx, dy = anchor[2] - sb[2], anchor[3] - sb[3]
+            location = [{**p, "transform": [dx, dy, 1.0]} for p in sibling]
+            anchor = [sb[0] + dx, sb[1] + dy, sb[2] + dx, sb[3] + dy]
+            parts = sibling
+        colours = dict(zip(roles(parts), (p["fill"] for p in parts), strict=True))
+        pin = colours.get("pin") or parts[0]["fill"]
+        tone = {
+            "base": colours.get("base", pin),
+            "pin": pin,
+            "inner": colours.get("inner", pin),
+        }
+        # The screen as tall as the pin with its base (the guide's pair, p.13),
+        # a pin drawn without one standing a little shorter (p.35).
+        has_base = "base" in colours
+        height = (anchor[3] - anchor[1]) * (1.0 if has_base else 1.19)
+        k = height / (screen_box[3] - screen_box[1])
+        width = (screen_box[2] - screen_box[0]) * k
+        x0 = (anchor[0] + anchor[2]) / 2 - width / 2
+        y0 = anchor[3] - height
+        platform = [
+            {
+                **p,
+                "fill": tone[role],
+                "transform": [x0 - screen_box[0] * k, y0 - screen_box[1] * k, k],
+            }
+            for p, role in zip(screen, screen_roles, strict=True)
+        ]
+        slot = next(s for s in layout[name]["slots"] if s["kind"] == "place_icon")
+        slot.pop("parts")
+        # Beside the place line (right of it), or above it (panoramic boards).
+        line = next(
+            s for s in layout[name]["slots"] if s["key"] in ("place", "place_line")
+        )
+        slot["beside"] = anchor[3] > line["bases"][0] - line["size"] * 0.9
+        slot["location"] = {"parts": location, "box": [round(v, 3) for v in anchor]}
+        slot["platform"] = {
+            "parts": platform,
+            "box": [
+                round(x0, 3),
+                round(y0, 3),
+                round(x0 + width, 3),
+                round(anchor[3], 3),
+            ],
+        }
+
+
 def main():
     guide = Path(sys.argv[1])
     OUT.mkdir(exist_ok=True)
     layout = {name: extract(name, spec, guide) for name, spec in TEMPLATES.items()}
+    place_icons(layout)
     (OUT / "layout.json").write_text(
         json.dumps(layout, ensure_ascii=False, indent=1) + "\n"
     )

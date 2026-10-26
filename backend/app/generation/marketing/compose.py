@@ -166,6 +166,17 @@ def values(project, item, count, extra):
     """Every slot's value for one page (item is None on an announcement)."""
     a = project.get("auction") or {}
     d = (item or {}).get("property_data") or {}
+    if item and a.get("auction_type") in ("electronic", "hybrid"):
+        # A property's bidding closes when the booklet says it does: its own
+        # date and time, else the auction's closing schedule at its place.
+        from ..booklet.composer import closing
+
+        close_date, close_time = closing(a, d, item.get("position", 0))
+        a = {
+            **a,
+            "auction_end_date": close_date or a.get("auction_end_date"),
+            "end_time": close_time or a.get("end_time"),
+        }
     start, end = days(a)
     start_time, end_time = a.get("start_time"), a.get("end_time")
     times = " - ".join(t for t in (hours(start_time, True), hours(end_time, True)) if t)
@@ -184,6 +195,8 @@ def values(project, item, count, extra):
         "end_date": slash(end),
         "end_time": f"الساعة {hours(end_time, True, True)}" if end_time else "",
         "place": place(a),
+        # Not a slot: which place icon the line takes (guide p.13).
+        "auction_type": a.get("auction_type") or "physical",
         "auction_name": bare_name(a),
         "license": a.get("license_number") or "",
         "district": d.get("district") or "",
@@ -380,6 +393,7 @@ def page(name, size, value_of, images):
         "logo": None,
         "photo": None,
         "accent": [],
+        "icons": [],
     }
 
     def box(b):
@@ -391,7 +405,7 @@ def page(name, size, value_of, images):
             round((y1 - y0) * ky, 3),
         ]
 
-    logo = None
+    logo = icons = None
     for slot in design["slots"]:
         kind, key = slot["kind"], slot["key"]
         if kind == "text":
@@ -411,6 +425,16 @@ def page(name, size, value_of, images):
             }
         elif kind == "accent":
             out["accent"].append({"path": slot["path"], "color": slot["color"]})
+        elif kind == "place_icon":
+            icons = slot
+    if icons:
+        out["icons"], shift = place_icons(icons, value_of.get("auction_type"))
+        for t in out["texts"]:
+            if shift and t["key"] in ("place", "place_line") and t["align"] == "right":
+                # Beside two icons the line starts further left.
+                t["x"] = round(t["x"] - shift * k, 3)
+                e = t["extent"]
+                t["extent"] = [e[0] - shift, e[1], e[2] - shift, e[3]]
     if logo:
         from ..booklet.art import logo_fit
 
@@ -429,6 +453,37 @@ def page(name, size, value_of, images):
         }
     out["view"] = [aw, ah]
     return out
+
+
+def place_icons(slot, auction_type):
+    """The place line's icon by the auction's type (guide p.13): the location
+    pin for a hall, the platform for an electronic auction, both side by side
+    for a hybrid one. Returns the parts to draw and how far the line moves
+    left to make room (guide points)."""
+    location, platform = slot["location"], slot["platform"]
+    if auction_type == "electronic":
+        return [dict(p, dx=0.0) for p in platform["parts"]], 0.0
+    if auction_type != "hybrid":
+        return [dict(p, dx=0.0) for p in location["parts"]], 0.0
+    lb, pb = location["box"], platform["box"]
+    gap = (lb[3] - lb[1]) * 0.35
+    # Beside the line (right of it), the screen follows the pin to its left;
+    # above it (the panoramic boards), the pair is centred where the pin was.
+    beside = slot.get("beside", True)
+    if beside:
+        loc_dx, plat_dx = 0.0, (lb[0] - gap) - pb[2]
+        shift = (pb[2] - pb[0]) + gap
+    else:
+        total = (lb[2] - lb[0]) + gap + (pb[2] - pb[0])
+        centre = (lb[0] + lb[2]) / 2
+        loc_dx = (centre + total / 2) - lb[2]
+        plat_dx = (centre - total / 2) - pb[0]
+        shift = 0.0
+    return (
+        [dict(p, dx=loc_dx) for p in location["parts"]]
+        + [dict(p, dx=plat_dx) for p in platform["parts"]],
+        shift,
+    )
 
 
 @lru_cache(maxsize=32)

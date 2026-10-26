@@ -197,6 +197,8 @@ def drafted(db, project, body):
             existing
             or {
                 "id": str(uuid4()),
+                # A new property takes the next place (composer.closing).
+                "position": len(items),
                 "image_assets": [],
                 "images": [],
                 "property_data": {},
