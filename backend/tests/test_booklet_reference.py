@@ -870,6 +870,39 @@ def test_long_summary_values_wrap_in_their_cell_without_shrinking():
     assert short["property_data"]["district"] == "العزيزية"
 
 
+def test_the_property_type_never_moves_another_column():
+    """Review: a long property type widened its cell and pushed the others. The
+    type's column keeps the guide's width, as the deed number's keeps its own:
+    a long type wraps inside its cell and its row grows, and every other
+    column edge stays where it was."""
+    from app.generation.booklet.composer import (
+        SUMMARY_COLS,
+        SUMMARY_LINE,
+        SUMMARY_MIN_ROW,
+        SUMMARY_TOP,
+    )
+
+    def summary(kind):
+        items = [item_with(property_type=kind), item_with(property_type="فيلا")]
+        booklet = compose(project_with("physical"), items)
+        return next(p for p in booklet["pages"] if p["kind"] == "summary")
+
+    short, word, long = (
+        summary(kind)
+        for kind in ["ع", "فيلا", "عمارة استثمارية سكنية تجارية مع محلات ومستودعات"]
+    )
+    assert short["cols"] == word["cols"] == long["cols"]
+    assert long["cols"][0] - long["cols"][1] == SUMMARY_COLS[0] - SUMMARY_COLS[1]
+    assert short["lines"][0]["property_type"] == ["ع"]
+    wrapped = long["lines"][0]["property_type"]
+    assert len(wrapped) >= 3
+    assert " ".join(wrapped) == "عمارة استثمارية سكنية تجارية مع محلات ومستودعات"
+    assert (
+        long["bottoms"][0] - SUMMARY_TOP
+        >= max(SUMMARY_MIN_ROW, len(wrapped) * SUMMARY_LINE + 6) - 0.01
+    )
+
+
 @pytest.mark.parametrize(
     "count, pages", [(20, [20]), (21, [20, 1]), (45, [20, 20, 5]), (3, [3])]
 )
@@ -1478,6 +1511,9 @@ def test_summary_columns_follow_their_values():
     assert widths["plot_number"] > guide["plot_number"]
     page = summary_pages = compose(project_with("physical"), items)["pages"][4]
     assert page["kind"] == "summary" and page["cols"] == cols
-    # Short values keep one line; the long plot text wraps in its cell.
+    # Short values keep one line; the long plot text wraps in its cell, and so
+    # does a type longer than its column (which keeps the guide's width).
     lines = summary_pages["lines"][0]
-    assert all(len(lines[k]) == 1 for k in ("property_type", "city", "district"))
+    assert all(len(lines[k]) == 1 for k in ("city", "district"))
+    assert widths["property_type"] == guide["property_type"]
+    assert " ".join(lines["property_type"]) == "أرض سكني تجاري"

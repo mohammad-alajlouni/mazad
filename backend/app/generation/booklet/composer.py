@@ -42,7 +42,7 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 12
+LAYOUT_VERSION = 13
 # Rows that the reference tables hold before continuing on another page.
 # Summary table (guide p.14). Column edges (right to left) come from the open
 # reference booklet; the title and table sit where the guide places them, and
@@ -559,6 +559,9 @@ SUMMARY_PAD = 6.0  # space beside a cell's widest line
 # A long word may still be split inside its cell (cell_text): no column is
 # made wider than this just to hold one.
 SUMMARY_WORD = 70.0
+# Columns of a fixed width (the guide's), whatever their values: a long value
+# wraps inside its cell and its row grows, so it never moves another column.
+SUMMARY_FIXED = {"property_type": SUMMARY_COLS[0] - SUMMARY_COLS[1]}
 
 
 def summary_heading(key, language="ar"):
@@ -571,12 +574,15 @@ def summary_columns(items, language="ar"):
     """Column edges (right to left) shared by the summary's pages, fitted to
     the values: each column as wide as its widest value on one line (and its
     heading), so a short column (the participation amount) gives its room to
-    the columns with more text. When the values cannot all stand on one line
-    the widest columns give way first, never below their longest word or
+    the columns with more text. The property type keeps the guide's width
+    (SUMMARY_FIXED): its text wraps in its cell, as a long deed number does,
+    and never moves another column. When the values cannot all stand on one
+    line the widest columns give way first, never below their longest word or
     heading word; the table keeps the guide's outer edges."""
-    total = SUMMARY_COLS[0] - SUMMARY_COLS[-1]
+    fitted = [key for key in SUMMARY_FIELDS if key not in SUMMARY_FIXED]
+    total = SUMMARY_COLS[0] - SUMMARY_COLS[-1] - sum(SUMMARY_FIXED.values())
     natural, least = [], []
-    for key in SUMMARY_FIELDS:
+    for key in fitted:
         values = [summary_value(item, key, language) for item in items] or ["-"]
         if key == "deed_number":
             # Several deeds stand one under another: the widest deed counts.
@@ -618,7 +624,8 @@ def summary_columns(items, language="ar"):
         widths = [max(m, min(w, low)) for w, m in zip(wanted, least)]
     # Room to spare is shared out evenly, so the table keeps its width.
     spare = (total - sum(widths)) / len(widths)
-    widths = [w + spare for w in widths]
+    fitted_widths = dict(zip(fitted, (w + spare for w in widths), strict=True))
+    widths = [SUMMARY_FIXED.get(key) or fitted_widths[key] for key in SUMMARY_FIELDS]
     edges, x = [SUMMARY_COLS[0]], SUMMARY_COLS[0]
     for width in widths:
         x -= width
