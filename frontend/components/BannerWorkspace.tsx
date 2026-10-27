@@ -36,6 +36,7 @@ type Template = {
 type Review = {
   valid: boolean;
   count: number;
+  templates?: Record<string, unknown>;
   missing: {
     field: string;
     section: string;
@@ -137,7 +138,11 @@ export default function BannerWorkspace({
     [dirty, setDirty] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]),
     [check, setCheck] = useState<Review | null>(null);
+  // Every size chosen is issued together; the preview shows one of them.
   const [size, setSize] = useState(detail.project.banner_config?.size || "4x2");
+  const [sizes, setSizes] = useState<string[]>(
+    detail.project.banner_config?.sizes || [size],
+  );
   // The court that supervises with Infath, named on the guide's boards.
   const [court, setCourt] = useState(
     detail.project.banner_config?.court_name || "",
@@ -236,7 +241,7 @@ export default function BannerWorkspace({
           config={
             isSocial
               ? { ...social, property_ids: ids }
-              : { size, property_ids: ids, court_name: court }
+              : { size, sizes, property_ids: ids, court_name: court }
           }
         >
           {step === "template" && (
@@ -251,7 +256,7 @@ export default function BannerWorkspace({
                     body: send(
                       isSocial
                         ? { ...social, property_ids: ids }
-                        : { size, property_ids: ids, court_name: court },
+                        : { size, sizes, property_ids: ids, court_name: court },
                     ),
                   });
                   await reloadProject();
@@ -261,6 +266,9 @@ export default function BannerWorkspace({
             >
               <h2>{t("chooseTemplate")}</h2>
               <p>{t("referenceHelp")}</p>
+              {!isSocial && (
+                <p className="muted banner-sizes-help">{t("sizesHelp")}</p>
+              )}
               {isSocial ? (
                 <SocialTemplateFields value={social} onChange={setSocial} />
               ) : (
@@ -293,16 +301,38 @@ export default function BannerWorkspace({
                       {templates
                         .filter((v) => v.layout === layout)
                         .map((v) => (
-                          <label className="checkbox-label" key={v.id}>
-                            <input
-                              type="radio"
-                              name="size"
-                              value={v.id}
-                              checked={size === v.id}
-                              onChange={() => setSize(v.id)}
-                            />
-                            <bdi>{v.id.replace("x", " × ")} m</bdi>
-                          </label>
+                          <div className="banner-size" key={v.id}>
+                            <label className="checkbox-label">
+                              <input
+                                type="checkbox"
+                                name="sizes"
+                                value={v.id}
+                                checked={sizes.includes(v.id)}
+                                onChange={(event) => {
+                                  const next = event.target.checked
+                                    ? [...sizes, v.id]
+                                    : sizes.filter((s) => s !== v.id);
+                                  setSizes(next);
+                                  // The preview follows the size just chosen.
+                                  if (event.target.checked) setSize(v.id);
+                                  else if (size === v.id && next.length)
+                                    setSize(next[0]);
+                                }}
+                              />
+                              <bdi>{v.id.replace("x", " × ")} m</bdi>
+                            </label>
+                            {sizes.includes(v.id) && sizes.length > 1 && (
+                              <button
+                                type="button"
+                                className="text-button"
+                                aria-pressed={size === v.id}
+                                disabled={size === v.id}
+                                onClick={() => setSize(v.id)}
+                              >
+                                {size === v.id ? t("previewing") : t("preview")}
+                              </button>
+                            )}
+                          </div>
                         ))}
                     </article>
                   ))}
@@ -353,7 +383,9 @@ export default function BannerWorkspace({
                   ))}
                 </details>
               )}
-              <button className="primary">{t("saveTemplate")}</button>
+              <button className="primary" disabled={!sizes.length}>
+                {t("saveTemplate")}
+              </button>
             </form>
           )}
           {step === "auction" && (
@@ -407,7 +439,10 @@ export default function BannerWorkspace({
                 <>
                   <p className={check.valid ? "notice" : "notice error"}>
                     {check.valid
-                      ? t("ready", { count: check.count })
+                      ? t("ready", {
+                          count: check.count,
+                          sizes: Object.keys(check.templates || {}).length || 1,
+                        })
                       : t("missing")}
                   </p>
                   {check.missing.map((issue, index) => (

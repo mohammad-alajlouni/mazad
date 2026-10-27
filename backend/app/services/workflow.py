@@ -1,6 +1,7 @@
 """The field contract and saved-stage readiness for auction publication flows."""
 
-from .banners import COURT_LIMIT, review_banners
+from ..banner_schemas import BannerConfig
+from .banners import COURT_LIMIT, PANORAMIC, review_banners
 from .social import review_social
 from ..generation.booklet.validation import validate_project
 
@@ -110,9 +111,10 @@ def workflow(db, project):
             "plot_number",
             "execution_request_number",
         ]
-        if scope == "project" or (project.banner_config or {}).get(
-            "size", "4x2"
-        ) not in ("10x3", "15x5"):
+        if scope == "project" or any(
+            size not in PANORAMIC
+            for size in BannerConfig.model_validate(project.banner_config or {}).sizes
+        ):
             rules["property_required"] += ["usage"]
     elif (
         scope == "social"

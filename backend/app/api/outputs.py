@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from ..auth import current_user
+from ..banner_schemas import BannerConfig
 from ..db import get_db
 from ..generation.booklet.validation import validate_project
 from ..generation.engine import build_content, render
@@ -81,13 +82,23 @@ async def generate(id: str, body: GenerationInput, db=Depends(get_db)):
         if not review_social(db, p)["valid"]:
             raise HTTPException(422, "Complete the social review before generation")
     result = []
-    for kind in dict.fromkeys(body.types):
+    # The campaign's boards: one output for each chosen size.
+    jobs = [
+        (kind, size)
+        for kind in dict.fromkeys(body.types)
+        for size in (
+            BannerConfig.model_validate(p.banner_config or {}).sizes
+            if kind == "banners" and p.workspace_type in ("project", "banners")
+            else [None]
+        )
+    ]
+    for kind, size in jobs:
         template = db.scalar(select(Template).where(Template.output_type == kind))
         if not template:
             raise HTTPException(
                 503, "Templates are not initialized. Run the bootstrap command."
             )
-        content = build_content(db, p, kind, body.output_language)
+        content = build_content(db, p, kind, body.output_language, size)
         if body.use_ai:
             ai = await AIService().generate(
                 "social content" if kind == "social_content" else "summary",
@@ -225,6 +236,9 @@ def regenerate(id: str, db=Depends(get_db)):
     o = get_output(db, id)
     p = get_project(db, o.project_id, True)
     output_language = o.content.get("output_language", "en")
+    # A board is issued again in its own size (also as a new draft beside an
+    # approved one).
+    size = (o.content.get("banner") or {}).get("size")
     if o.output_type == "project_booklet" and (
         p.auction or p.workspace_type == "project"
     ):
@@ -283,7 +297,7 @@ def regenerate(id: str, db=Depends(get_db)):
         )
         db.add(o)
         db.flush()
-    o.content = build_content(db, p, o.output_type, output_language)
+    o.content = build_content(db, p, o.output_type, output_language, size)
     o.status = "DRAFT"
     o.revision = p.revision
     o.approved_at = None

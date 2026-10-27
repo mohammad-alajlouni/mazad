@@ -137,7 +137,15 @@ export function OutputList({
               </span>
               <Badge status={o.status} />
             </div>
-            <h3>{title(o.output_type)}</h3>
+            <h3>
+              {title(o.output_type)}
+              {o.banner?.size && (
+                <>
+                  {" · "}
+                  <bdi>{o.banner.size.replace("x", " × ")} m</bdi>
+                </>
+              )}
+            </h3>
             <p>{o.project_name}</p>
             <div className="output-footer">
               <span>{date(o.created_at)}</span>

@@ -761,7 +761,7 @@
       "generate": "Review and generate",
       "outputs": "Generated banners"
     },
-    "chooseTemplate": "Choose a board layout and size",
+    "chooseTemplate": "Choose the board design and sizes",
     "referenceHelp": "Illustrations from the supplied Infath guide. Click to view the full reference; your campaign data and logos replace the examples.",
     "layouts": {
       "panoramic": "Panoramic board",
@@ -779,7 +779,7 @@
     "logos": "Board logos",
     "logosHelp": "Your selling agent logo comes from your account. Upload the auction logo below without attaching it to a property.",
     "review": "Banner readiness review",
-    "ready": "Ready to generate {count} banners.",
+    "ready": "Ready to generate {count} banners in {sizes, plural, one {one size} other {# sizes}}.",
     "missing": "Complete these details before generation. Select a field to open its section.",
     "generate": "Generate banners",
     "exportHelp": "Review and approve the output to download a PDF and a PNG for each property. Changes to campaign data require regeneration and approval.",
@@ -794,7 +794,10 @@
     },
     "tooLong": "{field}: shorten to {limit} characters to fit the board.",
     "auctionHelp": "Use the saved auction details, including the legal announcement, booklet link, contact number and schedule.",
-    "courtHelp": "Shown in the board's supervision line as in the guide: “Supervised by the Support and Liquidation Center - Infath, and …”. Leave empty to end the line at Infath."
+    "courtHelp": "Shown in the board's supervision line as in the guide: “Supervised by the Support and Liquidation Center - Infath, and …”. Leave empty to end the line at Infath.",
+    "sizesHelp": "Choose one size or more: every chosen size is issued together in one step, each as its own file.",
+    "preview": "Preview",
+    "previewing": "In preview"
   },
   "social": {
     "home": "Social posts",

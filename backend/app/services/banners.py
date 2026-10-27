@@ -13,6 +13,9 @@ SIZES = {
     "2x2": {"layout": "square", "width_mm": 200, "height_mm": 200},
 }
 
+# Boards without a usage line (the guide's panoramic designs).
+PANORAMIC = ("10x3", "15x5")
+
 # Longest court decision a banner campaign accepts (the guide's boards name
 # the court on their supervision line, see BannerConfig.court_name).
 COURT_LIMIT = 200
@@ -145,13 +148,20 @@ def review_banners(db, project):
             "execution_request_number",
         ):
             need(item.property_data.get(field), field, "items", item.title)
-        if config.size not in ("10x3", "15x5"):
+        if any(size not in PANORAMIC for size in config.sizes):
             need(item.property_data.get("usage"), "usage", "items", item.title)
-    errors += design_overflows(project, selected, banner=config.model_dump())
+    # Each chosen size has its own design: a value must fit every one of them.
+    for size in config.sizes:
+        for row in design_overflows(
+            project, selected, banner={**config.model_dump(), "size": size}
+        ):
+            if row not in errors:
+                errors.append(row)
     return {
         "valid": not errors,
         "missing": errors,
         "count": len(selected),
         "config": config.model_dump(),
         "template": SIZES[config.size],
+        "templates": {size: SIZES[size] for size in config.sizes},
     }

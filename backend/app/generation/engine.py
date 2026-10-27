@@ -295,7 +295,9 @@ def reports_content(project_data, items, data, kind, source=report_source):
     return {"kind": kind, "pages": pages, "fonts": fonts_of(pages)}
 
 
-def build_content(db, project, kind, output_language=None):
+def build_content(db, project, kind, output_language=None, banner_size=None):
+    """An output's content; a board is issued in banner_size (else the
+    campaign's previewed size)."""
     project_data, items = snapshot(db, project)
     if kind == "banners" and project.workspace_type in ("project", "banners"):
         from ..banner_schemas import BannerConfig
@@ -329,9 +331,10 @@ def build_content(db, project, kind, output_language=None):
     if kind == "banners" and project.workspace_type in ("project", "banners"):
         from ..services.banners import SIZES
 
+        size = banner_size or config.size
         content["banner"] = {
-            **SIZES[config.size],
-            "size": config.size,
+            **SIZES[size],
+            "size": size,
             "scale": "1:10",
             "court_name": config.court_name,
         }

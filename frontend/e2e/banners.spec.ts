@@ -42,7 +42,17 @@ test("independent banner workspace validates, generates and exports", async ({
     .getByRole("button", { name: "Create banner campaign", exact: true })
     .click();
   await expect(page.locator(".banner-template-card")).toHaveCount(3);
-  await page.locator('input[value="4x2"]').check();
+  // Several sizes are chosen together, saved once and issued together. The
+  // preview follows the size just chosen; any other chosen one can be shown.
+  const sizeRow = (label: string) =>
+    page.locator(".banner-size").filter({ hasText: label }).getByRole("button");
+  await expect(page.locator('input[value="4x2"]')).toBeChecked();
+  await page.locator('input[value="2x2"]').check();
+  await expect(sizeRow("2 × 2")).toHaveText("In preview");
+  await expect(sizeRow("4 × 2")).toHaveText("Preview");
+  await sizeRow("4 × 2").click();
+  await expect(sizeRow("4 × 2")).toHaveText("In preview");
+  await expect(sizeRow("2 × 2")).toHaveText("Preview");
   await page
     .getByRole("button", { name: "Save template and continue" })
     .click();
@@ -107,6 +117,7 @@ test("independent banner workspace validates, generates and exports", async ({
   await expect(
     page.getByRole("button", { name: "Generate banners", exact: true }),
   ).toBeEnabled();
+  await expect(page.getByText("in 2 sizes", { exact: false })).toBeVisible();
   // The approved design itself, beneath the values (guide p. 30).
   await expect(page.locator(".live-preview-paper")).toHaveAttribute(
     "data-page-kind",
@@ -126,6 +137,16 @@ test("independent banner workspace validates, generates and exports", async ({
   await expect(
     page.getByRole("button", { name: "Save changes", exact: true }),
   ).toHaveCount(0);
+  // One output for each chosen size, from the one press.
+  const campaign = (
+    await page.request.get("/api/projects").then((r) => r.json())
+  ).find((x: { name: string }) => x.name === name);
+  const boards = (
+    await page.request.get(`/api/projects/${campaign.id}`).then((r) => r.json())
+  ).outputs.filter((o: { output_type: string }) => o.output_type === "banners");
+  expect(
+    boards.map((o: { banner: { size: string } }) => o.banner.size).sort(),
+  ).toEqual(["2x2", "4x2"]);
   await page
     .getByRole("button", { name: "Approve output", exact: true })
     .click();
@@ -150,8 +171,10 @@ test("independent banner workspace validates, generates and exports", async ({
     .click();
   await expect(page.getByText(name, { exact: true })).toBeVisible();
   await page.getByText(name, { exact: true }).click();
-  // Another size shows its own design of the guide at once, unsaved.
-  await page.locator('input[value="2x2"]').check();
+  // Both sizes stay chosen; another size shows its own design of the guide
+  // at once, unsaved.
+  await expect(page.locator('input[name="sizes"]:checked')).toHaveCount(2);
+  await sizeRow("2 × 2").click();
   await expect(page.locator(".live-preview-paper")).toHaveAttribute(
     "data-page-kind",
     "board-square-physical",

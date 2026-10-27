@@ -33,7 +33,12 @@ export type Project = {
   // The booklet's public link: /api/b/<share_token>.
   share_token?: string;
   social_config?: import("./SocialTemplateFields").SocialConfig;
-  banner_config?: { size: string; property_ids: string[]; court_name?: string };
+  banner_config?: {
+    size: string;
+    sizes?: string[];
+    property_ids: string[];
+    court_name?: string;
+  };
   auction?: Record<string, unknown>;
   id: string;
   name: string;
