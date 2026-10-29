@@ -67,7 +67,9 @@ def test_banner_sizes_preview_approval(admin, size):
         "hybrid" if size == "2x2" else "electronic" if size == "15x5" else "physical",
     )
     assert (
-        admin.put(f"/api/projects/{p}/banner-config", json={"size": size}).status_code
+        admin.put(
+            f"/api/projects/{p}/banner-config", json={"auto_size": False, "size": size}
+        ).status_code
         == 200
     )
     review = admin.get(f"/api/projects/{p}/banner-review").json()
@@ -133,7 +135,8 @@ def test_banner_validation_selection_and_workspace_isolation(admin):
     assert len(admin.get("/api/banner-templates").json()) == 6
     assert (
         admin.put(
-            f"/api/projects/{p}/banner-config", json={"size": "unknown"}
+            f"/api/projects/{p}/banner-config",
+            json={"auto_size": False, "size": "unknown"},
         ).status_code
         == 422
     )
@@ -202,7 +205,9 @@ def test_boards_are_the_guides_arabic_designs(admin, size):
     # The guide's boards exist in Arabic only: an English request still
     # prints the approved design.
     p, _ = campaign(admin, "electronic")
-    admin.put(f"/api/projects/{p}/banner-config", json={"size": size})
+    admin.put(
+        f"/api/projects/{p}/banner-config", json={"auto_size": False, "size": size}
+    )
     r = admin.post(
         f"/api/projects/{p}/generate",
         json={"types": ["banners"], "output_language": "en"},

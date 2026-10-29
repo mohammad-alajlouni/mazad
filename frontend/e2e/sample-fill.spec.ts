@@ -70,7 +70,19 @@ test("sample fill completes a project that generates all its outputs", async ({
     .get("/api/projects/" + p.id)
     .then((r) => r.json());
   // The booklet, the banners and the posts (the official forms are issued
-  // in their own sections).
-  expect(detail.outputs).toHaveLength(3);
+  // in their own sections); the boards one output for each size their
+  // properties take (Infath's table, by kind and area).
+  const kinds = detail.outputs.map(
+    (o: { output_type: string }) => o.output_type,
+  );
+  expect([...new Set(kinds)].sort()).toEqual(
+    ["banners", "project_booklet", "social_content"].sort(),
+  );
+  for (const o of detail.outputs.filter(
+    (x: { output_type: string }) => x.output_type === "banners",
+  ))
+    expect(["10x3", "15x5", "4x2", "6x3", "10x5", "2x2"]).toContain(
+      o.banner.size,
+    );
   expect(errors).toEqual([]);
 });

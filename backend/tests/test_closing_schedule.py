@@ -105,7 +105,9 @@ def test_boards_close_each_property_as_the_booklet_does(admin):
         ) in "".join(own)
 
     for size in ("10x3", "4x2", "2x2"):
-        admin.put(f"/api/projects/{p}/banner-config", json={"size": size})
+        admin.put(
+            f"/api/projects/{p}/banner-config", json={"auto_size": False, "size": size}
+        )
         r = admin.post(f"/api/projects/{p}/generate", json={"types": ["banners"]})
         assert r.status_code == 200, r.text
         boards = [
@@ -121,7 +123,7 @@ def test_boards_close_each_property_as_the_booklet_does(admin):
     # A board for one property alone keeps that property's place in the booklet.
     admin.put(
         f"/api/projects/{p}/banner-config",
-        json={"size": "4x2", "property_ids": [items[1]]},
+        json={"auto_size": False, "size": "4x2", "property_ids": [items[1]]},
     )
     r = admin.post(f"/api/projects/{p}/generate", json={"types": ["banners"]})
     (board,) = [

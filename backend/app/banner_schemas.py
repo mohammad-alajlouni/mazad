@@ -7,6 +7,11 @@ Size = Literal["10x3", "15x5", "4x2", "6x3", "10x5", "2x2"]
 
 class BannerConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    # Each property's board in the size Infath's table gives its kind and
+    # area (services/banners.size_for), unless item_sizes names another for
+    # it; without auto_size, every property in each of the sizes chosen.
+    auto_size: bool = True
+    item_sizes: dict[str, Size] = Field(default_factory=dict, max_length=100)
     # The size shown in the live preview; one of sizes.
     size: Size = "4x2"
     # Every size issued together, one output each (a campaign saved before
@@ -15,7 +20,8 @@ class BannerConfig(BaseModel):
     property_ids: list[str] = Field(default_factory=list, max_length=100)
     # The court supervising with Infath: the guide's board line reads
     # «بإشراف مركز الإسناد والتصفية - إنفاذ، و ...».
-    court_name: str = Field(default="", max_length=60)
+    # Filled from the auction's court decision until changed here.
+    court_name: str = Field(default="", max_length=120)
 
     @model_validator(mode="after")
     def chosen_sizes(self):

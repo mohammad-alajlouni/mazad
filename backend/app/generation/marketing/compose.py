@@ -295,6 +295,58 @@ def fitted(text, slot):
         scale = max(SMALLEST, round(scale - 0.02, 2))
 
 
+# The boards' supervision line keeps this far (guide points) from a box
+# beside it (the property type's) or from its panel's edge, and is set on
+# one line down to ONE_LINE_MIN of the guide's size; a longer one takes two
+# lines where the panel has room under it (else smaller, down to SMALLEST).
+SUPERVISION_GAP = 6.0
+ONE_LINE_MIN = 0.7
+
+
+@lru_cache(maxsize=None)
+def supervision_room(name):
+    """(left limit, pitch of a second line or 0) of a board's supervision
+    line, measured on the design's own shapes."""
+    import pymupdf
+
+    slot = next(s for s in layout()[name]["slots"] if s["key"] == "supervision")
+    x, base, size = slot["x"], slot["bases"][0], slot["size"]
+    left = x - slot["maxw"]
+    with pymupdf.open(ART / f"{name}.pdf") as document:
+        page = document[0]
+        shapes = sorted(
+            (d["rect"] for d in page.get_drawings() if d.get("fill")),
+            key=lambda r: r.width * r.height,
+        )
+        middle = base - size * 0.3
+        panel = next(
+            (r for r in shapes if r.contains(pymupdf.Point(x - 5, middle))), page.rect
+        )
+        box = next(
+            (
+                r
+                for r in shapes
+                if r.contains(pymupdf.Point(left + 2, middle))
+                and r.width * r.height < panel.width * panel.height / 2
+            ),
+            None,
+        )
+    limit = (box.x1 if box else panel.x0) + SUPERVISION_GAP
+    pitch = round(size * 1.25, 3)
+    two = base + pitch + size * 0.3 <= panel.y1 - 2
+    return max(left, limit), pitch if two else 0.0
+
+
+def supervision_slot(name, slot, value):
+    """The supervision slot as a board sets this value (see SUPERVISION_GAP)."""
+    left, pitch = supervision_room(name)
+    slot = {**slot, "maxw": round(slot["x"] - left, 3)}
+    if width(value, slot, ONE_LINE_MIN) <= slot["maxw"] or not pitch:
+        return slot
+    base = slot["bases"][0]
+    return {**slot, "bases": [base, round(base + pitch, 3)]}
+
+
 def text_block(name, slot, value, geometry):
     k, ky, ox, oy = geometry
     lines, scale, fits = fitted(value, slot)
@@ -418,6 +470,8 @@ def page(name, size, value_of, images):
         kind, key = slot["kind"], slot["key"]
         if kind == "text":
             value = value_of.get(key, "")
+            if value and key == "supervision" and name.startswith("board-"):
+                slot = supervision_slot(name, slot, value)
             if value:
                 out["texts"].append(text_block(name, slot, value, geometry))
         elif kind == "qr" and images.get("qr"):
@@ -575,7 +629,11 @@ def banner_pages(project, items, config):
     """One board per property, in the size chosen, as the guide's p. 28-33."""
     from ...services.banners import SIZES
 
+    from ...services.banners import court_from
+
     a = project.get("auction") or {}
+    # The court named on the line: the campaign's, else the auction's decision.
+    config = {**config, "court_name": config.get("court_name") or court_from(a)}
     name = board_template(config["size"], a.get("auction_type"))
     spec = SIZES[config["size"]]
     size = (spec["width_mm"] * 72 / 25.4, spec["height_mm"] * 72 / 25.4)
@@ -641,7 +699,22 @@ def marketing_content(content):
         s = content["social"]
         pages = social_pages(project, items, s, s["width_px"], s["height_px"])
     else:
-        pages = banner_pages(project, items, content["banner"])
+        board = content["banner"]
+        sizes = board.get("item_sizes") or {}
+        # Each property in its own size (the live preview of a campaign sized
+        # by Infath's table); an output holds one size.
+        groups = {}
+        for item in items:
+            groups.setdefault(sizes.get(item.get("id"), board["size"]), []).append(item)
+        made = {}
+        for size, group in groups.items():
+            for item, made_page in zip(
+                group,
+                banner_pages(project, group, {**board, "size": size}),
+                strict=True,
+            ):
+                made[id(item)] = made_page
+        pages = [made[id(item)] for item in items]
     used = {
         name
         for p in pages

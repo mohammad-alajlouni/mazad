@@ -34,6 +34,8 @@ export type Project = {
   share_token?: string;
   social_config?: import("./SocialTemplateFields").SocialConfig;
   banner_config?: {
+    auto_size?: boolean;
+    item_sizes?: Record<string, string>;
     size: string;
     sizes?: string[];
     property_ids: string[];

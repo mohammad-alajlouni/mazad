@@ -46,6 +46,14 @@ test("independent banner workspace validates, generates and exports", async ({
   // preview follows the size just chosen; any other chosen one can be shown.
   const sizeRow = (label: string) =>
     page.locator(".banner-size").filter({ hasText: label }).getByRole("button");
+  // By default each property's board takes its size from Infath's table;
+  // this campaign chooses its sizes by hand, for all its properties.
+  const modes = page.locator('input[name="size_mode"]');
+  await expect(modes.first()).toBeChecked();
+  await expect(page.locator('input[name="sizes"]')).toHaveCount(0);
+  await page
+    .getByRole("radio", { name: /Sizes I choose for all properties/ })
+    .check();
   await expect(page.locator('input[value="4x2"]')).toBeChecked();
   await page.locator('input[value="2x2"]').check();
   await expect(sizeRow("2 × 2")).toHaveText("In preview");

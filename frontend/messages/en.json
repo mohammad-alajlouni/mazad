@@ -794,10 +794,19 @@
     },
     "tooLong": "{field}: shorten to {limit} characters to fit the board.",
     "auctionHelp": "Use the saved auction details, including the legal announcement, booklet link, contact number and schedule.",
-    "courtHelp": "Shown in the board's supervision line as in the guide: “Supervised by the Support and Liquidation Center - Infath, and …”. Leave empty to end the line at Infath.",
-    "sizesHelp": "Choose one size or more: every chosen size is issued together in one step, each as its own file.",
+    "courtHelp": "Filled from the auction’s court decision and editable here; it shows on the board’s supervision line as in the guide: «under the supervision of Infath, and …». A long line takes two lines rather than leave its place.",
+    "sizesHelp": "Each size is issued as its own file, in one step.",
     "preview": "Preview",
-    "previewing": "In preview"
+    "previewing": "In preview",
+    "sizeMode": "Board size",
+    "sizeAuto": "Automatic, by property",
+    "sizeAutoHelp": "Each property’s board takes the size Infath’s board table gives its kind and area, updated as soon as the area is entered or changed; any property’s size can be changed below.",
+    "sizeManual": "Sizes I choose for all properties",
+    "sizeManualHelp": "Every property’s board is issued in each size you choose from the guide below.",
+    "itemSizes": "Each property’s board size",
+    "itemSizesHelp": "The automatic size comes from Infath’s table (kind and area); choose another size to change it by hand.",
+    "autoSizeOption": "Automatic ({size})",
+    "autoSizeUnknown": "Automatic: kind not in the table ({size})"
   },
   "social": {
     "home": "Social posts",

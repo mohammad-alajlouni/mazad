@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from ..auth import current_user
-from ..banner_schemas import BannerConfig
+from ..services.banners import issued_sizes
 from ..db import get_db
 from ..generation.booklet.validation import validate_project
 from ..generation.engine import build_content, pack, render
@@ -89,12 +89,13 @@ async def generate(id: str, body: GenerationInput, db=Depends(get_db)):
         if not review_social(db, p)["valid"]:
             raise HTTPException(422, "Complete the social review before generation")
     result = []
-    # The campaign's boards: one output for each chosen size.
+    # The campaign's boards: one output for each size (each property's own
+    # size from Infath's table, or every chosen size).
     jobs = [
         (kind, size)
         for kind in dict.fromkeys(body.types)
         for size in (
-            BannerConfig.model_validate(p.banner_config or {}).sizes
+            issued_sizes(db, p)
             if kind == "banners" and p.workspace_type in ("project", "banners")
             else [None]
         )

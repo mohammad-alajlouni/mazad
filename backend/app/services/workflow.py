@@ -1,7 +1,6 @@
 """The field contract and saved-stage readiness for auction publication flows."""
 
-from ..banner_schemas import BannerConfig
-from .banners import COURT_LIMIT, PANORAMIC, review_banners
+from .banners import COURT_LIMIT, PANORAMIC, issued_sizes, review_banners
 from .social import review_social
 from ..generation.booklet.validation import validate_project
 
@@ -110,8 +109,7 @@ def workflow(db, project):
             "execution_request_number",
         ]
         if scope == "project" or any(
-            size not in PANORAMIC
-            for size in BannerConfig.model_validate(project.banner_config or {}).sizes
+            size not in PANORAMIC for size in issued_sizes(db, project)
         ):
             rules["property_required"] += ["usage"]
     elif (

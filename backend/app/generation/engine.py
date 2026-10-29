@@ -319,6 +319,12 @@ def build_content(db, project, kind, output_language=None, banner_size=None):
             for i in items
             if not config.property_ids or i["id"] in config.property_ids
         ]
+        if config.auto_size and banner_size:
+            # Each property in its own size: this output holds that size's.
+            from ..services.banners import item_sizes
+
+            sizes = item_sizes(config, [(i["id"], i["property_data"]) for i in items])
+            items = [i for i in items if sizes[i["id"]] == banner_size] or items
     if kind == "social_content" and project.workspace_type in ("project", "social"):
         from ..services.social import social_configuration
 

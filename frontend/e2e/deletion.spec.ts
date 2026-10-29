@@ -38,6 +38,21 @@ test("an output and a project are deleted from their lists, once confirmed", asy
   await expect(
     page.getByText("3 properties and 4 images in this shared project"),
   ).toBeVisible({ timeout: 30000 });
+  // A name of its own: sample names repeat, and the outputs list shows the
+  // outputs of every project by its name.
+  const created = (
+    await page.request.get("/api/projects").then((r) => r.json())
+  ).find((x: { id: string }) => !before.some((b) => b.id === x.id));
+  const saved = await page.request
+    .get("/api/projects/" + created.id)
+    .then((r) => r.json());
+  expect(
+    (
+      await page.request.put("/api/projects/" + created.id, {
+        data: { ...saved.project, name: `حذف ${Date.now()}` },
+      })
+    ).status(),
+  ).toBe(200);
   await page.locator(".workflow-steps button").nth(3).click();
   const generate = page
     .locator(".project-generation")
@@ -54,13 +69,16 @@ test("an output and a project are deleted from their lists, once confirmed", asy
     (await page.request.get("/api/outputs").then((r) => r.json())).filter(
       (o: { project_id: string }) => o.project_id === p.id,
     );
-  expect(await outputsOf()).toHaveLength(3);
+  // The booklet, the posts and the boards: one output for each board size
+  // the properties take (Infath's table, by kind and area).
+  const issued = (await outputsOf()).length;
+  expect(issued).toBeGreaterThanOrEqual(3);
 
   // Outputs: each card has its own delete button, beside the card itself.
   const nav = page.locator(".sidebar nav");
   await nav.getByRole("button", { name: "Outputs", exact: true }).click();
   const cards = page.locator(".output-item").filter({ hasText: p.name });
-  await expect(cards).toHaveCount(3);
+  await expect(cards).toHaveCount(issued);
   const dialog = page.getByRole("dialog");
   const removeOutput = cards
     .first()
@@ -69,13 +87,13 @@ test("an output and a project are deleted from their lists, once confirmed", asy
   await expect(dialog).toContainText("can be generated again");
   // Cancelling leaves everything as it was.
   await dialog.getByRole("button", { name: "Cancel" }).click();
-  await expect(cards).toHaveCount(3);
-  expect(await outputsOf()).toHaveLength(3);
+  await expect(cards).toHaveCount(issued);
+  expect(await outputsOf()).toHaveLength(issued);
   await removeOutput.click();
   await dialog.getByRole("button", { name: "Confirm" }).click();
   await expect(page.locator(".toast.success")).toHaveText("Output deleted");
-  await expect(cards).toHaveCount(2);
-  expect(await outputsOf()).toHaveLength(2);
+  await expect(cards).toHaveCount(issued - 1);
+  expect(await outputsOf()).toHaveLength(issued - 1);
   // The card still opens its output.
   await cards.first().locator(".output-card").click();
   await expect(page.locator(".review")).toBeVisible();

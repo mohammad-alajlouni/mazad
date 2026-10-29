@@ -39,6 +39,13 @@ def preview(db, project, body):
         from .banners import SIZES
 
         content["banner"] = {**SIZES[config.size], **config.model_dump()}
+        if config.auto_size:
+            # Each property's board in its own size, as it will be issued.
+            from .banners import item_sizes
+
+            content["banner"]["item_sizes"] = item_sizes(
+                config, [(i["id"], i["property_data"]) for i in items]
+            )
     else:
         content["social"] = {**config.model_dump(), **FORMATS[config.format]}
     if not items and (body.kind == "banner" or config.post_kind == "property"):

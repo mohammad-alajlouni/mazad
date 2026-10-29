@@ -16,6 +16,78 @@ SIZES = {
 # Boards without a usage line (the guide's panoramic designs).
 PANORAMIC = ("10x3", "15x5")
 
+# Infath's table of board sizes («اللوحات الإعلانية»): by the kind of property,
+# then its area in m² (the first band whose upper bound the area reaches not).
+AREA_SIZES = (
+    # Raw land: 200 - 1,000, 1,001 - 5,000, 5,001 - 20,000, 20,001 - 100,000, more.
+    (
+        ("أرض", "ارض", "اراضي", "أراضي"),
+        (
+            (1000, "4x2"),
+            (5000, "6x3"),
+            (20000, "10x3"),
+            (100000, "10x5"),
+            (None, "15x5"),
+        ),
+    ),
+    # Rest house, farm.
+    (("استراحة", "استراحه", "مزرعة", "مزرعه"), ((None, "4x2"),)),
+    # Palace (2,501 and more).
+    (("قصر",), ((None, "6x3"),)),
+    # Residential or commercial building.
+    (("عمارة", "عماره", "مبنى", "برج", "مجمع"), ((None, "6x3"),)),
+    # Apartment.
+    (("شقة", "شقه"), ((None, "2x2"),)),
+    # Villa: up to 500, then to 2,500; larger ones are boarded as palaces.
+    (
+        ("فيلا", "فيلة", "فله", "فلة", "دوبلكس"),
+        ((500, "2x2"), (2500, "4x2"), (None, "6x3")),
+    ),
+)
+
+
+def court_from(auction):
+    """The court as the boards' supervision line names it, from the auction's
+    court decision: «وبقرار من محكمة التنفيذ …» gives «بقرار من محكمة التنفيذ …»
+    (the line adds its own «و»)."""
+    text = str((auction or {}).get("court_decision_text") or "").strip()
+    text = text.split("\n")[0].strip()
+    return text[1:] if text.startswith("وب") else text
+
+
+def size_for(prop):
+    """The board size Infath's table gives a property (by its kind, then its
+    area), or None when its kind is not in the table."""
+    kind = str((prop or {}).get("property_type") or "")
+    try:
+        area = Decimal(str((prop or {}).get("area") or 0))
+    except ArithmeticError:
+        area = Decimal(0)
+    for words, bands in AREA_SIZES:
+        if any(word in kind for word in words):
+            for upper, size in bands:
+                if upper is None or area <= upper:
+                    return size
+    return None
+
+
+def item_sizes(config, items):
+    """Each property's board size: chosen for it, else from Infath's table,
+    else the campaign's size. items: (id, property_data) pairs."""
+    return {
+        id: config.item_sizes.get(id) or size_for(data) or config.size
+        for id, data in items
+    }
+
+
+def campaign_sizes(config, items):
+    """The sizes a campaign issues, in the order SIZES lists them."""
+    if not config.auto_size:
+        return config.sizes
+    used = set(item_sizes(config, items).values())
+    return [size for size in SIZES if size in used] or [config.size]
+
+
 # Longest court decision a banner campaign accepts (the guide's boards name
 # the court on their supervision line, see BannerConfig.court_name).
 COURT_LIMIT = 200
@@ -45,6 +117,22 @@ def design_overflows(project, items, banner=None, social=None):
         }
         for row in found
     ]
+
+
+def issued_sizes(db, project):
+    """The sizes a campaign's boards are issued in (one output each)."""
+    config = BannerConfig.model_validate(project.banner_config or {})
+    items = db.execute(
+        select(ProjectItem.id, ProjectItem.property_data).where(
+            ProjectItem.project_id == project.id
+        )
+    ).all()
+    chosen = [
+        (id, data)
+        for id, data in items
+        if not config.property_ids or id in config.property_ids
+    ]
+    return campaign_sizes(config, chosen)
 
 
 def review_banners(db, project):
@@ -127,6 +215,7 @@ def review_banners(db, project):
     ).all()
     need(any(i.id == data.get("logo_image_id") for i in images), "agent_logo", "images")
     # The auction icon is a fixed identity asset; only the name varies.
+    sizes = item_sizes(config, [(i.id, i.property_data) for i in selected])
     for item in selected:
         for field in (
             "property_type",
@@ -149,12 +238,19 @@ def review_banners(db, project):
             "execution_request_number",
         ):
             need(item.property_data.get(field), field, "items", item.title)
-        if any(size not in PANORAMIC for size in config.sizes):
+        boards = [sizes[item.id]] if config.auto_size else config.sizes
+        if any(size not in PANORAMIC for size in boards):
             need(item.property_data.get("usage"), "usage", "items", item.title)
-    # Each chosen size has its own design: a value must fit every one of them.
-    for size in config.sizes:
+    # Each size has its own design: a value must fit every one it is set in.
+    issued = campaign_sizes(config, [(i.id, i.property_data) for i in selected])
+    for size in issued:
+        boards = (
+            [i for i in selected if sizes[i.id] == size]
+            if config.auto_size
+            else selected
+        )
         for row in design_overflows(
-            project, selected, banner={**config.model_dump(), "size": size}
+            project, boards, banner={**config.model_dump(), "size": size}
         ):
             if row not in errors:
                 errors.append(row)
@@ -164,5 +260,8 @@ def review_banners(db, project):
         "count": len(selected),
         "config": config.model_dump(),
         "template": SIZES[config.size],
-        "templates": {size: SIZES[size] for size in config.sizes},
+        "templates": {size: SIZES[size] for size in issued},
+        # Each property's board size (auto_size: from Infath's table).
+        "item_sizes": sizes,
+        "auto_sizes": {i.id: size_for(i.property_data) for i in selected},
     }

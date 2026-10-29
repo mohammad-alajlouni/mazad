@@ -84,7 +84,10 @@ def test_design_changes_only_invalidate_the_affected_publication(admin):
     for o in outputs.values():
         assert admin.post(f"/api/outputs/{o['id']}/approve").status_code == 200
     assert (
-        admin.put(f"/api/projects/{p}/banner-config", json={"size": "10x3"}).status_code
+        admin.put(
+            f"/api/projects/{p}/banner-config",
+            json={"auto_size": False, "size": "10x3"},
+        ).status_code
         == 200
     )
     assert (
@@ -125,7 +128,9 @@ def test_default_project_and_required_data_checks(admin):
     assert r.status_code == 201 and r.json()["workspace_type"] == "project"
     p = r.json()["id"]
     assert (
-        admin.put(f"/api/projects/{p}/banner-config", json={"size": "4x2"}).status_code
+        admin.put(
+            f"/api/projects/{p}/banner-config", json={"auto_size": False, "size": "4x2"}
+        ).status_code
         == 200
     )
     assert (

@@ -49,7 +49,9 @@ def spans(page):
 @pytest.mark.parametrize("size", ["10x3", "4x2", "2x2"])
 def test_board_values_stand_on_the_guides_baselines(admin, size):
     p, _ = campaign(admin)
-    admin.put(f"/api/projects/{p}/banner-config", json={"size": size})
+    admin.put(
+        f"/api/projects/{p}/banner-config", json={"auto_size": False, "size": size}
+    )
     r = admin.post(f"/api/projects/{p}/generate", json={"types": ["banners"]})
     assert r.status_code == 200, r.text
     name = f"board-{SIZES[size]['layout']}-physical"
@@ -74,7 +76,7 @@ def test_supervision_line_names_the_court(admin):
     p, _ = campaign(admin)
     admin.put(
         f"/api/projects/{p}/banner-config",
-        json={"size": "4x2", "court_name": "محكمة التنفيذ بالرياض"},
+        json={"auto_size": False, "size": "4x2", "court_name": "محكمة التنفيذ بالرياض"},
     )
     r = admin.post(f"/api/projects/{p}/generate", json={"types": ["banners"]})
     with pymupdf.open(stream=pdf(admin, r.json()[0]), filetype="pdf") as doc:
@@ -88,7 +90,11 @@ def test_board_live_preview_follows_the_unsaved_choices(admin):
         f"/api/projects/{p}/marketing-preview",
         json={
             "kind": "banner",
-            "config": {"size": "2x2", "court_name": "محكمة التنفيذ بجدة"},
+            "config": {
+                "auto_size": False,
+                "size": "2x2",
+                "court_name": "محكمة التنفيذ بجدة",
+            },
             "auction": {"auction_name": "مزاد الواحة", "auction_type": "physical"},
         },
     )

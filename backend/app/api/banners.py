@@ -21,6 +21,22 @@ def templates():
     ]
 
 
+@router.get("/projects/{id}/banner-sizes")
+def banner_sizes(id: str, db=Depends(get_db)):
+    """Each property's board size by Infath's table (None: its kind is not
+    in the table, the campaign's size stands)."""
+    from sqlalchemy import select
+
+    from ..models import ProjectItem
+    from ..services.banners import size_for
+
+    get_project(db, id)
+    return {
+        item.id: size_for(item.property_data)
+        for item in db.scalars(select(ProjectItem).where(ProjectItem.project_id == id))
+    }
+
+
 @router.get("/projects/{id}/banner-review")
 def review(id: str, db=Depends(get_db)):
     return review_banners(db, get_project(db, id))
@@ -38,6 +54,7 @@ def configure(id: str, body: BannerConfig, db=Depends(get_db)):
     if (
         len(body.property_ids) != len(set(body.property_ids))
         or not set(body.property_ids) <= known
+        or not set(body.item_sizes) <= known
     ):
         raise HTTPException(400, "Invalid banner property selection")
     project.banner_config = body.model_dump()

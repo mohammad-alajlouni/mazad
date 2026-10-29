@@ -44,6 +44,16 @@ type Review = {
     limit?: number;
   }[];
 };
+// The court as the boards' supervision line names it, from the auction's
+// court decision (the line adds its own «و»); services/banners.court_from.
+function courtFrom(decision: unknown) {
+  const text = String(decision || "")
+    .trim()
+    .split("\n")[0]
+    .trim();
+  return text.startsWith("وب") ? text.slice(1) : text;
+}
+
 export function BannerCreate({
   run,
   onDone,
@@ -143,9 +153,28 @@ export default function BannerWorkspace({
   const [sizes, setSizes] = useState<string[]>(
     detail.project.banner_config?.sizes || [size],
   );
-  // The court that supervises with Infath, named on the guide's boards.
+  // Each property's board in the size Infath's table gives it (by kind and
+  // area), unless one is chosen for it; or the sizes chosen, for all.
+  const [autoSize, setAutoSize] = useState(
+    detail.project.banner_config?.auto_size ?? true,
+  );
+  const [itemSizes, setItemSizes] = useState<Record<string, string>>(
+    detail.project.banner_config?.item_sizes || {},
+  );
+  const [tableSizes, setTableSizes] = useState<Record<string, string | null>>(
+    {},
+  );
+  useEffect(() => {
+    if (!isSocial)
+      void api<Record<string, string | null>>(
+        `/projects/${detail.project.id}/banner-sizes`,
+      ).then(setTableSizes);
+  }, [detail]);
+  // The court that supervises with Infath, named on the guide's boards:
+  // the auction's court decision until it is changed here.
   const [court, setCourt] = useState(
-    detail.project.banner_config?.court_name || "",
+    detail.project.banner_config?.court_name ||
+      courtFrom(detail.project.auction?.court_decision_text),
   );
   const [ids, setIds] = useState<string[]>(
     (isSocial ? detail.project.social_config : detail.project.banner_config)
@@ -241,7 +270,14 @@ export default function BannerWorkspace({
           config={
             isSocial
               ? { ...social, property_ids: ids }
-              : { size, sizes, property_ids: ids, court_name: court }
+              : {
+                  auto_size: autoSize,
+                  item_sizes: itemSizes,
+                  size,
+                  sizes,
+                  property_ids: ids,
+                  court_name: court,
+                }
           }
         >
           {step === "template" && (
@@ -256,7 +292,14 @@ export default function BannerWorkspace({
                     body: send(
                       isSocial
                         ? { ...social, property_ids: ids }
-                        : { size, sizes, property_ids: ids, court_name: court },
+                        : {
+                            auto_size: autoSize,
+                            item_sizes: itemSizes,
+                            size,
+                            sizes,
+                            property_ids: ids,
+                            court_name: court,
+                          },
                     ),
                   });
                   await reloadProject();
@@ -268,6 +311,27 @@ export default function BannerWorkspace({
               <p>{t("referenceHelp")}</p>
               {!isSocial && (
                 <p className="muted banner-sizes-help">{t("sizesHelp")}</p>
+              )}
+              {!isSocial && (
+                <fieldset className="choice-group banner-size-mode">
+                  <legend>{t("sizeMode")}</legend>
+                  {[true, false].map((auto) => (
+                    <label className="checkbox-label" key={String(auto)}>
+                      <input
+                        type="radio"
+                        name="size_mode"
+                        checked={autoSize === auto}
+                        onChange={() => setAutoSize(auto)}
+                      />
+                      <span>
+                        <strong>{t(auto ? "sizeAuto" : "sizeManual")}</strong>
+                        <small className="muted">
+                          {t(auto ? "sizeAutoHelp" : "sizeManualHelp")}
+                        </small>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
               )}
               {isSocial ? (
                 <SocialTemplateFields value={social} onChange={setSocial} />
@@ -300,43 +364,106 @@ export default function BannerWorkspace({
                       </p>
                       {templates
                         .filter((v) => v.layout === layout)
-                        .map((v) => (
-                          <div className="banner-size" key={v.id}>
-                            <label className="checkbox-label">
-                              <input
-                                type="checkbox"
-                                name="sizes"
-                                value={v.id}
-                                checked={sizes.includes(v.id)}
-                                onChange={(event) => {
-                                  const next = event.target.checked
-                                    ? [...sizes, v.id]
-                                    : sizes.filter((s) => s !== v.id);
-                                  setSizes(next);
-                                  // The preview follows the size just chosen.
-                                  if (event.target.checked) setSize(v.id);
-                                  else if (size === v.id && next.length)
-                                    setSize(next[0]);
-                                }}
-                              />
+                        .map((v) =>
+                          autoSize ? (
+                            <p className="banner-size" key={v.id}>
                               <bdi>{v.id.replace("x", " × ")} m</bdi>
-                            </label>
-                            {sizes.includes(v.id) && sizes.length > 1 && (
-                              <button
-                                type="button"
-                                className="text-button"
-                                aria-pressed={size === v.id}
-                                disabled={size === v.id}
-                                onClick={() => setSize(v.id)}
-                              >
-                                {size === v.id ? t("previewing") : t("preview")}
-                              </button>
-                            )}
-                          </div>
-                        ))}
+                            </p>
+                          ) : (
+                            <div className="banner-size" key={v.id}>
+                              <label className="checkbox-label">
+                                <input
+                                  type="checkbox"
+                                  name="sizes"
+                                  value={v.id}
+                                  checked={sizes.includes(v.id)}
+                                  onChange={(event) => {
+                                    const next = event.target.checked
+                                      ? [...sizes, v.id]
+                                      : sizes.filter((s) => s !== v.id);
+                                    setSizes(next);
+                                    // The preview follows the size just chosen.
+                                    if (event.target.checked) setSize(v.id);
+                                    else if (size === v.id && next.length)
+                                      setSize(next[0]);
+                                  }}
+                                />
+                                <bdi>{v.id.replace("x", " × ")} m</bdi>
+                              </label>
+                              {sizes.includes(v.id) && sizes.length > 1 && (
+                                <button
+                                  type="button"
+                                  className="text-button"
+                                  aria-pressed={size === v.id}
+                                  disabled={size === v.id}
+                                  onClick={() => setSize(v.id)}
+                                >
+                                  {size === v.id
+                                    ? t("previewing")
+                                    : t("preview")}
+                                </button>
+                              )}
+                            </div>
+                          ),
+                        )}
                     </article>
                   ))}
                 </div>
+              )}
+              {!isSocial && autoSize && detail.items.length > 0 && (
+                // Each property's board size: Infath's table by kind and
+                // area, or one chosen for it.
+                <section className="banner-item-sizes">
+                  <h3>{t("itemSizes")}</h3>
+                  <p className="muted">{t("itemSizesHelp")}</p>
+                  {detail.items
+                    .filter((item) => !ids.length || ids.includes(item.id))
+                    .map((item) => {
+                      const table = tableSizes[item.id];
+                      const shown = (value: string) =>
+                        // Kept left to right inside Arabic text.
+                        `\u2066${value.replace("x", " × ")} m\u2069`;
+                      return (
+                        <label className="banner-item-size" key={item.id}>
+                          <span>
+                            <strong>{item.title}</strong>
+                            <small className="muted">
+                              {[
+                                item.property_data?.property_type,
+                                item.property_data?.area
+                                  ? `\u2066${item.property_data.area} m²\u2069`
+                                  : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </small>
+                          </span>
+                          <select
+                            name={`item_size.${item.id}`}
+                            value={itemSizes[item.id] || ""}
+                            onChange={(event) => {
+                              const next = { ...itemSizes };
+                              if (event.target.value)
+                                next[item.id] = event.target.value;
+                              else delete next[item.id];
+                              setItemSizes(next);
+                            }}
+                          >
+                            <option value="">
+                              {table
+                                ? t("autoSizeOption", { size: shown(table) })
+                                : t("autoSizeUnknown", { size: shown(size) })}
+                            </option>
+                            {templates.map((v) => (
+                              <option key={v.id} value={v.id}>
+                                {shown(v.id)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      );
+                    })}
+                </section>
               )}
               {!isSocial && (
                 <label>
@@ -344,7 +471,7 @@ export default function BannerWorkspace({
                   <input
                     name="court_name"
                     value={court}
-                    maxLength={60}
+                    maxLength={120}
                     onChange={(event) => setCourt(event.target.value)}
                   />
                   <small className="muted">{t("courtHelp")}</small>
