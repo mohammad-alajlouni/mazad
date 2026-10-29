@@ -168,29 +168,38 @@ def image(id: str, size: str = "", db=Depends(get_db)):
     if not img:
         raise HTTPException(404, "Image not found")
     get_project(db, img.project_id)
-    data = LocalStorage().read(img.key)
+    storage = LocalStorage()
     media = "image/png" if img.key.endswith(".png") else "image/jpeg"
     if size == "preview":
-        # Stored images never change under an id, so the reduced copy the live
-        # preview uses can be cached by the (authenticated) browser.
-        from io import BytesIO
+        # The live preview's light copy: made once and kept beside the file
+        # (the printed booklet uses the stored file itself). Stored images
+        # never change under an id, so the browser may keep it too.
+        preview = storage.path(img.key + ".preview")
+        if preview.is_file():
+            data = preview.read_bytes()
+        else:
+            from io import BytesIO
 
-        from PIL import Image
+            from PIL import Image
 
-        with Image.open(BytesIO(data)) as picture:
-            picture.thumbnail((1400, 1400))
-            out = BytesIO()
-            if media == "image/png":
-                picture.save(out, format="PNG", optimize=True)
-            else:
-                picture.convert("RGB").save(out, format="JPEG", quality=82)
+            with Image.open(BytesIO(storage.read(img.key))) as picture:
+                picture.thumbnail((1400, 1400))
+                out = BytesIO()
+                if media == "image/png":
+                    picture.save(out, format="PNG", optimize=True)
+                else:
+                    picture.convert("RGB").save(out, format="JPEG", quality=82)
+            data = out.getvalue()
+            preview.write_bytes(data)
         return Response(
-            out.getvalue(),
+            data,
             media_type=media,
-            headers={"Cache-Control": "private, max-age=86400"},
+            headers={"Cache-Control": "private, max-age=31536000, immutable"},
         )
     return Response(
-        data, media_type=media, headers={"Cache-Control": "private, no-store"}
+        storage.read(img.key),
+        media_type=media,
+        headers={"Cache-Control": "private, no-store"},
     )
 
 

@@ -12,6 +12,7 @@ from html import escape
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import HTMLResponse
 from sqlalchemy import select
+from sqlalchemy.orm import defer
 
 from ..db import get_db
 from ..models import GeneratedFile, GeneratedOutput, Project
@@ -27,12 +28,14 @@ def booklet(db, token):
     project = db.scalar(select(Project).where(Project.share_token == token))
     if project is None:
         raise HTTPException(404, "Booklet not found")
+    # (Only which booklet is shown: its content is not read.)
     outputs = db.scalars(
         select(GeneratedOutput)
         .where(
             GeneratedOutput.project_id == project.id,
             GeneratedOutput.output_type == "project_booklet",
         )
+        .options(defer(GeneratedOutput.content))
         .order_by(GeneratedOutput.created_at.desc())
     ).all()
     outputs.sort(key=lambda o: o.approved_at is None)  # approved first

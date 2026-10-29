@@ -1,12 +1,13 @@
 """The property's boundaries and lengths on its first page (guide p.15, p.19).
 
-The four boundary descriptions stand beside their labels, each on as many
-lines as it needs at a size that shrinks a little when they need more room;
-the rows below move down. In portrait the lengths section (its tab and two
+The four boundary descriptions stand beside their labels, each on one line or
+two at most, running to the margin, at a size that shrinks a little when they
+need more room; the rows below move down. In portrait the lengths section (its tab and two
 rows) moves down with them, as far as the additional-information tab allows.
 The lengths stand two to a row, as in the guide: north and south on the
 right, east and west on the left. Only boundaries that do not fit even so go
-to a page of their own (see composer: separate boundaries).
+to a page of their own (see composer: separate boundaries): any description
+longer than two lines, even at DESCRIPTION_MIN.
 """
 
 from .composer import text_width, wrap_lines
@@ -15,6 +16,9 @@ SIDES = ("north", "south", "east", "west")
 FONT = "LamaSans-Medium"
 LABEL_SIZE = 10.06
 SIZE, MINIMUM = 9.6, 7.0
+# A description takes two lines at most beside its label, set no smaller than
+# this; a longer one sends the boundaries to their own page.
+MAX_LINES, DESCRIPTION_MIN = 2, 8.5
 LINE = 1.15  # line pitch of a description's lines, per point of size
 ROW_GAP = 5.0  # added space between two rows when one takes several lines
 MARGIN = 0.97  # measured widths differ slightly between renderers
@@ -76,8 +80,14 @@ def sides_layout(boundaries, layout):
     while True:
         line = round(size * LINE, 2)
         rows, base = [], g["first"]
+        wrapped = {s: description_lines(texts[s], size, g["width"]) for s in SIDES}
+        if any(len(lines) > MAX_LINES for lines in wrapped.values()):
+            if size <= DESCRIPTION_MIN:
+                return None
+            size = max(DESCRIPTION_MIN, round(size - 0.2, 2))
+            continue
         for side in SIDES:
-            lines = description_lines(texts[side], size, g["width"])
+            lines = wrapped[side]
             # A row of several lines is centred on its label's line.
             first = base - (len(lines) - 1) * line / 2 if len(lines) > 1 else base
             # Rows keep clear of each other: more than a line apart.
@@ -98,9 +108,9 @@ def sides_layout(boundaries, layout):
         shift = max(0.0, rows[-1]["bottom"] - g["rows_end"])
         if shift <= g["room"]:
             break
-        if size <= MINIMUM:
+        if size <= DESCRIPTION_MIN:
             return None
-        size = max(MINIMUM, round(size - 0.2, 2))
+        size = max(DESCRIPTION_MIN, round(size - 0.2, 2))
     # The lengths: north and south on the right, east and west on the left.
     lengths = []
     for column, sides in zip(g["pairs"], (("north", "south"), ("east", "west"))):

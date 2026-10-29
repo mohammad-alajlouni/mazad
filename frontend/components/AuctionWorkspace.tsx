@@ -509,15 +509,20 @@ export function Fields({
                     [prefix + key]: true,
                   }));
               }}
-              defaultValue={String(values[key] || defaults[key] || "")}
+              defaultValue={
+                // A website is shown as typed (www.aayan.com): the platform
+                // adds https:// when it is saved.
+                key === "website"
+                  ? String(values[key] || "").replace(/^https:\/\//, "")
+                  : String(values[key] || defaults[key] || "")
+              }
+              inputMode={key === "website" ? "url" : undefined}
               type={
                 key.endsWith("_date")
                   ? "date"
                   : key.endsWith("_time")
                     ? "time"
-                    : key.endsWith("_url") ||
-                        key.endsWith("_link") ||
-                        key === "website"
+                    : key.endsWith("_url") || key.endsWith("_link")
                       ? "url"
                       : [
                             "area",

@@ -51,6 +51,9 @@ LABELS = {
         "The auction will be documented in photographs and video for marketing and publication.",
     ),
     "closes": ("تغلق المزايدة\nعلى العقار", "Bidding on this\nproperty closes"),
+    # The schedule of an auction held over several days (electronic, hybrid).
+    "auction_starts": ("يبدأ المزاد", "The auction starts"),
+    "auction_ends": ("ينتهي المزاد", "The auction ends"),
     "property_number_in_booklet": (
         "رقم العقار في كتيب المزاد",
         "Property number in booklet",

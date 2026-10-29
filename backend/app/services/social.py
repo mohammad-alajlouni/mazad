@@ -115,7 +115,10 @@ def review_social(db, project):
 
 def caption(project, config, items, language):
     """Deterministic companion text: no generated regulatory wording or dates."""
-    a = project["auction"]
+    from ..generation.marketing.compose import contact_number
+
+    # The number: the auction's own, else the agent's (account settings).
+    a = {**project["auction"], "auction_contact_number": contact_number(project)}
     ar = language == "ar"
     lines = [config.caption, config.headline, config.tagline, a["auction_name"]]
     for key, label in [

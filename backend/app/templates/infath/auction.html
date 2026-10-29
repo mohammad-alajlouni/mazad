@@ -15,16 +15,40 @@
 {% for line in copy %}<div class="t r w3" style="{{ T(495.4, 314.4 - (19 - cs) * 0.6 + cl * loop.index0, cs, lh=cl, width=373) }};color:#000">{{ line }}</div>
 {% endfor %}
 {% set rows = [] %}
+{% set S = page.schedule %}
+{% if S %}
+{#- Held over several days (electronic, hybrid): when it starts, then when it
+    ends (its last day, from the first property's closing to the last one's),
+    each under its heading, as the notes' example sets them; then where. -#}
+{% set _ = rows.append(('heading', bt('auction_starts'))) %}
+{% set _ = rows.append(('calendar', fmt.long_day(S.start[0], output_language) or '—')) %}
+{% if S.start[1] %}{% set _ = rows.append(('time', fmt.at_clock(S.start[1], output_language))) %}{% endif %}
+{% set _ = rows.append(('heading', bt('auction_ends'))) %}
+{% set _ = rows.append(('calendar', fmt.long_day(S.end[0], output_language) or '—')) %}
+{% if S.end[1] or S.end[2] %}{% set _ = rows.append(('time', fmt.clock_window(S.end[1], S.end[2], output_language))) %}{% endif %}
+{% else %}
 {% if auction.start_time or auction.end_time %}{% set _ = rows.append(('time', fmt.time_range(auction, output_language))) %}{% endif %}
 {% set _ = rows.append(('calendar', fmt.day_range(auction, output_language) or '—')) %}
+{% endif %}
 {% if auction.auction_type != 'electronic' %}{% set _ = rows.append(('location', auction.physical_location or bt('location'))) %}{% endif %}
 {% if auction.auction_type != 'physical' %}{% set _ = rows.append(('platform', auction.electronic_platform_name or bt('platform_name'))) %}{% endif %}
+{#- In-person auctions: the reference slots. Over several days: a heading
+    takes 26 pt, a row 36 pt (icons 32 pt high), from the first slot down. -#}
 {% set slots = [(424.6, 404), (465.8, 444), (505.7, 485), (551.3, 527)] %}
-{% for icon, text in rows %}{% set base, top = slots[loop.index0] %}
+{% set y = namespace(top=396.0) %}
+{% for icon, text in rows %}
+{% if S %}{% set top = y.top %}{% set base = top + 20.6 %}
+{% set y.top = y.top + (26.0 if icon == 'heading' else 36.0) %}
+{% else %}{% set base, top = slots[loop.index0] %}{% endif %}
 {% set base = base + down %}{% set top = top + down %}
+{% if icon == 'heading' %}
+<div class="t r w5" style="{{ T(493.0, top + 18.0, 13.48, width=330) }};color:#11375c">{{ text }}</div>
+{% else %}
 {{ vec('auction-' ~ icon, 461, top, 32, {'time': 31, 'calendar': 33, 'location': 31, 'platform': 33}[icon]) }}
 {% set size = fit.box_size(icon == 'location' and 'physical_location' or 'electronic_platform_name', text) if icon in ('location', 'platform') else 13.48 %}
 <div class="t r w5" style="{{ T(437.9, base, size, width=330) }};color:#3abdba" data-fit="auction-schedule-{{ icon }}" data-max-height="26pt">{{ text|nums }}</div>
+{% endif %}
 {% endfor %}
+{% set notice = (y.top + 30.0 if S else 584.3) + down %}
 {#- Filming happens in the auction hall: in-person and hybrid auctions only. -#}
-{% if auction.auction_type != 'electronic' %}<div class="t r w3" style="{{ T(498.4, 584.3 + down, 10, width=400) }};color:#000">{{ bt('recording_notice') }}</div>{% endif %}
+{% if auction.auction_type != 'electronic' %}<div class="t r w3" style="{{ T(498.4, notice, 10, width=400) }};color:#000">{{ bt('recording_notice') }}</div>{% endif %}

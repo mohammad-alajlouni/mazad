@@ -1966,10 +1966,11 @@ html[dir="rtl"] .profile-return .lucide-arrow-left { transform: scaleX(-1); }
   thead th:first-child { min-width: 0; }
 }
 
-/* The cover page: assignment number, the name suggestion, then the name. */
+/* The cover page: assignment number, the name, then (on its left, aligned
+   with it) the button that suggests one. */
 .name-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.6fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) auto;
   align-items: end;
   gap: 12px;
 }
@@ -1981,7 +1982,8 @@ html[dir="rtl"] .profile-return .lucide-arrow-left { transform: scaleX(-1); }
   align-items: center;
   gap: 6px;
   min-height: 44px;
-  margin-bottom: 2px;
+  /* The field labels' own bottom margin: the button's foot meets the input's. */
+  margin-bottom: 20px;
 }
 @media (max-width: 700px) {
   .name-row {

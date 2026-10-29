@@ -94,6 +94,40 @@ def clock(value, language):
     return f"{hour}:{moment.minute:02d} " + ("AM" if moment.hour < 12 else "PM")
 
 
+def long_day(value, language):
+    """الأحد الموافق 01 نوفمبر 2026 م — a day as the schedule names it."""
+    day = as_date(value)
+    if not day:
+        return ""
+    if language == "ar":
+        return (
+            f"{WEEKDAYS_AR[day.weekday()]} الموافق "
+            f"{day.day:02d} {MONTHS_AR[day.month - 1]} {day.year} م"
+        )
+    return (
+        f"{WEEKDAYS_EN[day.weekday()]}, {day.day} {MONTHS_EN[day.month - 1]} {day.year}"
+    )
+
+
+def at_clock(value, language):
+    """الساعة 10 : 00 صباحاً"""
+    text = clock(value, language)
+    if not text:
+        return ""
+    return f"الساعة {text}" if language == "ar" else f"at {text}"
+
+
+def clock_window(start, end, language):
+    """من الساعة 04 : 00 مساءً إلى الساعة 09 : 00 مساءً (one time alone when
+    both are the same, or one is missing)."""
+    first, last = clock(start, language), clock(end, language)
+    if not first or not last or first == last:
+        return at_clock(start or end, language)
+    if language == "ar":
+        return f"من الساعة {first} إلى الساعة {last}"
+    return f"from {first} to {last}"
+
+
 def time_range(auction, language):
     start = clock(auction.get("start_time"), language)
     end = clock(auction.get("end_time"), language)

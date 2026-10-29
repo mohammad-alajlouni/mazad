@@ -101,8 +101,9 @@ function partsFor(section: "auction" | "closing", kind: string): Part[] {
   ];
 }
 
-// The terms of entry: the guide's written in, each term on its own line; the
-// author may change them for this auction or go back to the guide's.
+// The terms of entry: the guide's for the auction's kind written in, each term
+// on its own line; the author may change them for this auction or go back to
+// the guide's.
 function TermsText({ initial, guide }: { initial: string; guide: string }) {
   const p = useTranslations("bookletPages");
   const area = useRef<HTMLTextAreaElement>(null);
@@ -122,11 +123,14 @@ function TermsText({ initial, guide }: { initial: string; guide: string }) {
         className="text-button"
         onClick={() => {
           if (!area.current) return;
-          area.current.value = guide;
+          // Set as if typed, so the form, its unsaved state and the live
+          // preview all take the guide's terms.
+          Object.getOwnPropertyDescriptor(
+            HTMLTextAreaElement.prototype,
+            "value",
+          )!.set!.call(area.current, guide);
           area.current.dispatchEvent(new Event("input", { bubbles: true }));
-          area.current.form?.dispatchEvent(
-            new Event("change", { bubbles: true }),
-          );
+          area.current.dispatchEvent(new Event("change", { bubbles: true }));
         }}
       >
         <RotateCcw size={14} />
@@ -215,6 +219,12 @@ export function BookletPages({
     String(auction.supervisor || "infath"),
   );
   const rules = detail.workflow?.rules.auction[kind];
+  // The guide's terms of entry for this kind of auction.
+  const guideTerms = String(
+    detail.workflow?.rules.terms_defaults?.[kind] ||
+      detail.workflow?.rules.terms_default ||
+      "",
+  );
   const visible = (fields: string[] = []) =>
     fields.filter((key) => !rules || rules.visible.includes(key));
   const parts = partsFor(section, kind).filter(
@@ -392,12 +402,21 @@ export function BookletPages({
     }, sv("logoSaved"));
   };
   const agent = detail.selling_agent || {};
-  const logo = detail.images.find(
-    (i) => i.id === agent.logo_image_id || i.category === "agent_logo",
-  );
+  // The agent's current logo (the account's, as the booklet prints it): a
+  // project keeps the logos it had before, so the one the agent names comes
+  // first, then the latest stored.
+  const logo =
+    detail.images.find((i) => i.id === agent.logo_image_id) ||
+    detail.images
+      .filter((i) => i.category === "agent_logo" && !i.item_id)
+      .at(-1);
   const agentIssues = detail.workflow?.stages.agent?.missing || [];
-  // Each press suggests the name after the current one; the author may edit it.
-  const suggestName = () => {
+  // Names the AI suggests from the properties (asked once), else the form's
+  // own; each press suggests the name after the current one, which the
+  // author may edit.
+  const [aiNames, setAiNames] = useState<string[] | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
+  const suggestName = async () => {
     const input = form.current?.querySelector<HTMLInputElement>(
       'input[name="auction_name"]',
     );
@@ -407,7 +426,23 @@ export function BookletPages({
         auction.document_language ||
         "ar",
     );
-    const ideas = nameIdeas(detail.items, language);
+    let names = aiNames;
+    if (names === null) {
+      setSuggesting(true);
+      try {
+        const reply = await api<{ names: string[] }>(
+          `/projects/${detail.project.id}/name-suggestions`,
+          { method: "POST" },
+        );
+        names = reply.names || [];
+      } catch {
+        names = [];
+      } finally {
+        setSuggesting(false);
+      }
+      setAiNames(names);
+    }
+    const ideas = names.length ? names : nameIdeas(detail.items, language);
     const next = ideas[(ideas.indexOf(input.value.trim()) + 1) % ideas.length];
     // Set as if typed, so the form and the live preview take it.
     Object.getOwnPropertyDescriptor(
@@ -589,11 +624,17 @@ export function BookletPages({
               return (
                 <>
                   {item.cover && before.includes("auction_name") ? (
-                    // The assignment number beside the name, and between
-                    // them the button that suggests one.
+                    // The assignment number beside the name, and right after
+                    // the name (on its left), aligned with it, the button that
+                    // suggests one.
                     <div className="name-row">
                       <Fields
                         fields={before.filter((k) => k !== "auction_name")}
+                        values={values}
+                        requiredFields={rules?.required}
+                      />
+                      <Fields
+                        fields={["auction_name"]}
                         values={values}
                         requiredFields={rules?.required}
                       />
@@ -601,16 +642,13 @@ export function BookletPages({
                         type="button"
                         className="secondary suggest-name"
                         title={p("suggestNameHelp")}
-                        onClick={suggestName}
+                        disabled={suggesting}
+                        aria-busy={suggesting}
+                        onClick={() => void suggestName()}
                       >
                         <Sparkles size={16} />
                         {p("suggestName")}
                       </button>
-                      <Fields
-                        fields={["auction_name"]}
-                        values={values}
-                        requiredFields={rules?.required}
-                      />
                     </div>
                   ) : (
                     before.length > 0 && (
@@ -838,12 +876,8 @@ export function BookletPages({
           )}
           {item.terms && (
             <TermsText
-              initial={String(
-                auction.terms_text ||
-                  detail.workflow?.rules.terms_default ||
-                  "",
-              )}
-              guide={String(detail.workflow?.rules.terms_default || "")}
+              initial={String(auction.terms_text || guideTerms)}
+              guide={guideTerms}
             />
           )}
           {/* The agent's details live in the account: nothing is repeated

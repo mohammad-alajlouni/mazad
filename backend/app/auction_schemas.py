@@ -1,11 +1,18 @@
 """Typed auction data shared by manual input, Excel and the renderer."""
 
+import re
 from datetime import date, time
 from decimal import Decimal
 from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+
+# A website's host: a real domain name (labels, then a top-level name).
+DOMAIN = re.compile(
+    r"^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{2,59})$"
+)
 
 
 class Structured(BaseModel):
@@ -28,6 +35,15 @@ class Structured(BaseModel):
             return None
         return value
 
+    @field_validator("website", mode="before", check_fields=False)
+    @classmethod
+    def website_scheme(cls, value):
+        # A website may be typed as www.aayan.com: https:// is added here.
+        text = str(value or "").strip()
+        if text and not re.match(r"^[a-z][a-z0-9+.-]*://", text, re.I):
+            text = "https://" + text
+        return text
+
     @model_validator(mode="after")
     def urls(self):
         for key in self.__class__.model_fields:
@@ -41,6 +57,7 @@ class Structured(BaseModel):
                     or not parsed.hostname
                     or parsed.username
                     or any(c.isspace() for c in value)
+                    or (key == "website" and not DOMAIN.match(parsed.hostname))
                 ):
                     raise ValueError(f"{key}: use a complete http(s) URL")
                 if len(value) > 1000:
@@ -95,11 +112,12 @@ class AuctionData(Structured):
     @field_validator("terms_text", mode="before")
     @classmethod
     def own_terms(cls, value):
-        # Terms left as the guide's are not kept: they follow the guide.
-        from .generation.booklet.terms import TERMS
+        # Terms left as the guide's (for any kind of auction) are not kept:
+        # they follow the guide, the auction's kind choosing its terms.
+        from .generation.booklet.terms import GUIDE_TEXTS
 
         text = str(value or "").replace("\r\n", "\n").strip()
-        return "" if text == TERMS else text
+        return "" if text in GUIDE_TEXTS.values() else text
 
     @model_validator(mode="after")
     def schedule(self):

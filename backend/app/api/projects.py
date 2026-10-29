@@ -20,7 +20,7 @@ from ..models import (
 )
 from ..schemas import ItemInput, ProjectInput
 from ..services.properties import item_view, save_item
-from .common import audit, discard_files, get_project, invalidate, output_view
+from .common import audit, discard_files, get_project, invalidate, output_views
 
 router = APIRouter(dependencies=[Depends(current_user)], tags=["projects"])
 
@@ -149,14 +149,14 @@ def project_detail(id: str, db=Depends(get_db)):
         "images": db.scalars(
             select(ProjectImage).where(ProjectImage.project_id == id)
         ).all(),
-        "outputs": [
-            output_view(db, o)
-            for o in db.scalars(
+        "outputs": output_views(
+            db,
+            db.scalars(
                 select(GeneratedOutput)
                 .where(GeneratedOutput.project_id == id)
                 .order_by(GeneratedOutput.created_at.desc())
-            )
-        ],
+            ).all(),
+        ),
     }
 
 

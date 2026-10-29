@@ -49,10 +49,15 @@ def audit(db, action, detail):
 
 
 def invalidate(db, project, output_types=None):
+    from sqlalchemy.orm import defer
+
     previous_revision = project.revision
     project.revision += 1
+    # An output's content is read only where its approval may be withdrawn.
     for o in db.scalars(
-        select(GeneratedOutput).where(GeneratedOutput.project_id == project.id)
+        select(GeneratedOutput)
+        .where(GeneratedOutput.project_id == project.id)
+        .options(defer(GeneratedOutput.content))
     ):
         if output_types is not None and o.output_type not in output_types:
             # Design-only edits do not change another output's source data.
@@ -60,6 +65,11 @@ def invalidate(db, project, output_types=None):
                 o.revision = project.revision
             continue
         o.status = "NEEDS_REGENERATION"
+        if o.approved_at is None:
+            continue
+        from ..generation.engine import compact
+
+        compact(db, o)
         if (
             not o.content.get("booklet")
             and not o.content.get("banner")
@@ -68,6 +78,18 @@ def invalidate(db, project, output_types=None):
             and not o.content.get("reports")
         ):
             o.approved_at = None
+
+
+def output_views(db, outputs):
+    """Views of outputs, compacting (once) any stored before pictures were
+    kept by reference (engine.compact)."""
+    from ..generation.engine import compact
+
+    changed = [compact(db, o) for o in outputs]
+    views = [output_view(db, o) for o in outputs]
+    if any(changed):
+        db.commit()
+    return views
 
 
 def output_view(db, o):
@@ -129,6 +151,7 @@ def discard_files(db, keys):
     for key in keys - kept:
         try:
             storage.delete(key)
+            storage.delete(key + ".preview")  # its live-preview copy, if made
         except (OSError, HTTPException):
             logger.warning("Stored file %s could not be removed", key)
 

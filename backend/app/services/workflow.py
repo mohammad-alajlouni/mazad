@@ -93,11 +93,9 @@ def workflow(db, project):
         if kind == "hybrid":
             required += ["physical_location"]
         if scope != "booklet":
-            required += [
-                "license_number",
-                "auction_contact_number",
-                "legal_announcement_text",
-            ]
+            # (The contact number is the agent's from the account settings
+            # unless the auction gives its own: never required here.)
+            required += ["license_number", "legal_announcement_text"]
         rules["auction"][kind] = {
             "visible": AUCTION_COMMON + visible,
             "required": required,
@@ -167,16 +165,26 @@ def workflow(db, project):
         ):
             for field in ("property_type", "city", "district", "area", "deed_number"):
                 limit(field, 28)
+    if paged:
+        # A boundary description no longer than its box on the boundaries page.
+        from ..generation.booklet.composer import boundary_limit
+
+        for side in ("north", "south", "east", "west"):
+            limit(f"boundary.{side}_description", boundary_limit())
     rules["limits"] = limits
     if paged:
         # Frames of the booklet's photographs, for the upload editor.
         from ..generation.booklet.composer import image_frames
 
         rules["image_frames"] = image_frames()
-        # The guide's terms of entry, which an auction may change.
-        from ..generation.booklet.terms import TERMS
+        # The guide's terms of entry for each kind of auction, which an
+        # auction may change.
+        from ..generation.booklet.terms import GUIDE_TEXTS, guide_terms
 
-        rules["terms_default"] = TERMS
+        rules["terms_defaults"] = GUIDE_TEXTS
+        rules["terms_default"] = guide_terms(
+            (project.auction or {}).get("auction_type")
+        )
 
     # Issues name a property by title; the id lets the form open that property.
     from sqlalchemy import select as _select

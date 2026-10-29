@@ -92,12 +92,7 @@ def review_banners(db, project):
         "electronic_platform_name": 40,
     }.items():
         fits(a.get(field), field, limit, "auction")
-    for field in (
-        "auction_name",
-        "license_number",
-        "auction_contact_number",
-        "legal_announcement_text",
-    ):
+    for field in ("auction_name", "license_number", "legal_announcement_text"):
         need(a.get(field), field, "auction")
     electronic = a.get("auction_type") in ("electronic", "hybrid")
     physical = a.get("auction_type") in ("physical", "hybrid")
@@ -117,6 +112,12 @@ def review_banners(db, project):
         need(a.get("physical_location"), "physical_location", "auction")
     agent = db.scalar(select(SellingAgent).where(SellingAgent.project_id == project.id))
     data = agent.data if agent else {}
+    # The boards' number: the auction's own, else the agent's (settings).
+    need(
+        a.get("auction_contact_number") or data.get("phone"),
+        "auction_contact_number",
+        "auction",
+    )
     need(data.get("name"), "agent_name", "images")
     fits(data.get("name"), "agent_name", 60, "images")
     images = db.scalars(

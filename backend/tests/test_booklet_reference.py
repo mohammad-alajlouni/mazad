@@ -238,30 +238,33 @@ def test_boundaries_use_the_room_they_have_before_leaving_the_page():
     assert north(fits)["size"] == 9.6
     assert [x["text"] for x in north(fits)["lines"]] == ["شارع بعرض 30م"]
     assert [x["text"] for x in fits["boundaries"]["rows"][1]["lines"]] == ["-"]
-    # Longer: further lines at the same size, the text whole.
-    text = "شارع بعرض ثلاثين متراً من الجهة الشمالية الشرقية"
-    long = page({"north_description": text * 2})
+    # Longer: a second line at the same size, the text whole.
+    text = "شارع بعرض ثلاثين متراً من الجهة"
+    long = page({"north_description": text})
     assert not long["separate_boundaries"]
-    assert north(long)["size"] == 9.6 and len(north(long)["lines"]) > 2
-    assert " ".join(x["text"] for x in north(long)["lines"]).split() == (
-        (text * 2).split()
-    )
+    assert north(long)["size"] == 9.6 and len(north(long)["lines"]) == 2
+    assert " ".join(x["text"] for x in north(long)["lines"]).split() == text.split()
     rows = long["boundaries"]["rows"]
     assert all(
         a["lines"][-1]["base"] < b["lines"][0]["base"]
         for a, b in itertools.pairwise(rows)
     )
-    # Longer again: set a little smaller rather than leaving the page.
-    smaller = page({"north_description": text * 3})
+    # Notes: two lines at most beside the label, set a little smaller rather
+    # than taking a third; longer, the boundaries continue on their own page
+    # and the property's page leaves them out entirely.
+    smaller = page({"north_description": text + " الشمالية الشرقية"})
     assert not smaller["separate_boundaries"]
-    assert 7.0 <= north(smaller)["size"] < 9.6
-    # Too long even so: the boundaries continue on their own page, and the
-    # property's page leaves them out entirely.
-    far = page({"north_description": text * 6})
+    assert 8.5 <= north(smaller)["size"] <= 9.6
+    assert len(north(smaller)["lines"]) <= 2
+    far = page({"north_description": text + " الشمالية الشرقية ثم ممر"})
     assert far["separate_boundaries"] and far["boundaries"] is None
+    for plan in (fits, long, smaller):
+        assert all(len(r["lines"]) <= 2 for r in plan["boundaries"]["rows"])
     # Portrait pages have the wider column: more fits at the reference size.
-    wide = page({"north_description": text * 4}, booklet_layout="portrait")
-    assert north(wide)["size"] == 9.6
+    wide = page(
+        {"north_description": text + " الشمالية الشرقية"}, booklet_layout="portrait"
+    )
+    assert north(wide)["size"] == 9.6 and len(north(wide)["lines"]) == 2
     # A long length is set smaller on its line; an impossible one leaves the page.
     length = page({"north_length": "1,032.55 م"})
     assert 7.0 <= length["boundaries"]["lengths"][0]["size"] <= 10.06
@@ -276,7 +279,7 @@ def test_boundaries_are_printed_inside_their_column_on_both_layouts():
     their labels."""
     boundaries = {
         "north_description": "يحدها من الشمال ارض فضاء",
-        "south_description": "شارع الملك سعود بعرض 60م ثم ممر مشاة " * 2,
+        "south_description": "شارع الملك سعود بعرض 60م ثم ممر مشاة",
         "east_description": "قطعة رقم 161 وقطعة رقم 162",
         "west_description": "شارع بعرض 30م",
         "north_length": "107,032م",
@@ -771,8 +774,12 @@ def test_times_and_slashed_dates_keep_their_digit_order_in_arabic():
                 rows.setdefault(round(y1), []).append((x0, word))
         return [" ".join(w for _, w in sorted(row)) for _, row in sorted(rows.items())]
 
-    # Right-to-left line: the first time sits on the right, each drawn "hh mm".
-    assert "09 31 08 31" in digits("auction")
+    # Over several days the auction page sets when it starts, then when it
+    # ends, each time on its own line, drawn "hh mm"; the dates "yyyy dd".
+    auction = digits("auction")
+    assert auction.index("08 31") < auction.index("09 31")
+    assert "2026 27" in auction and "2026 29" in auction
+    # Right-to-left line (contact page): the first time sits on the right.
     assert any(row.startswith("09 31 08 31") for row in digits("contact"))
     assert any("2026 07 29" in row for row in digits("property"))
 

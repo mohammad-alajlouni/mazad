@@ -162,6 +162,14 @@ def supervision(a, court):
     return f"{body}، و{court}" if court else body
 
 
+def contact_number(project):
+    """The auction's own contact number, else the selling agent's (account
+    settings)."""
+    a = project.get("auction") or {}
+    agent = project.get("selling_agent") or {}
+    return a.get("auction_contact_number") or agent.get("phone") or ""
+
+
 def values(project, item, count, extra):
     """Every slot's value for one page (item is None on an announcement)."""
     a = project.get("auction") or {}
@@ -183,8 +191,8 @@ def values(project, item, count, extra):
     return {
         "property_type": d.get("property_type") or "",
         "supervision": supervision(a, extra.get("court_name")),
-        "phone": a.get("auction_contact_number") or "",
-        "phone_text": a.get("auction_contact_number") or "",
+        "phone": contact_number(project),
+        "phone_text": contact_number(project),
         "date": slash(start),
         "time": hours(start_time),
         "day_label": f"يوم {WEEKDAYS[start.weekday()]}" if start else "",

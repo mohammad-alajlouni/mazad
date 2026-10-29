@@ -4,5 +4,5 @@
 {% set profile_logo %}<img class="logo" style="{{ box(463.4 - A.width, 243.3 - A.height, A.width, A.height) }}" src="{{ A.src }}">{% endset %}
 {% else %}{% set profile_logo = '' %}{% endif %}
 {% set profile_title = agent.name %}
-{% set profile_contacts = [('x', agent.social_accounts), ('phone', agent.phone), ('web', agent.website)] %}
+{% set profile_contacts = [('x', agent.social_accounts), ('phone', agent.phone), ('web', agent.website|site)] %}
 {% include 'infath/profile.html' %}

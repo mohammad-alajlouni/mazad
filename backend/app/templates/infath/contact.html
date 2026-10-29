@@ -24,17 +24,23 @@
 {% else %}<div class="t r w5" style="{{ T(x, 392.8, 10.4, align='center', width=165) }};color:#159d9d" data-fit="contact-{{ icon }}" data-max-height="22pt">{{ text|nums }}</div>{% endif %}
 {% endfor %}
 <div class="t r w5" style="{{ T(300.3, 469.5, 20.37, align='center', width=300) }};color:#11375c">{{ bt('contact') }}</div>
-{% set phone = auction.auction_contact_number or agent.phone %}
+{#- The agent's number (account settings) beside its WhatsApp; the auction's
+    own contact number, when given, stands under them as another number. -#}
+{% set phone = agent.phone or auction.auction_contact_number %}
+{% set extra = auction.auction_contact_number if agent.phone and auction.auction_contact_number and auction.auction_contact_number != agent.phone else '' %}
 {% if agent.whatsapp %}{{ vec('contact-whatsapp', 420, 514, 18, 19) }}
 <div class="t l w5" style="{{ T(398.9, 530.0, 14.61, 'l', width=130) }};color:#159d9d" dir="ltr">{{ agent.whatsapp }}</div>{% endif %}
 {% if phone %}{% set right = 253.8 if agent.whatsapp else 326.3 %}{{ vec('contact-phone', right + 11.2, 516, 18, 19) }}
 <div class="t l w5" style="{{ T(right, 530.0, 14.61, 'l', width=130) }};color:#159d9d" dir="ltr">{{ phone }}</div>{% endif %}
+{% if extra %}{{ vec('contact-phone', 337.5, 541, 18, 19) }}
+<div class="t l w5" style="{{ T(326.3, 555.0, 14.61, 'l', width=130) }};color:#159d9d" dir="ltr">{{ extra }}</div>{% endif %}
 {#- The agent's additional contact text (account settings), under the numbers. -#}
-{% if agent.contact_information and agent.contact_information.strip() %}<div class="t p r w5" style="{{ T(300, 556.5, 10, lh=14, align='center', width=360) }};color:#159d9d;white-space:pre-line" data-fit="contact-extra" data-max-height="28pt">{{ agent.contact_information|trim|nums }}</div>{% endif %}
+{% if agent.contact_information and agent.contact_information.strip() %}<div class="t p r w5" style="{{ T(300, 556.5 + (25 if extra else 0), 10, lh=14, align='center', width=360) }};color:#159d9d;white-space:pre-line" data-fit="contact-extra" data-max-height="28pt">{{ agent.contact_information|trim|nums }}</div>{% endif %}
 {#- The QR leads to the auction hall: electronic auctions have none (guide p.25). -#}
 {% set target = booklet.auction_qrs|selectattr('label', 'equalto', 'auction_location_url')|list %}
+{% set dq = 25 if extra else 0 %}
 {% if target and auction.auction_type != 'electronic' %}{% set link = target[0] %}
-<a class="hit" href="{{ link.url }}" style="{{ box(231.4, 595.8, 137, 45.5) }}"></a><img class="qr-code" style="{{ box(231.4, 595.8, 45.5, 45.5) }}" src="{{ link.image }}">
-<div class="t r w7" style="{{ T(368.1, 606.7, 13.3, width=150) }};color:#001647">{{ bt('auction_platform' if link.label == 'electronic_platform_url' else 'auction_hall') }}</div>
-{% for line in bt('scan_to_reach').split('\n') %}<div class="t r w5" style="{{ T(368.1, 626.9 + 12.4 * loop.index0, 8.4, width=150) }};color:#001647">{{ line }}</div>{% endfor %}
+<a class="hit" href="{{ link.url }}" style="{{ box(231.4, 595.8 + dq, 137, 45.5) }}"></a><img class="qr-code" style="{{ box(231.4, 595.8 + dq, 45.5, 45.5) }}" src="{{ link.image }}">
+<div class="t r w7" style="{{ T(368.1, 606.7 + dq, 13.3, width=150) }};color:#001647">{{ bt('auction_platform' if link.label == 'electronic_platform_url' else 'auction_hall') }}</div>
+{% for line in bt('scan_to_reach').split('\n') %}<div class="t r w5" style="{{ T(368.1, 626.9 + dq + 12.4 * loop.index0, 8.4, width=150) }};color:#001647">{{ line }}</div>{% endfor %}
 {% endif %}

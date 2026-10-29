@@ -79,6 +79,8 @@ def draft_values(model, values):
                 normalized = normalized.strip()
                 if len(normalized) > 20000:
                     continue
+                if key == "website" and normalized and "://" not in normalized:
+                    normalized = "https://" + normalized  # typed as www.aayan.com
                 if key.endswith(("_url", "_link")) or key == "website":
                     url = urlsplit(normalized)
                     if not (

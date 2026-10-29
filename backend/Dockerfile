@@ -8,4 +8,7 @@ COPY . .
 RUN useradd --create-home app && mkdir -p /app/storage && chown -R app:app /app
 USER app
 EXPOSE 8000
-CMD ["sh","-c","alembic upgrade head && python -m app.bootstrap && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# Several worker processes (WEB_CONCURRENCY, 3 unless .env says otherwise):
+# rendering a preview or a booklet is CPU work that would otherwise hold up
+# every other request (opening the dashboard, a project, saving).
+CMD ["sh","-c","alembic upgrade head && python -m app.bootstrap && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY:-3}"]

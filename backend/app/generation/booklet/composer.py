@@ -42,7 +42,10 @@ RENTAL_FIELDS = (
     "next_due_date",
 )
 # Version of the stored page plan; raise it whenever compose() output changes shape.
-LAYOUT_VERSION = 14
+LAYOUT_VERSION = 15
+# Covers whose colour is navy (the others teal): the booklet's tables follow
+# the cover. Cover 6 is the top photograph over a navy band.
+NAVY_COVERS = (2, 4, 6)
 # Rows that the reference tables hold before continuing on another page.
 # Summary table (guide p.14). Column edges (right to left) come from the open
 # reference booklet; the title and table sit where the guide places them. Rows
@@ -119,36 +122,17 @@ INFO_REGION = {
         "left": {"digital": 258.71, "print": 258.71},
     },
 }
-# When the boundaries continue on a page of their own, the box takes their
-# place: in portrait it moves up beside the photograph (its tab where the
-# boundaries tab stood), in landscape it runs across to the page margin (the
-# links move up into the column the boundaries left).
-INFO_SEPARATE = {
-    "portrait": {
-        "top": 398.76,
-        "bottom": 757.68,
-        "right": 564.9,
-        "left": 350.0,
-        "tab": -228.8,
-    },
-    "landscape": {
-        "top": 577.59,
-        "bottom": 750.62,
-        "right": 563.04,
-        "left": 34.3,
-        "tab": 0.0,
-    },
-}
 INFO_PAD = 8.0
 INFO_SIZE, INFO_LINE = 10.0, 1.4
 
 
-def info_region(layout, edition, separate=False):
+def info_region(layout, edition):
     """The box, and the text region inside it: right edge, width, top of its
-    first line box, the lines it holds at the reference size, and how far its
-    tab moved (when the boundaries continue on their own page)."""
-    box = INFO_SEPARATE[layout] if separate else INFO_REGION[layout]
-    left = box["left"] if separate else box["left"].get(edition, box["left"]["print"])
+    first line box and the lines it holds at the reference size. The box keeps
+    its place when the boundaries continue on a page of their own: only the
+    boundaries and lengths leave the page, nothing else moves."""
+    box = INFO_REGION[layout]
+    left = box["left"].get(edition, box["left"]["print"])
     line = INFO_SIZE * INFO_LINE
     top = box["top"] + INFO_PAD - (line - INFO_SIZE) / 2
     return {
@@ -157,7 +141,7 @@ def info_region(layout, edition, separate=False):
         "width": round(box["right"] - left - 2 * INFO_PAD, 2),
         "top": round(top, 2),
         "lines": int((box["bottom"] - INFO_PAD + (line - INFO_SIZE) / 2 - top) // line),
-        "tab": box.get("tab", 0.0) if separate else 0.0,
+        "tab": 0.0,
     }
 
 
@@ -189,7 +173,22 @@ ANNOUNCEMENT = (19, 373, 3)
 ANNOUNCEMENT_LINE = 29.0
 ANNOUNCEMENT_LINES = 6
 ANNOUNCEMENT_MIN = 13.0
-BOUNDARY_PAGE = (15, 444, 4)  # the fifth line carries the length
+# The boundaries page (guide p.16): each side's text in 14 pt, from the box's
+# right (538) to 14 pt inside its left line (25.9), above its cut corner; four
+# lines, the fifth carries the length. BOUNDARY_LIMIT characters always fit.
+BOUNDARY_PAGE = (14, 498, 4)
+
+
+@lru_cache(maxsize=1)
+def boundary_limit():
+    """Characters a side's description may have: what its box on the
+    boundaries page holds (measured on boundary-like text, with room to spare),
+    so a description never continues in a further box."""
+    sample = "شارع عرض 15 م ثم قطعة رقم 54 بطول 40 م " * 40
+    length, _ = fit_length(sample, *BOUNDARY_PAGE)
+    return int(length * 0.9)
+
+
 # Width in points beside each direction label on the property page.
 BOUNDARY_WIDTH = {"landscape": 100, "portrait": 130}
 # Boundaries beside their labels: one line each at 9.6 pt, set smaller down to
@@ -775,15 +774,58 @@ def boundaries_need_page(boundaries, layout="landscape"):
     return boundary_fit(boundaries, layout) is None
 
 
+# A clause of the announcement starts at a word such as «وبإشراف» or «وبقرار»
+# (and after a comma): lines break there, never inside a clause, as the notes
+# set the text: «تعلن ... بالمزاد العلني / وبإشراف من مركز ... "إنفاذ" /
+# وبقرار محكمة التنفيذ وبحكم محكمة الأحوال الشخصية».
+CLAUSE = re.compile(r"(?<=[،,؛;])\s+|\s+(?=وب)")
+# The size steps down from the guide's 19 pt, no lower than this, so that
+# every clause stands whole on its line.
+ANNOUNCEMENT_CLAUSE_MIN = 14.0
+
+
+def clause_lines(text, size, width, name="RuaqArabic-Light"):
+    """The text set clause by clause, as many clauses to a line as fit; None
+    when a clause is wider than a line at this size."""
+    lines = []
+    for paragraph in text.split("\n"):
+        current = ""
+        for clause in CLAUSE.split(paragraph.strip()):
+            if text_width(clause, size, name) > width:
+                return None
+            candidate = f"{current} {clause}" if current else clause
+            if current and text_width(candidate, size, name) > width:
+                lines.append(current)
+                current = clause
+            else:
+                current = candidate
+        lines.append(current)
+    return lines
+
+
 def announcement_fit(text):
     """The announcement as the lines it prints on the auction page.
 
-    Returns (size, line height, lines, rest): the reference setting while the
-    text fits six lines, smaller (down to 13 pt) to keep a longer one in the
-    same space, and whatever still does not fit as the rest for a later page.
+    Returns (size, line height, lines, rest). Its lines break between clauses
+    (CLAUSE): in the fewest lines, at the largest size from the guide's down to
+    ANNOUNCEMENT_CLAUSE_MIN that sets them within six; otherwise word by word at the
+    reference setting, smaller (down to 13 pt) to keep a longer text in the
+    same space, whatever still does not fit being the rest for a later page.
     """
     size, width, _ = ANNOUNCEMENT
     space = ANNOUNCEMENT_LINES * ANNOUNCEMENT_LINE
+    if text:
+        # The fewest lines, at the largest size that sets them.
+        best, step = None, size
+        while step >= ANNOUNCEMENT_CLAUSE_MIN:
+            height = round(ANNOUNCEMENT_LINE * step / ANNOUNCEMENT[0], 2)
+            lines = clause_lines(text, step, width)
+            if lines is not None and len(lines) * height <= space + 0.01:
+                if best is None or len(lines) < len(best[2]):
+                    best = (step, height, lines, "")
+            step = round(step - 0.5, 2)
+        if best:
+            return best
     while True:
         height = round(ANNOUNCEMENT_LINE * size / ANNOUNCEMENT[0], 2)
         rows = wrap_lines(text, size, width, "RuaqArabic-Light") if text else []
@@ -894,6 +936,14 @@ def fill_box(entries, size, width, capacity):
             if first.strip():
                 shown.append({"text": first})
                 rest = [{"text": remainder}] + entries[index + 1 :]
+        elif set(entry) == {"number", "text"} and need > capacity and free > 0:
+            # A numbered point longer than the whole region is split too: its
+            # number stays with its first part, the rest continues as text on
+            # the next page. (A shorter one moves on whole.)
+            first, remainder = split_text(text, size, width - indent, free)
+            if first.strip():
+                shown.append({**entry, "text": first})
+                rest = [{"text": remainder}] + entries[index + 1 :]
         elif shown and "heading" in shown[-1]:
             rest = [shown.pop()] + rest  # never leave a heading without its items
         if not shown:  # a single entry larger than the region still has to move on
@@ -991,6 +1041,37 @@ def description_fit(text, layout):
     }
 
 
+def schedule(auction, items):
+    """When an auction held over several days (electronic or hybrid) starts
+    and ends, as the auction page sets it: {"start": (day, time), "end": (day,
+    first time, last time)}. It ends on its last day from the first property's
+    closing to the last one's (or the auction's end time, when later); with no
+    closing times, at its end time. None for an in-person auction."""
+    if auction.get("auction_type") not in ("electronic", "hybrid"):
+        return None
+    from .formatting import as_time
+
+    start = auction.get("auction_start_date")
+    end = auction.get("auction_end_date") or start
+    first = as_time(auction.get("first_close_time"))
+    last = as_time(auction.get("end_time"))
+    if first:
+        times = [
+            as_time(closing(auction, item.get("property_data") or {}, n)[1])
+            for n, item in enumerate(items)
+        ]
+        times = [t for t in times if t] + ([last] if last else [])
+        last = max(times) if times else first
+    return {
+        "start": [start, auction.get("start_time")],
+        "end": [
+            end,
+            first.strftime("%H:%M") if first else None,
+            last.strftime("%H:%M") if last else None,
+        ],
+    }
+
+
 def compose(project, items):
     from .boundaries import deed_pages, deeds_differ, sides_layout
     from .facts import property_facts
@@ -1011,7 +1092,7 @@ def compose(project, items):
         profile_page("introduction", supervisor.get("text")),
         profile_page("agent", agent.get("description")),
     ]
-    auction_page = {"kind": "auction"}
+    auction_page = {"kind": "auction", "schedule": schedule(auction, items)}
     pages.append(auction_page)
     announcement = "\n".join(
         t.strip()
@@ -1074,7 +1155,7 @@ def compose(project, items):
         # Guide p.17 and the notes (p.12): the features have a page of their
         # own, never the additional-information box.
         features = features_of(prop) if prop.get("include_features_page", True) else []
-        region = info_region(layout, edition, separate_boundaries)
+        region = info_region(layout, edition)
         shown, rest, info_size = fit_box(
             info_entries(item, include_info, with_features=False),
             INFO_SIZE,
@@ -1234,7 +1315,7 @@ def compose(project, items):
     pages.append({"kind": "contact"})
     return {
         "layout_version": LAYOUT_VERSION,
-        "theme": "navy" if cover.display_order in (2, 4) else "teal",
+        "theme": "navy" if cover.display_order in NAVY_COVERS else "teal",
         "pages": pages,
         "cover_id": cover.id,
         "auction_qrs": [

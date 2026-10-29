@@ -177,6 +177,7 @@ Settings are read from the root `.env` file; environment variables take preceden
 | `MAX_UPLOAD_MB` | Per-file upload limit (default 10) |
 | `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` | Optional OpenAI-compatible provider for narrative drafts; generation works without it |
 | `API_INTERNAL_URL` | API address used by the Next.js rewrite (build time) |
+| `WEB_CONCURRENCY` | API worker processes in the container (default 3; each needs about 200 MB) |
 
 Never commit `.env`.
 

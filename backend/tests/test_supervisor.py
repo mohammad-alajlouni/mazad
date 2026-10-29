@@ -205,7 +205,7 @@ def test_old_outputs_without_supervisor_details_show_infath():
 def test_the_terms_are_the_guides_and_may_be_changed_for_an_auction(admin):
     from app.generation.booklet.terms import TERMS
 
-    p = create_auction(admin)
+    p = create_auction(admin)  # hybrid: the hybrid terms
     add(admin, p, property_input())
     rules = admin.get(f"/api/projects/{p}").json()["workflow"]["rules"]
     assert rules["terms_default"] == TERMS
@@ -239,4 +239,41 @@ def test_longer_terms_are_set_smaller_on_their_one_page():
     page = terms_page({"terms_text": TERMS + "\n" + TERMS.split("\n")[3]})
     assert page["size"] < SIZE
     assert page["terms"][-1]["lines"][-1]["base"] <= LAST
-    assert terms_page({})["size"] == SIZE
+    # The in-person and electronic terms keep the guide's size; the hybrid
+    # terms (ten) are set a little smaller, inside the frame.
+    for kind in ("physical", "electronic"):
+        assert terms_page({"auction_type": kind})["size"] == SIZE
+    hybrid = terms_page({"auction_type": "hybrid"})
+    assert 11.0 <= hybrid["size"] < SIZE
+    assert hybrid["terms"][-1]["lines"][-1]["base"] <= LAST
+
+
+def test_each_kind_of_auction_has_its_own_terms(admin):
+    """Notes: the electronic auction's terms are not the hybrid's; each kind
+    has its own, the restored ones being its kind's."""
+    from app.generation.booklet.terms import GUIDE_TEXTS, guide_terms, terms_page
+
+    assert len({guide_terms(k) for k in ("physical", "electronic", "hybrid")}) == 3
+    electronic = guide_terms("electronic").split("\n")
+    assert electronic[0] == "التسجيل في منصة المزاد الإلكتروني."
+    assert not any("حضوريًا" in t or "شيك" in t for t in electronic)
+    physical = guide_terms("physical").split("\n")
+    assert physical[0].startswith("سداد مبلغ المشاركة") and "فاتورة سداد" in physical[0]
+    assert not any("منصة المزاد" in t for t in physical)
+    for kind in GUIDE_TEXTS:
+        assert "تم الإعلان بناءً على البيانات" in guide_terms(kind)
+        page = terms_page({"auction_type": kind})
+        assert len(page["terms"]) == len(guide_terms(kind).split("\n"))
+    p = create_auction(admin, "electronic")
+    add(admin, p, property_input())
+    rules = admin.get(f"/api/projects/{p}").json()["workflow"]["rules"]
+    assert rules["terms_default"] == guide_terms("electronic")
+    assert rules["terms_defaults"] == GUIDE_TEXTS
+    html = preview(admin, p, "terms")
+    assert "التسجيل في منصة المزاد الإلكتروني" in html and "حضوريًا" not in html
+    # Another kind's guide terms saved here also follow the guide.
+    project = admin.get(f"/api/projects/{p}").json()["project"]
+    project["auction"]["terms_text"] = guide_terms("physical")
+    assert admin.put(f"/api/projects/{p}", json=project).status_code == 200
+    saved = admin.get(f"/api/projects/{p}").json()["project"]["auction"]
+    assert saved["terms_text"] == ""

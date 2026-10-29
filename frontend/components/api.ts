@@ -107,6 +107,7 @@ export type Detail = {
       // The frame each uploaded photograph is printed in ([width, height]).
       // The guide's terms of entry (an auction may change them).
       terms_default?: string;
+      terms_defaults?: Record<string, string>;
       image_frames?: {
         main: { landscape: [number, number]; portrait: [number, number] };
         additional: [number, number];

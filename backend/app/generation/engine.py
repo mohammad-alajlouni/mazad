@@ -74,6 +74,17 @@ def nums(value):
 env.filters["nums"] = nums
 
 
+def site(value):
+    """A website as the booklet prints it: www.aayan.com, without its protocol
+    or a trailing slash (the link itself keeps https://)."""
+    import re
+
+    return re.sub(r"^https?://", "", str(value or "").strip()).rstrip("/")
+
+
+env.filters["site"] = site
+
+
 def record_dict(record):
     return {
         c.name: str(getattr(record, c.name))
@@ -412,6 +423,94 @@ def document_messages(language):
     return json.loads((TEMPLATE_ROOT / "messages" / f"{locale}.json").read_text())
 
 
+# A stored output keeps its photographs and logos as references to the files
+# they are stored in, not as data URIs: a booklet repeats its properties'
+# photographs on many pages, and kept as text they made each output hundreds
+# of megabytes, read again on every save and every list of outputs. render()
+# brings the pictures back before rendering.
+STORED = "stored-image:"
+
+
+def stored_uri(key, storage=None):
+    """A stored file as the data URI the snapshot gives it."""
+    data = (storage or LocalStorage()).read(key)
+    kind = "png" if key.endswith(".png") else "jpeg"
+    return f"data:image/{kind};base64," + base64.b64encode(data).decode()
+
+
+def pack(db, project_id, content):
+    """Content to store: every picture that is one of the project's stored
+    files (or Infath's logo) replaced by a reference to it."""
+    import hashlib
+
+    from ..models import SystemSetting
+
+    storage = LocalStorage()
+    keys = list(
+        db.scalars(
+            select(ProjectImage.key).where(ProjectImage.project_id == project_id)
+        )
+    )
+    infath = db.get(SystemSetting, "infath")
+    if infath and (infath.data or {}).get("logo_key"):
+        keys.append(infath.data["logo_key"])
+    known = {}
+    for key in keys:
+        try:
+            uri = stored_uri(key, storage)
+        except (OSError, HTTPException):
+            continue
+        known[(len(uri), hashlib.sha1(uri.encode()).digest())] = key
+    lengths = {length for length, _ in known}
+
+    def walk(value):
+        if isinstance(value, str):
+            if len(value) in lengths and value.startswith("data:image/"):
+                key = known.get((len(value), hashlib.sha1(value.encode()).digest()))
+                return STORED + key if key else value
+            return value
+        if isinstance(value, dict):
+            return {k: walk(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [walk(v) for v in value]
+        return value
+
+    return {**walk(content), "_packed": 1}
+
+
+def unpack(content):
+    """Stored content with its pictures back as data URIs, for rendering."""
+    storage, cache = LocalStorage(), {}
+
+    def walk(value):
+        if isinstance(value, str):
+            if not value.startswith(STORED):
+                return value
+            key = value[len(STORED) :]
+            if key not in cache:
+                try:
+                    cache[key] = stored_uri(key, storage)
+                except (OSError, HTTPException):
+                    cache[key] = ""
+            return cache[key]
+        if isinstance(value, dict):
+            return {k: walk(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [walk(v) for v in value]
+        return value
+
+    return walk(content)
+
+
+def compact(db, output):
+    """Store an output written before pictures were kept by reference in the
+    compact form (once). True when it changed."""
+    if output.content.get("_packed"):
+        return False
+    output.content = pack(db, output.project_id, output.content)
+    return True
+
+
 def render(db, output):
     storage = LocalStorage()
     font_data = base64.b64encode(
@@ -426,10 +525,12 @@ def render(db, output):
         raise ValueError("Invalid template path")
     from .booklet.composer import current_booklet
 
-    content, upgraded = current_booklet(dict(output.content))
+    content, upgraded = current_booklet(unpack(dict(output.content)))
     if upgraded:
         # Keep the stored plan (and the page list shown to users) consistent.
-        output.content = {**output.content, "booklet": content["booklet"]}
+        output.content = pack(
+            db, output.project_id, {**output.content, "booklet": content["booklet"]}
+        )
     if output.output_type == "banners" and content["project"].get("auction"):
         template_file = "infath/banners.html"
     if content.get("banner") or content.get("social"):

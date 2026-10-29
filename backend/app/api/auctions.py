@@ -152,3 +152,61 @@ def booklet_preview(
 ):
     response.headers["Cache-Control"] = "no-store, private"
     return preview(db, get_project(db, id), body)
+
+
+# Names the cover can hold: a short phrase after the fixed word «مزاد».
+NAME_WORDS, NAME_LENGTH = 4, 30
+
+
+def clean_names(text, prefix="مزاد"):
+    """The suggested names from the AI's reply: one per line, without numbers,
+    quotes, the cover's own «مزاد», or anything not a short name."""
+    import re
+
+    names = []
+    for line in str(text or "").splitlines():
+        name = re.sub(r"^[\s\-*•\d.)٠-٩]+", "", line).strip(" \"'«»“”.،,:")
+        if name.startswith(prefix + " "):
+            name = name[len(prefix) :].strip()
+        if (
+            name
+            and len(name) <= NAME_LENGTH
+            and len(name.split()) <= NAME_WORDS
+            and re.fullmatch(r"[\w\s\-]+", name)
+            and name not in names
+        ):
+            names.append(name)
+    return names[:6]
+
+
+@router.post("/projects/{id}/name-suggestions")
+async def name_suggestions(id: str, db=Depends(get_db)):
+    """Names for the auction suggested by the AI from its properties (cities,
+    districts, kinds); an empty list when the AI is unavailable (the form then
+    suggests its own)."""
+    from ..services.ai import AIService
+
+    p = get_project(db, id)
+    auction = p.auction or {}
+    language = auction.get("document_language") or "ar"
+    facts = [
+        {
+            k: (i.property_data or {}).get(k)
+            for k in ("city", "district", "property_type", "usage")
+            if (i.property_data or {}).get(k)
+        }
+        for i in db.scalars(select(ProjectItem).where(ProjectItem.project_id == id))
+    ][:30]
+    result = await AIService().generate(
+        "list of six distinct, short and attractive names for a Saudi real-estate "
+        "auction, inspired by the properties' cities, districts and kinds; one "
+        "name per line, two or three words each, no numbering, no quotes, and "
+        "without the word «مزاد» (the cover adds it)",
+        {
+            "properties": facts,
+            "auction_type": auction.get("auction_type"),
+            "current_name": auction.get("auction_name") or "",
+        },
+        output_language=language,
+    )
+    return {"status": result["status"], "names": clean_names(result["text"])}

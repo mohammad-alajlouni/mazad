@@ -402,6 +402,11 @@ def infath_logo(colour):
 LOGO_COLOURS = {"introduction": "#001547", "cover": "#ffffff"}
 
 
+# The right edge of the auction logo on the photograph covers (cover.html,
+# logo_right): Infath's logo above it is aligned to it.
+COVER_LOGO_RIGHT = {"cover-1": 566.3, "cover-6": 566.3}
+
+
 def supervisor_logo(supervisor, place, box=None):
     """The supervising body's logo where the guide puts Infath's.
 
@@ -418,6 +423,10 @@ def supervisor_logo(supervisor, place, box=None):
         return ""
     x, y, w, h = box
     cover = place.startswith("cover-")
+    if place in COVER_LOGO_RIGHT:
+        # On the photograph covers Infath's logo stands on the auction logo's
+        # line: their right edges meet.
+        x = COVER_LOGO_RIGHT[place] - w
     src = (supervisor or {}).get("logo")
     if not src and (supervisor or {}).get("kind") == "other":
         return ""  # another body's logo stands here once it is uploaded

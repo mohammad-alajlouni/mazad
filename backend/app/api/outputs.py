@@ -8,7 +8,7 @@ from ..auth import current_user
 from ..banner_schemas import BannerConfig
 from ..db import get_db
 from ..generation.booklet.validation import validate_project
-from ..generation.engine import build_content, render
+from ..generation.engine import build_content, pack, render
 from ..generation.generators import (
     ALL_GENERATORS,
     FORM_GENERATORS,
@@ -26,7 +26,14 @@ from ..models import (
 )
 from ..services.ai import AIService
 from ..services.storage import LocalStorage
-from .common import audit, discard_files, get_output, get_project, output_view
+from .common import (
+    audit,
+    discard_files,
+    get_output,
+    get_project,
+    output_view,
+    output_views,
+)
 
 router = APIRouter(dependencies=[Depends(current_user)], tags=["outputs"])
 
@@ -147,7 +154,8 @@ async def generate(id: str, body: GenerationInput, db=Depends(get_db)):
         o = GeneratedOutput(
             project_id=id,
             output_type=kind,
-            content=content,
+            # Pictures kept by reference (engine.pack); render() restores them.
+            content=pack(db, id, content),
             template_id=template.id,
             revision=p.revision,
         )
@@ -162,15 +170,15 @@ async def generate(id: str, body: GenerationInput, db=Depends(get_db)):
 
 @router.get("/outputs")
 def outputs(db=Depends(get_db)):
-    return [
-        output_view(db, o)
-        for o in db.scalars(
+    return output_views(
+        db,
+        db.scalars(
             select(GeneratedOutput)
             .join(Project, Project.id == GeneratedOutput.project_id)
             .where(Project.owner_id == db.info.get("user_id"))
             .order_by(GeneratedOutput.created_at.desc())
-        )
-    ]
+        ).all(),
+    )
 
 
 @router.get("/outputs/{id}")
@@ -297,7 +305,9 @@ def regenerate(id: str, db=Depends(get_db)):
         )
         db.add(o)
         db.flush()
-    o.content = build_content(db, p, o.output_type, output_language, size)
+    o.content = pack(
+        db, p.id, build_content(db, p, o.output_type, output_language, size)
+    )
     o.status = "DRAFT"
     o.revision = p.revision
     o.approved_at = None

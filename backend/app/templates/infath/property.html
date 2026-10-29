@@ -75,8 +75,8 @@
 <div class="t l w5 value" style="{{ T(item.value, item.base, item.size, 'l', width=item.width) }}">{{ item.text|nums }}</div>
 {% endfor %}
 {% endif %}
-{#- (Boundaries on a page of their own leave nothing here: the information
-    box takes their place; see composer.info_region.) -#}
+{#- (Boundaries on a page of their own leave only their place empty: their
+    tabs and rows go, the information box and the links stay where they are.) -#}
 {#- Additional information box (composer.info_region): features, notes and
     free text, the same margin from the box's top and sides, set smaller when
     there is more of it. The portrait box is drawn here: wider in the digital
@@ -91,9 +91,8 @@
 <div class="t" style="right:{{ 595.276 - R.right }}pt;top:{{ R.top + (14 - flh) / 2 }}pt;width:{{ R.width }}pt" data-fit="property-extra" data-max-height="{{ 14 * R.lines + 2 }}pt">
 {{ info_entries(page.info, fs, flh) }}</div>
 {#- Links: QR codes in the print edition, buttons in the digital edition. -#}
-{% set up = 0 if S or portrait else 450.0 - G.buttons[1] %}
 {% if page.edition == 'digital' %}
-{% set x0, y0, step, scale = G.buttons %}{% set y0 = y0 + up %}
+{% set x0, y0, step, scale = G.buttons %}
 {% for link in item.qr_links[:4] %}{% set top = y0 + step * loop.index0 %}
 <a class="hit" href="{{ link.url }}" style="{{ box(x0, top, 98.88 * scale, 17.49) }}"></a>{{ plate(x0, top, 98.88 * scale, 17.49) }}
 <img class="icon" style="{{ box(x0 + 98.88 * scale + 6.2, top + 4.4, 5.04, 6.1) }}" src="{{ shape_in('M5.04 0L0 3.05L5.04 6.1Z', '#cdebf1') }}">
@@ -101,7 +100,7 @@
 {% endfor %}
 {% else %}
 {#- Two columns of QR codes, where the guide puts them (p.16 and p.20). -#}
-{% set y0, step = G.qr_rows %}{% set y0 = y0 + (0 if S or portrait else 450.0 - y0) %}
+{% set y0, step = G.qr_rows %}
 {% for link in item.qr_links[:4] %}{% set col = G.qr[loop.index0 % 2] %}{% set top = y0 + step * (loop.index0 // 2) %}
 <a class="hit" href="{{ link.url }}" style="{{ box(col[0] - 40.5, top, 81, 54) }}"></a>{{ plate(col[0] - 40.5, top, 81, 15) }}
 <img class="icon" style="{{ box(col[2], top + 4.1, 4.1, 4.9) }}" src="{{ shape_in('M4.1 0L0 2.45L4.1 4.9Z', '#cdebf1') }}">
