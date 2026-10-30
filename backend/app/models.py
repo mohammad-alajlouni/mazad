@@ -57,6 +57,11 @@ class Project(Record, Base):
     banner_config: Mapped[dict] = mapped_column(
         JSONType, default=dict, server_default="{}"
     )
+    # The selling agent's logo, larger or smaller than its place gives it, per
+    # kind of output: {"booklet": 0.8, "banner": 1.0, "social": 0.6}.
+    agent_logo_scales: Mapped[dict] = mapped_column(
+        JSONType, default=dict, server_default="{}"
+    )
     social_config: Mapped[dict] = mapped_column(
         JSONType, default=dict, server_default="{}"
     )

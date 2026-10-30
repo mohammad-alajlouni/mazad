@@ -197,14 +197,20 @@ def prepared_logo(src, white=False):
 AGENT_LOGO_SCALE = 1.5
 
 
-def agent_logo_fit(src, max_width, max_height, white=False, room=None):
-    """The selling agent's logo in its reference box, enlarged; room (points)
-    caps its width where the page sets something beside it, never below the
-    reference box."""
-    width = max_width * AGENT_LOGO_SCALE
+def agent_logo_fit(
+    src, max_width, max_height, white=False, room=None, scale=1.0, tallest=None
+):
+    """The selling agent's logo in its reference box, enlarged, then at the
+    author's scale; room (points) caps its width where the page sets something
+    beside it, never below the reference box at that scale, and tallest its
+    height where the page's drawing is near."""
+    width = max_width * AGENT_LOGO_SCALE * scale
+    height = max_height * AGENT_LOGO_SCALE * scale
     if room is not None:
-        width = max(max_width, min(width, room))
-    return logo_fit(src, width, max_height * AGENT_LOGO_SCALE, white)
+        width = max(max_width * min(scale, 1.0), min(width, room))
+    if tallest is not None:
+        height = min(height, tallest)
+    return logo_fit(src, width, height, white)
 
 
 def logo_fit(src, max_width, max_height, white=False):

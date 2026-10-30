@@ -1,4 +1,7 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Response
+from pydantic import BaseModel, ConfigDict, Field
 from ..auth import current_user
 from ..db import get_db
 from ..banner_schemas import BannerConfig
@@ -35,6 +38,39 @@ def banner_sizes(id: str, db=Depends(get_db)):
         item.id: size_for(item.property_data)
         for item in db.scalars(select(ProjectItem).where(ProjectItem.project_id == id))
     }
+
+
+LOGO_OUTPUTS = {
+    "booklet": "project_booklet",
+    "banner": "banners",
+    "social": "social_content",
+}
+
+
+class AgentLogoScale(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["booklet", "banner", "social"]
+    scale: float = Field(ge=0.4, le=1.5)
+
+
+@router.get("/projects/{id}/agent-logo-scales")
+def agent_logo_scales(id: str, db=Depends(get_db)):
+    """The agent's logo's size on each kind of output (1 when not set)."""
+    saved = get_project(db, id).agent_logo_scales or {}
+    return {kind: saved.get(kind, 1.0) for kind in LOGO_OUTPUTS}
+
+
+@router.put("/projects/{id}/agent-logo-scales")
+def set_agent_logo_scale(id: str, body: AgentLogoScale, db=Depends(get_db)):
+    """Set from the live preview, at once: that kind's outputs issue again."""
+    project = get_project(db, id, True)
+    project.agent_logo_scales = {
+        **(project.agent_logo_scales or {}),
+        body.kind: round(body.scale, 2),
+    }
+    invalidate(db, project, output_types={LOGO_OUTPUTS[body.kind]})
+    db.commit()
+    return {kind: project.agent_logo_scales.get(kind, 1.0) for kind in LOGO_OUTPUTS}
 
 
 @router.get("/projects/{id}/banner-review")

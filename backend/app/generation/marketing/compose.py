@@ -536,10 +536,14 @@ def page(name, size, value_of, images):
     if logo:
         from ..booklet.art import logo_fit
 
-        room = logo_room(name, logo["box"], [t["extent"] for t in out["texts"]])
+        scale = images.get("logo_scale", 1.0)
+        room = logo_room(
+            name, logo["box"], [t["extent"] for t in out["texts"]], scale=scale
+        )
         x, y, w, h = box(room)
         white = dark_behind(name, tuple(logo["box"]))
-        fit = logo_fit(images["logo"], w, h, white)
+        # Smaller within its room, centred there; larger, the room itself grew.
+        fit = logo_fit(images["logo"], w * min(scale, 1), h * min(scale, 1), white)
         out["logo"] = {
             "src": fit["src"],
             "box": [
@@ -615,12 +619,13 @@ def label_centre(name, box):
     return x0 - 5 + (ink[0] + ink[2]) / 2 / k if ink else (x0 + x1) / 2
 
 
-def logo_room(name, box, texts, gap=1.5):
+def logo_room(name, box, texts, gap=1.5, scale=1.0):
     """The guide's box for the selling agent's logo, grown to AGENT_LOGO_SCALE
     as far as the design leaves it free: it stops short of the guide's own
     drawing and of the values beside it, and is never smaller than the
     guide's box. On a board it stays centred under its label, growing alike
-    on both sides."""
+    on both sides. A scale above 1 (the author's) grows it further, as far as
+    the design leaves it free."""
     from PIL import ImageChops
 
     from ..booklet.art import AGENT_LOGO_SCALE
@@ -644,7 +649,8 @@ def logo_room(name, box, texts, gap=1.5):
         diff = ImageChops.difference(crop, crop.point(lambda _: background))
         return diff.point(lambda v: 255 if v > 40 else 0).getbbox() is None
 
-    grow = AGENT_LOGO_SCALE - 1
+    largest = AGENT_LOGO_SCALE * max(scale, 1.0)
+    grow = largest - 1
     step = 0.25
 
     def reach(edge):
@@ -665,8 +671,8 @@ def logo_room(name, box, texts, gap=1.5):
         return n
 
     left, right, top, bottom = (reach(e) for e in "lrtb")
-    width_ = min(w * AGENT_LOGO_SCALE, w + left + right)
-    height = min(h * AGENT_LOGO_SCALE, h + top + bottom)
+    width_ = min(w * largest, w + left + right)
+    height = min(h * largest, h + top + bottom)
     centre = label_centre(name, tuple(box)) if name.startswith("board-") else None
     if centre is None:
         # Centred on the guide's box where the room allows, shifted where not.
@@ -692,11 +698,14 @@ def logo_room(name, box, texts, gap=1.5):
     return room
 
 
+def logo_scale(project, kind):
+    """The author's scale for the agent's logo on this kind of output."""
+    return (project.get("agent_logo_scales") or {}).get(kind, 1.0)
+
+
 def banner_pages(project, items, config):
     """One board per property, in the size chosen, as the guide's p. 28-33."""
-    from ...services.banners import SIZES
-
-    from ...services.banners import court_from
+    from ...services.banners import SIZES, court_from
 
     a = project.get("auction") or {}
     # The court named on the line: the campaign's, else the auction's decision.
@@ -704,7 +713,11 @@ def banner_pages(project, items, config):
     name = board_template(config["size"], a.get("auction_type"))
     spec = SIZES[config["size"]]
     size = (spec["width_mm"] * 72 / 25.4, spec["height_mm"] * 72 / 25.4)
-    images = {"qr": a.get("booklet_url"), "logo": project.get("agent_logo")}
+    images = {
+        "qr": a.get("booklet_url"),
+        "logo": project.get("agent_logo"),
+        "logo_scale": logo_scale(project, "banner"),
+    }
     return [
         page(name, size, values(project, item, len(items), config), images)
         | {"item": item.get("title") or ""}
@@ -722,7 +735,10 @@ def social_pages(project, items, config, width_px, height_px):
     """The guide's post (p. 35-37): one announcement, or one per property."""
     name = post_template(config)
     size = (width_px * 0.75, height_px * 0.75)
-    base = {"logo": project.get("agent_logo")}
+    base = {
+        "logo": project.get("agent_logo"),
+        "logo_scale": logo_scale(project, "social"),
+    }
     if config["post_kind"] == "property" and config["format"] != "story":
         return [
             page(

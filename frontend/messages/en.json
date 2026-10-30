@@ -1564,5 +1564,13 @@
       "closing": "Closing",
       "closing_form": "Auction closing form"
     }
+  },
+  "agentLogoSize": {
+    "title": "Agent logo size",
+    "smaller": "Make the logo smaller",
+    "larger": "Make the logo larger",
+    "reset": "Back to the original size",
+    "failed": "The size could not be saved; try again.",
+    "help": "Saved at once, for this kind of output only; growth stops at the elements beside it. Issue again to apply it to the file."
   }
 }

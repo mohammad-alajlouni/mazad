@@ -2,6 +2,7 @@ import base64
 import json
 import unicodedata
 from decimal import Decimal
+from functools import partial
 from io import BytesIO
 from pathlib import Path
 
@@ -706,7 +707,17 @@ def render_html(
         rentals_column=rentals_column,
         white_logo=white_logo,
         logo_fit=logo_fit,
-        agent_logo_fit=agent_logo_fit,
+        # At the author's scale in a booklet (a report's logo has its own box).
+        agent_logo_fit=(
+            partial(
+                agent_logo_fit,
+                scale=(content["project"].get("agent_logo_scales") or {}).get(
+                    "booklet", 1.0
+                ),
+            )
+            if content.get("booklet")
+            else agent_logo_fit
+        ),
         cover_photo_window=COVER_PHOTO.get,
         agent_logo_box=AGENT_LOGO,
         supervisor_logo=supervisor_logo,

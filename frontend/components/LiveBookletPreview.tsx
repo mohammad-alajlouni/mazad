@@ -1,6 +1,7 @@
 "use client";
 import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import AgentLogoSize from "./AgentLogoSize";
 import { Eye, X, ZoomIn, ZoomOut } from "lucide-react";
 import { api, Detail, send } from "./api";
 import { readProperty } from "./AuctionWorkspace";
@@ -626,6 +627,13 @@ export default function LiveBookletPreview({
         )}
         {preview && preview.pages.some((_, i) => locked(i)) && (
           <p className="muted live-preview-locked">{t("lockedHelp")}</p>
+        )}
+        {!formsMode && !!detail.selling_agent?.logo_image_id && (
+          <AgentLogoSize
+            projectId={detail.project.id}
+            kind="booklet"
+            onChange={() => setRetry((v) => v + 1)}
+          />
         )}
         <div className="live-preview-zoom">
           <button
