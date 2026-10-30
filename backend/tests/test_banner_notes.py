@@ -14,6 +14,7 @@ from app.generation.marketing.compose import (
     layout,
     marketing_content,
     label_centre,
+    phone_room,
     supervision_left,
 )
 from app.services.banners import SIZES, court_from, size_for
@@ -183,3 +184,42 @@ def test_the_agents_logo_stands_centred_under_its_label():
                 x, _, width, _ = page["logo"]["box"]
                 centre = label_centre(page["name"], tuple(slot["box"]))
                 assert abs((x + width / 2) / k - centre) < 0.05, (kind, size, name)
+
+
+@pytest.mark.parametrize("kind", ["physical", "electronic", "hybrid"])
+@pytest.mark.parametrize("size", ["10x3", "15x5"])
+def test_a_ten_digit_number_keeps_clear_of_the_panoramic_design(kind, size):
+    """The number ran over the calendar icon (electronic) and the divider (in
+    the hall): its digits close up and keep the guide's size; the guide's nine
+    digits stay as the guide sets them."""
+
+    def phone(number):
+        content = {
+            "project": {
+                "auction": {
+                    "auction_name": "مزاد طويق",
+                    "auction_type": kind,
+                    "auction_date": "2026-10-10",
+                    "auction_start_date": "2026-10-10",
+                    "start_time": "16:00:00",
+                    "auction_contact_number": number,
+                },
+                "selling_agent": {},
+                "agent_logo": "",
+            },
+            "items": [{**item_with(property_type="فيلا"), "title": "x", "id": "i"}],
+            "banner": {**SIZES[size], "size": size, "court_name": ""},
+        }
+        page = marketing_content(content)["pages"][0]
+        slot = next(s for s in layout()[page["name"]]["slots"] if s["key"] == "phone")
+        k = page["size"][0] / page["view"][0]
+        return next(t for t in page["texts"] if t["key"] == "phone"), slot, k, page
+
+    text, slot, k, page = phone("0555405658")
+    assert text["fits"]
+    assert text["size"] == pytest.approx(slot["size"] * k, abs=0.01)
+    assert text["spacing"] < slot["spacing"] * k
+    assert text["extent"][0] >= slot["x"] - phone_room(page["name"]) - 0.5
+    short, slot, k, _ = phone("920011513")
+    assert short["size"] == pytest.approx(slot["size"] * k, abs=0.01)
+    assert short["spacing"] == pytest.approx(slot["spacing"] * k, abs=0.01)

@@ -343,6 +343,44 @@ def supervision_slot(name, slot):
     }
 
 
+# A contact number longer than the guide's nine digits, on a board where it
+# ends against the design's drawing (the panoramic boards): its digits keep
+# the guide's size and close up, down to this share of the guide's spacing;
+# only then are they set smaller. It stops this far (guide points) short.
+PHONE_GAP = 4.0
+PHONE_TIGHTEST = 0.4
+
+
+@lru_cache(maxsize=None)
+def phone_room(name):
+    """The room of a right-aligned phone: from its right edge to the first
+    ink of the design on its line (an icon, a divider)."""
+    slot = next(s for s in layout()[name]["slots"] if s["key"] == "phone")
+    image, k = artwork(name)
+    top = int((slot["bases"][0] - slot["size"] * 0.72) * k)
+    bottom = int(slot["bases"][0] * k)
+    column = int(slot["x"] * k)
+    while column > 0:
+        strip = image.crop((column, top, column + 1, bottom))
+        if strip.point(lambda v: 255 if v < 225 else 0).getbbox():
+            break
+        column -= 1
+    return slot["x"] - column / k - PHONE_GAP
+
+
+def phone_slot(name, slot, value):
+    """The phone's slot as a panoramic board sets this number."""
+    room = phone_room(name)
+    slot = {**slot, "maxw": round(room, 3)}
+    excess = width(value, slot) - slot["maxw"] + 0.01  # (past its rounding)
+    if excess > 0.01 and len(value) > 1:
+        slot["spacing"] = max(
+            slot["spacing"] * PHONE_TIGHTEST,
+            slot["spacing"] - excess / (len(value) - 1),
+        )
+    return slot
+
+
 def text_block(name, slot, value, geometry):
     k, ky, ox, oy = geometry
     lines, scale, fits = fitted(value, slot)
@@ -468,6 +506,8 @@ def page(name, size, value_of, images):
             value = value_of.get(key, "")
             if value and key == "supervision" and name.startswith("board-"):
                 slot = supervision_slot(name, slot)
+            if value and key == "phone" and name.startswith("board-panoramic"):
+                slot = phone_slot(name, slot, value)
             if value:
                 out["texts"].append(text_block(name, slot, value, geometry))
         elif kind == "qr" and images.get("qr"):
