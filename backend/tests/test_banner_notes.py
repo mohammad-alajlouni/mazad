@@ -1,7 +1,11 @@
 """The banner notes (الملاحظات الأهم للبنرات): each note and what answers it."""
 
+import base64
+from io import BytesIO
+
 import pymupdf
 import pytest
+from PIL import Image
 from test_auctions import add, pdf, property_input
 from test_banners import campaign
 from test_booklet_reference import item_with
@@ -9,7 +13,8 @@ from test_booklet_reference import item_with
 from app.generation.marketing.compose import (
     layout,
     marketing_content,
-    supervision_room,
+    label_centre,
+    supervision_left,
 )
 from app.services.banners import SIZES, court_from, size_for
 
@@ -91,9 +96,9 @@ def test_boards_are_issued_each_in_its_propertys_size(admin):
 
 def test_the_supervision_line_never_reaches_the_box_beside_it():
     """Notes: «محكمة التنفيذ» ran into the property type's box: the line keeps
-    clear of it (or of the panel's edge), on two lines where it needs them."""
+    clear of it (or of the panel's edge), and on one line whatever its length."""
     for name in [n for n in layout() if n.startswith("board-")]:
-        left, _ = supervision_room(name)
+        left = supervision_left(name)
         slot = next(s for s in layout()[name]["slots"] if s["key"] == "supervision")
         assert left >= slot["x"] - slot["maxw"]
     for kind in ("physical", "electronic", "hybrid"):
@@ -118,11 +123,13 @@ def test_the_supervision_line_never_reaches_the_box_beside_it():
             page = marketing_content(content)["pages"][0]
             line = next(t for t in page["texts"] if t["key"] == "supervision")
             assert line["fits"], (kind, size)
+            # One line, always: two would be refused.
+            assert len(line["lines"]) == 1, (kind, size)
             # Filled from the auction's court decision, its «و» once.
             text = " ".join(x["text"] for x in line["lines"])
             assert "وبقرار محكمة التنفيذ" in text and "ووبقرار" not in text
             k = page["size"][0] / page["view"][0]
-            left, _ = supervision_room(page["name"])
+            left = supervision_left(page["name"])
             assert line["extent"][0] >= left - 0.5, (kind, size)
             assert line["x"] <= page["size"][0]
             assert k > 0
@@ -136,3 +143,43 @@ def test_the_court_is_filled_from_the_auction():
         "بقرار محكمة جدة"
     )
     assert court_from({}) == ""
+
+
+def test_the_agents_logo_stands_centred_under_its_label():
+    """Notes: the logo went left of «وكيل البيع القضائي» when the auction's name
+    left it no room on the right: it stays centred under the label, whatever
+    the name's length."""
+    logo = BytesIO()
+    Image.new("RGB", (900, 300), (20, 20, 20)).save(logo, "PNG")
+    uri = "data:image/png;base64," + base64.b64encode(logo.getvalue()).decode()
+    for kind in ("physical", "electronic"):
+        for size in SIZES:
+            for name in ("مزاد طويق", "مزاد أعيان الرياض", "مزاد أعيان الرياض الكبرى"):
+                project = {
+                    "auction": {
+                        "auction_name": name,
+                        "auction_type": kind,
+                        "auction_date": "2026-10-10",
+                        "auction_start_date": "2026-10-10",
+                        "start_time": "16:00:00",
+                    },
+                    "selling_agent": {},
+                    "agent_logo": uri,
+                }
+                content = {
+                    "project": project,
+                    "items": [
+                        {**item_with(property_type="فيلا"), "title": "x", "id": "i"}
+                    ],
+                    "banner": {**SIZES[size], "size": size, "court_name": ""},
+                }
+                page = marketing_content(content)["pages"][0]
+                slot = next(
+                    s
+                    for s in layout()[page["name"]]["slots"]
+                    if s["key"] == "agent_logo"
+                )
+                k = page["size"][0] / page["view"][0]
+                x, _, width, _ = page["logo"]["box"]
+                centre = label_centre(page["name"], tuple(slot["box"]))
+                assert abs((x + width / 2) / k - centre) < 0.05, (kind, size, name)

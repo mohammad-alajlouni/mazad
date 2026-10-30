@@ -794,7 +794,7 @@
     },
     "tooLong": "{field}: shorten to {limit} characters to fit the board.",
     "auctionHelp": "Use the saved auction details, including the legal announcement, booklet link, contact number and schedule.",
-    "courtHelp": "Filled from the auction’s court decision and editable here; it shows on the board’s supervision line as in the guide: «under the supervision of Infath, and …». A long line takes two lines rather than leave its place.",
+    "courtHelp": "Filled from the auction’s court decision and editable here; it shows on the board’s supervision line as in the guide: «under the supervision of Infath, and …». The line always stays on one line, set smaller as it grows.",
     "sizesHelp": "Each size is issued as its own file, in one step.",
     "preview": "Preview",
     "previewing": "In preview",

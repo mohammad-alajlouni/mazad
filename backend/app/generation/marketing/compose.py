@@ -290,23 +290,23 @@ def fitted(text, slot):
         lines = wrap(text, slot, scale, count) if count > 1 else [text]
         if lines and (count > 1 or width(text, slot, scale) <= slot["maxw"]):
             return lines, scale, True
-        if scale <= SMALLEST:
-            return (lines or [text]), SMALLEST, False
-        scale = max(SMALLEST, round(scale - 0.02, 2))
+        smallest = slot.get("smallest", SMALLEST)
+        if scale <= smallest:
+            return (lines or [text]), smallest, False
+        scale = max(smallest, round(scale - 0.02, 2))
 
 
-# The boards' supervision line keeps this far (guide points) from a box
-# beside it (the property type's) or from its panel's edge, and is set on
-# one line down to ONE_LINE_MIN of the guide's size; a longer one takes two
-# lines where the panel has room under it (else smaller, down to SMALLEST).
+# The boards' supervision line stands on one line, always (the guide's), this
+# far (guide points) from a box beside it (the property type's) or from its
+# panel's edge, set smaller as it grows, down to SUPERVISION_SMALLEST.
 SUPERVISION_GAP = 6.0
-ONE_LINE_MIN = 0.7
+SUPERVISION_SMALLEST = 0.4
 
 
 @lru_cache(maxsize=None)
-def supervision_room(name):
-    """(left limit, pitch of a second line or 0) of a board's supervision
-    line, measured on the design's own shapes."""
+def supervision_left(name):
+    """The left limit of a board's supervision line, measured on the design's
+    own shapes."""
     import pymupdf
 
     slot = next(s for s in layout()[name]["slots"] if s["key"] == "supervision")
@@ -331,20 +331,16 @@ def supervision_room(name):
             ),
             None,
         )
-    limit = (box.x1 if box else panel.x0) + SUPERVISION_GAP
-    pitch = round(size * 1.25, 3)
-    two = base + pitch + size * 0.3 <= panel.y1 - 2
-    return max(left, limit), pitch if two else 0.0
+    return max(left, (box.x1 if box else panel.x0) + SUPERVISION_GAP)
 
 
-def supervision_slot(name, slot, value):
-    """The supervision slot as a board sets this value (see SUPERVISION_GAP)."""
-    left, pitch = supervision_room(name)
-    slot = {**slot, "maxw": round(slot["x"] - left, 3)}
-    if width(value, slot, ONE_LINE_MIN) <= slot["maxw"] or not pitch:
-        return slot
-    base = slot["bases"][0]
-    return {**slot, "bases": [base, round(base + pitch, 3)]}
+def supervision_slot(name, slot):
+    """The supervision slot as a board sets it."""
+    return {
+        **slot,
+        "maxw": round(slot["x"] - supervision_left(name), 3),
+        "smallest": SUPERVISION_SMALLEST,
+    }
 
 
 def text_block(name, slot, value, geometry):
@@ -471,7 +467,7 @@ def page(name, size, value_of, images):
         if kind == "text":
             value = value_of.get(key, "")
             if value and key == "supervision" and name.startswith("board-"):
-                slot = supervision_slot(name, slot, value)
+                slot = supervision_slot(name, slot)
             if value:
                 out["texts"].append(text_block(name, slot, value, geometry))
         elif kind == "qr" and images.get("qr"):
@@ -557,11 +553,34 @@ def artwork(name):
     return image, image.width / layout()[name]["size"][0]
 
 
+@lru_cache(maxsize=None)
+def label_centre(name, box):
+    """The middle of the label «وكيل البيع القضائي» over a board's logo box:
+    the ink of the design's strip just above the box (the label is outlines
+    on some boards, so it is measured on the picture)."""
+    from PIL import ImageChops
+
+    image, k = artwork(name)
+    x0, y0, x1, _ = box
+    strip = image.crop(
+        (round((x0 - 5) * k), round((y0 - 11) * k), round((x1 + 5) * k), round(y0 * k))
+    )
+    background = sorted(strip.getdata())[len(strip.getdata()) // 2]
+    ink = (
+        ImageChops.difference(strip, strip.point(lambda _: background))
+        .convert("L")
+        .point(lambda v: 255 if v > 40 else 0)
+        .getbbox()
+    )
+    return x0 - 5 + (ink[0] + ink[2]) / 2 / k if ink else (x0 + x1) / 2
+
+
 def logo_room(name, box, texts, gap=1.5):
     """The guide's box for the selling agent's logo, grown to AGENT_LOGO_SCALE
     as far as the design leaves it free: it stops short of the guide's own
     drawing and of the values beside it, and is never smaller than the
-    guide's box."""
+    guide's box. On a board it stays centred under its label, growing alike
+    on both sides."""
     from PIL import ImageChops
 
     from ..booklet.art import AGENT_LOGO_SCALE
@@ -608,8 +627,13 @@ def logo_room(name, box, texts, gap=1.5):
     left, right, top, bottom = (reach(e) for e in "lrtb")
     width_ = min(w * AGENT_LOGO_SCALE, w + left + right)
     height = min(h * AGENT_LOGO_SCALE, h + top + bottom)
-    # Centred on the guide's box where the room allows, shifted where not.
-    a = min(max((x0 + x1 - width_) / 2, x0 - left), x1 + right - width_)
+    centre = label_centre(name, tuple(box)) if name.startswith("board-") else None
+    if centre is None:
+        # Centred on the guide's box where the room allows, shifted where not.
+        a = min(max((x0 + x1 - width_) / 2, x0 - left), x1 + right - width_)
+    else:
+        half = min(width_ / 2, centre - (x0 - left), x1 + right - centre)
+        a, width_ = centre - half, 2 * half
     b = min(max((y0 + y1 - height) / 2, y0 - top), y1 + bottom - height)
     room = [a, b, a + width_, b + height]
     # The corners, too, are free (shrink towards the guide's box if not).
@@ -622,6 +646,9 @@ def logo_room(name, box, texts, gap=1.5):
             room[2] + (x1 - room[2]) * 0.1,
             room[3] + (y1 - room[3]) * 0.1,
         ]
+    if centre is not None:
+        half = min(centre - room[0], room[2] - centre)
+        room[0], room[2] = centre - half, centre + half
     return room
 
 
@@ -788,8 +815,16 @@ def review(project, items, banner=None, social=None):
             if t["fits"] or not field:
                 continue
             text = " ".join(line["text"] for line in t["lines"])
-            room = slots[t["key"]]["maxw"] * len(slots[t["key"]]["bases"])
-            fit = int(len(text) * room / width(text, slots[t["key"]], SMALLEST))
+            slot = slots[t["key"]]
+            if t["key"] == "supervision" and name.startswith("board-"):
+                slot = supervision_slot(name, slot)
+            room = slot["maxw"] * len(slot["bases"])
+            fit = int(
+                len(text) * room / width(text, slot, slot.get("smallest", SMALLEST))
+            )
+            if t["key"] == "supervision" and "، و" in text:
+                # The limit is the court's: the line's opening is fixed.
+                fit -= len(text.split("، و")[0]) + 3
             entry = {
                 "field": field,
                 "item": p.get("item") or None,
